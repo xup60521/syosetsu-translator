@@ -20,18 +20,17 @@ const multibar = new cliProgress.MultiBar(
     cliProgress.Presets.shades_grey
 );
 
-export async function translation(
-    urls: string[],
-    model: LanguageModelV1,
-    divideLine = 50,
-    autoRetry: boolean,
-    sleep_ms?: number
-) {
-    let b1 = multibar.create(urls.length, 0);
+export async function translation({ sleep_ms }: {sleep_ms?: number}) {
+    const { url_string, divide_line, model, auto_retry } = state
+    const url_arr = url_string.split(" ")
+    if (!model) {
+        throw new Error("Model is undefined")
+    }
+    let b1 = multibar.create(url_arr.length, 0);
 
     let urlIndex = 0;
-    while (urlIndex < urls.length) {
-        const url = urls[urlIndex];
+    while (urlIndex < url_arr.length) {
+        const url = url_arr[urlIndex];
         b1.update(urlIndex + 1, { filename: url });
         
         try {
@@ -43,7 +42,7 @@ export async function translation(
                 let sectionedText = "";
                 try {
                     sectionedText = (
-                        await translateText(paragraphArr, divideLine, model)
+                        await translateText(paragraphArr, divide_line, model)
                     )
                         .join("\n")
                         .replace(/(\r\n|\r|\n)/g, "\n\n");
@@ -60,7 +59,7 @@ export async function translation(
     ${indexPrefix}
     
     Model: ${model.modelId}
-    Devide Line: ${divideLine}
+    Devide Line: ${divide_line}
     
     ` + (await replace_words(sectionedText));
 
@@ -77,8 +76,8 @@ export async function translation(
             urlIndex++;
         } catch (err) {
             console.error(err)
-            if (autoRetry) {
-                b1 = multibar.create(urls.length, 0);
+            if (auto_retry) {
+                b1 = multibar.create(url_arr.length, 0);
                 continue
             }
             const result = await select({
@@ -99,76 +98,35 @@ export async function translation(
                 ],
             });
             if (result === "retry") {
-                b1 = multibar.create(urls.length, 0);
+                b1 = multibar.create(url_arr.length, 0);
                 continue
             } else if (result === "stop") {
                 throw new Error("Operation terminated")
             } else if (result === "change_provider") {
-                state.update(urls.slice(urlIndex).join(" "))
+                state.set_url_string(url_arr.slice(urlIndex).join(" "))
                 return false
             }
         }
     }
 
-    //     for await (const url of urls) {
-    //         b1.increment(1, { filename: url });
-    //         const items = await handler(url);
-
-    //         for await (const item of items) {
-    //             const { paragraphArr, title, indexPrefix, series_title } = item;
-
-    //             // console.log(paragraphArr.length);
-    //             let sectionedText = "";
-    //             try {
-    //                 sectionedText = (
-    //                     await translateText(paragraphArr, divideLine, model)
-    //                 )
-    //                     .join("\n")
-    //                     .replace(/(\r\n|\r|\n)/g, "\n\n");
-    //             } catch (err) {
-    //                 console.error("An error occur when translating " + url)
-    //                 throw new Error(err as any)
-    //             }
-
-    //             const content =
-    //                 `# ${title}
-
-    // URL: ${url}
-    // ${indexPrefix}
-
-    // Model: ${model.modelId}
-    // Devide Line: ${divideLine}
-
-    // ` + (await replace_words(sectionedText));
-
-    //             await fs.mkdir(`./output/${series_title}`, { recursive: true });
-
-    //             fs.writeFile(
-    //                 `./output/${series_title}/${indexPrefix}-${title}_translated.txt`,
-    //                 content
-    //             );
-    //             if (sleep_ms) {
-    //                 await sleep(sleep_ms);
-    //             }
-    //         }
-    //     }
+    
     multibar.stop();
     return true;
 }
 
 async function translateText(
     paragraphArr: string[],
-    divideLine: number,
+    divide_line: number,
     model: LanguageModelV1
 ) {
     const numberOfLine = paragraphArr.length;
-    const numberOfSections = Math.floor(numberOfLine / divideLine) + 2;
-    // console.log(numberOfLine,divideLine, numberOfSections)
+    const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
+    // console.log(numberOfLine,divide_line, numberOfSections)
     const buf: string[][] = [];
 
     for (let i = 0; i < numberOfSections; i++) {
-        // console.log(divideLine * i, divideLine * (i + 1));
-        buf.push(paragraphArr.slice(divideLine * i, divideLine * (i + 1)));
+        // console.log(divide_line * i, divide_line * (i + 1));
+        buf.push(paragraphArr.slice(divide_line * i, divide_line * (i + 1)));
     }
     // console.log(buf)
     // const filteredBuf = buf.filter((d) => d.length !== 0);
