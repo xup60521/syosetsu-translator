@@ -35,3 +35,4 @@ test(state.update)
 console.log(state.value)
 
 // some change
+// e.g. new state
