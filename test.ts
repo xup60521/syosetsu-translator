@@ -34,5 +34,3 @@ function test(updateFunction: (a: number) => void) {
 test(state.update)
 console.log(state.value)
 
-// some change
-// e.g. new state
