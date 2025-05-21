@@ -9,7 +9,7 @@ import fs from "node:fs/promises";
 import handler from "./handler";
 import cliProgress from "cli-progress";
 import { select } from "@inquirer/prompts";
-import { state } from "./state";
+import { state, url_state } from "./state";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -21,7 +21,8 @@ const multibar = new cliProgress.MultiBar(
 );
 
 export async function translation({ sleep_ms }: {sleep_ms?: number}) {
-    const { url_string, divide_line, model, auto_retry } = state
+    const { divide_line, model, auto_retry } = state
+    const { url_string } = url_state
     const url_arr = url_string.split(" ")
     if (!model) {
         throw new Error("Model is undefined")
@@ -103,7 +104,7 @@ export async function translation({ sleep_ms }: {sleep_ms?: number}) {
             } else if (result === "stop") {
                 throw new Error("Operation terminated")
             } else if (result === "change_provider") {
-                state.set_url_string(url_arr.slice(urlIndex).join(" "))
+                url_state.set_url_string(url_arr.slice(urlIndex).join(" "))
                 return false
             }
         }
@@ -114,7 +115,7 @@ export async function translation({ sleep_ms }: {sleep_ms?: number}) {
     return true;
 }
 
-async function translateText(
+export async function translateText(
     paragraphArr: string[],
     divide_line: number,
     model: LanguageModelV1

@@ -27,8 +27,15 @@ const providerOption = [
     },
 ];
 
-class State {
+class URL_State {
     url_string = "";
+    set_url_string = (e: string) => {
+        this.url_string = e;
+    };
+
+}
+
+class State {
     model = undefined as undefined | LanguageModelV1;
     provider = undefined as undefined | string;
     divide_line = default_divide_line;
@@ -46,9 +53,6 @@ class State {
                 default: "50",
             }))
         );
-    };
-    set_url_string = (e: string) => {
-        this.url_string = e;
     };
     selectModel = async () => {
         const provider = await select({
@@ -197,3 +201,4 @@ class State {
 }
 
 export const state = new State();
+export const url_state = new URL_State()

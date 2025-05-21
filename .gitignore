@@ -3,3 +3,5 @@
 output/
 
 node_modules/
+
+translate_from_files/

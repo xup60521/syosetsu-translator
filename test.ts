@@ -1,5 +1,6 @@
 // import handler from "./handler";
-// import fs from "node:fs/promises"
+import fs from "node:fs/promises"
+import path from "node:path";
 
 // import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
@@ -18,19 +19,6 @@
 
 
 
-class obj {
-    value = 123
-    update = (e: number) => {
-        this.value = e
-    }
-}
 
-const state = new obj()
-
-function test(updateFunction: (a: number) => void) {
-    updateFunction(456)
-}
-
-test(state.update)
-console.log(state.value)
-
+const content = await fs.readFile("./translate_from_files/うなぎいぬ_わたくしとお姉様/1_何がなんだかわかりません！！.txt", "utf-8");
+console.log(content)
