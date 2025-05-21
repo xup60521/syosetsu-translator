@@ -11,16 +11,15 @@ type ResultType = {
 }[]
 
 export default async function handler(url: string) {
-    const res = await fetch(url).then((res) => res.text());
-    const $ = load(res);
+    
     const urlobj = new URL(url);
     let result: ResultType | undefined = undefined;
     switch (urlobj.origin) {
         case "https://ncode.syosetu.com":
-            result = syosetsu_handler(urlobj, $)
+            result = await syosetsu_handler(urlobj)
             break;
         case "https://www.pixiv.net":
-            result = pixiv_handler(urlobj, $)
+            result = await pixiv_handler(urlobj)
             break;
     }
     if (!result) throw new Error("handler is not defined");

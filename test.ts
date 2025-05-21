@@ -1,11 +1,12 @@
-// import handler from "./handler";
+import handler from "./handler";
 import fs from "node:fs/promises"
 import path from "node:path";
 
 // import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-// const url = "https://www.pixiv.net/novel/show.php?id=13312682";
-// const [{ paragraphArr, series_title, indexPrefix, title }] = await handler(url);
+const url = "https://www.pixiv.net/novel/series/8601040";
+const data = await handler(url);
+console.log(data.length)
 
 // let text = `file_name: ${indexPrefix}-${title}_translated.txt\n`
 // text += `title: ${title}` + "\n"
@@ -20,5 +21,5 @@ import path from "node:path";
 
 
 
-const content = await fs.readFile("./translate_from_files/うなぎいぬ_わたくしとお姉様/1_何がなんだかわかりません！！.txt", "utf-8");
-console.log(content)
+// const content = await fs.readFile("./translate_from_files/うなぎいぬ_わたくしとお姉様/1_何がなんだかわかりません！！.txt", "utf-8");
+// console.log(content)
