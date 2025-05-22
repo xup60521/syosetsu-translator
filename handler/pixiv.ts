@@ -1,6 +1,6 @@
 import { load, type CheerioAPI } from "cheerio";
 
-const regex = /[\/:?]/g;
+const regex = /[<>:"/\\|?*]/g;
 
 export async function pixiv_handler(urlobj: URL) {
     if (urlobj.pathname.includes("/novel/series/")) {
@@ -30,9 +30,9 @@ async function single_handler(urlobj: URL) {
     return [
         {
             title: title.replaceAll(regex, " "),
-            indexPrefix,
+            indexPrefix: indexPrefix.replaceAll(regex, " "),
             paragraphArr,
-            series_title,
+            series_title: series_title.replaceAll(regex, " "),
         },
     ];
 }
