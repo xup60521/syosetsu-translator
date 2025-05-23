@@ -1,4 +1,5 @@
 import { load, type CheerioAPI } from "cheerio";
+import type { ResultType } from ".";
 
 const regex = /[<>:"/\\|?*]/g;
 
@@ -12,9 +13,15 @@ export async function pixiv_handler(urlobj: URL) {
 
 async function single_handler(urlobj: URL) {
 
-    const novel_id = urlobj.searchParams.get("id")
-
-    const this_novel_data = await fetch(`https://www.pixiv.net/ajax/novel/${novel_id}`).then((res) => res.json());
+    let this_novel_data
+    if (urlobj.pathname.includes("/novel/show")) {
+        const novel_id = urlobj.searchParams.get("id")
+        this_novel_data = await fetch(`https://www.pixiv.net/ajax/novel/${novel_id}`).then((res) => res.json());
+    } else if (urlobj.pathname.includes("/ajax/novel")) {
+        this_novel_data = await fetch(urlobj).then((res) => res.json());
+    } else {
+        throw new Error("An error happens with url: " + urlobj.href)
+    }
     // console.log(this_novel_data)
     const paragraphs = this_novel_data.body.content
     const paragraphArr = paragraphs.split("\n");
@@ -33,6 +40,7 @@ async function single_handler(urlobj: URL) {
             indexPrefix: indexPrefix.replaceAll(regex, " "),
             paragraphArr,
             series_title: series_title.replaceAll(regex, " "),
+            url: urlobj.href
         },
     ];
 }
@@ -55,12 +63,7 @@ async function series_handler(urlobj: URL) {
     ) {
         throw new Error("Series data has some error");
     }
-    const all_content_data = [] as {
-        title: string;
-        indexPrefix: string;
-        paragraphArr: string[];
-        series_title: string;
-    }[];
+    const all_content_data = [] as ResultType
     let current_novel_id = firstNovelId;
     for (let i = 0; i < publishedContentCount; i++) {
         const this_novel_data = await fetch(
@@ -86,6 +89,7 @@ async function series_handler(urlobj: URL) {
                 indexPrefix,
                 paragraphArr: paragraphs.split("\n"),
                 series_title,
+                url: `https://www.pixiv.net/ajax/novel/${current_novel_id}`
             };
             current_novel_id = next_novel_id;
             console.log(`complete ${i}/${publishedContentCount}`);

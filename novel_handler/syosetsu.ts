@@ -17,6 +17,7 @@ export async function syosetsu_handler(urlobj: URL) {
             indexPrefix: urlobj.pathname.replaceAll("/", " ").trim(),
             paragraphArr,
             series_title,
+            url: urlobj.href
         },
     ];
 }

@@ -1,10 +1,10 @@
-import handler from "./handler";
+import handler from "./novel_handler";
 import fs from "node:fs/promises"
 import path from "node:path";
 
 // import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-const url = "https://www.pixiv.net/novel/series/8601040";
+const url = "https://www.pixiv.net/novel/show.php?id=21378387 https://www.pixiv.net/novel/show.php?id=21308233 https://www.pixiv.net/novel/show.php?id=21333695 https://www.pixiv.net/novel/show.php?id=21339969 https://www.pixiv.net/novel/show.php?id=21347687 https://www.pixiv.net/novel/show.php?id=21362565 https://www.pixiv.net/novel/show.php?id=21372192 https://www.pixiv.net/novel/show.php?id=21427895 https://www.pixiv.net/novel/show.php?id=21154139 https://www.pixiv.net/novel/show.php?id=21469540 https://www.pixiv.net/novel/show.php?id=23692798";
 const data = await handler(url);
 console.log(data.length)
 

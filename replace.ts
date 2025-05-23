@@ -16,6 +16,7 @@ export async function replace_words(str: string) {
 
 // Function to replace text in all .txt files in a given directory
 export async function replaceTextInFiles() {
+    await new Promise((resolve) => setTimeout(() => resolve(undefined), 100));
     const directory = "./output";
     try {
         await processDirectory(directory);

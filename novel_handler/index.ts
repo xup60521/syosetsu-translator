@@ -3,12 +3,13 @@ import { syosetsu_handler } from "./syosetsu";
 import { z } from "zod";
 import { pixiv_handler } from "./pixiv";
 
-type ResultType = {
+export type ResultType = {
     title: string;
     indexPrefix: string;
     paragraphArr: string[];
     series_title: string;
-}[]
+    url: string;
+}[];
 
 export default async function handler(url: string) {
     

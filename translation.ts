@@ -6,10 +6,16 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { load } from "cheerio";
 import { replace_words } from "./replace";
 import fs from "node:fs/promises";
-import handler from "./handler";
+import handler from "./novel_handler";
 import cliProgress from "cli-progress";
 import { select } from "@inquirer/prompts";
-import { state, url_state } from "./state";
+import {
+    input_auto_retry,
+    input_divide_line,
+    input_select_model,
+    input_url_string,
+    input_retry_or_stop,
+} from "./utils";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -20,41 +26,52 @@ const multibar = new cliProgress.MultiBar(
     cliProgress.Presets.shades_grey
 );
 
-export async function translation({ sleep_ms }: {sleep_ms?: number}) {
-    const { divide_line, model, auto_retry } = state
-    const { url_string } = url_state
-    const url_arr = url_string.split(" ")
-    if (!model) {
-        throw new Error("Model is undefined")
-    }
-    let b1 = multibar.create(url_arr.length, 0);
+type TranslationParameter = {
+    sleep_ms?: number;
+    model: LanguageModelV1;
+    provider: string;
+    auto_retry: boolean;
+    divide_line: number;
+    url_string: string;
+};
 
-    let urlIndex = 0;
-    while (urlIndex < url_arr.length) {
-        const url = url_arr[urlIndex];
-        b1.update(urlIndex + 1, { filename: url });
+export async function translation(params: TranslationParameter) {
+    const {
+        sleep_ms,
+        model,
+        provider,
+        auto_retry,
+        divide_line,
+        url_string,
+    } = params;
+
+    const urls = url_string.split(" ");
+
+    let b1 = multibar.create(urls.length, 0);
+
+    let url_index = 0;
+    while (url_index < urls.length) {
         
         try {
-            const items = await handler(url);
-            for await (const item of items) {
-                const { paragraphArr, title, indexPrefix, series_title } = item;
+            const novel_url = urls[url_index];
+            const [{ series_title, paragraphArr, title, indexPrefix, url }] =
+                await handler(novel_url);
+            b1.update(url_index + 1, { filename: url });
+            let sectionedText = "";
+            try {
+                sectionedText = (
+                    await translateText(paragraphArr, divide_line, model)
+                )
+                    .join("\n")
+                    .replace(/(\r\n|\r|\n)/g, "\n\n");
+            } catch (err) {
+                b1.stop();
+                console.error("An error occur when translating " + url);
+                throw new Error(err as any);
+            }
 
-                // console.log(paragraphArr.length);
-                let sectionedText = "";
-                try {
-                    sectionedText = (
-                        await translateText(paragraphArr, divide_line, model)
-                    )
-                        .join("\n")
-                        .replace(/(\r\n|\r|\n)/g, "\n\n");
-                } catch (err) {
-                    b1.stop()
-                    console.error("An error occur when translating " + url);
-                    throw new Error(err as any)
-                }
-
-                const content =
-                    `# ${title} 
+            const content =
+                `# ${title} 
     
     URL: ${url}
     ${indexPrefix}
@@ -64,53 +81,62 @@ export async function translation({ sleep_ms }: {sleep_ms?: number}) {
     
     ` + (await replace_words(sectionedText));
 
-                await fs.mkdir(`./output/${series_title}`, { recursive: true });
+            await fs.mkdir(`./output/${series_title}`, { recursive: true });
 
-                fs.writeFile(
-                    `./output/${series_title}/${indexPrefix}-${title}_translated.txt`,
-                    content
-                );
-                if (sleep_ms) {
-                    await sleep(sleep_ms);
-                }
+            fs.writeFile(
+                `./output/${series_title}/${indexPrefix}-${title}_translated.txt`,
+                content
+            );
+            if (sleep_ms) {
+                await sleep(sleep_ms);
             }
-            urlIndex++;
+
+            url_index++;
+
         } catch (err) {
-            console.error(err)
+
+            console.error(err);
             if (auto_retry) {
-                b1 = multibar.create(url_arr.length, 0);
-                continue
+                b1 = multibar.create(urls.length, 0);
+                continue;
             }
-            const result = await select({
-                message: "Retry or Stop",
-                choices: [
-                    {
-                        name: "Retry",
-                        value: "retry",
-                    },
-                    {
-                        name: "Stop",
-                        value: "stop",
-                    },
-                    {
-                        name: "Change Provider",
-                        value: "change_provider"
-                    }
-                ],
-            });
+            const result = await input_retry_or_stop();
             if (result === "retry") {
-                b1 = multibar.create(url_arr.length, 0);
-                continue
+                b1 = multibar.create(urls.length, 0);
+                continue;
             } else if (result === "stop") {
-                throw new Error("Operation terminated")
+                throw new Error("Operation terminated");
             } else if (result === "change_provider") {
-                url_state.set_url_string(url_arr.slice(urlIndex).join(" "))
-                return false
+                multibar.stop();
+
+                return (async () => {
+                    const { model, provider } = await input_select_model();
+                    const divide_line = await input_divide_line();
+                    const auto_retry = await input_auto_retry();
+                    const url_string = urls.slice(url_index).join(" ");
+                    if (provider === "groq") {
+                        await translation({
+                            model,
+                            provider,
+                            url_string,
+                            auto_retry,
+                            divide_line,
+                            sleep_ms: 60_000,
+                        });
+                    } else {
+                        await translation({
+                            model,
+                            provider,
+                            url_string,
+                            auto_retry,
+                            divide_line,
+                        });
+                    }
+                })();
             }
         }
     }
 
-    
     multibar.stop();
     return true;
 }
