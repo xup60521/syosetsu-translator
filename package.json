@@ -10,7 +10,8 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "build": "bun build ./index.ts --outdir ./ --target=node"
+    "build": "bun build ./index.ts --outdir ./ --target=node",
+    "start": "bun run --bun ./index.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.1.17",
