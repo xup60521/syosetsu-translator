@@ -142,8 +142,8 @@ export async function input_select_model() {
                     value: "gemini-2.5-pro-exp-03-25",
                 },
                 {
-                    name: "gemini-2.5-flash-preview-04-17",
-                    value: "gemini-2.5-flash-preview-04-17",
+                    name: "gemini-2.5-flash-preview-05-20",
+                    value: "gemini-2.5-flash-preview-05-20",
                 },
             ],
         });

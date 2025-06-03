@@ -16,6 +16,7 @@ import {
     input_url_string,
     input_retry_or_stop,
 } from "./utils";
+import { url_string_handler } from "./url_string_handler";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -45,7 +46,7 @@ export async function translation(params: TranslationParameter) {
         url_string,
     } = params;
 
-    const urls = url_string.split(" ");
+    const urls = await url_string_handler(url_string)
 
     let b1 = multibar.create(urls.length, 0);
 
@@ -189,7 +190,7 @@ export async function translateText(
                             type: "text",
                             text: `
 # 指令：
-請將以下日文文章翻譯成台灣常用的繁體中文。
+請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
 
 # 翻譯規則：
 1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。

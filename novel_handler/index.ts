@@ -26,3 +26,8 @@ export default async function handler(url: string) {
     if (!result) throw new Error("handler is not defined");
     return result;
 }
+
+
+export async function decompose_series_into_novels() {
+    
+}

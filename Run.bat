@@ -1,2 +1,2 @@
-bun run ./index.ts
+bun.exe run ./index.ts
 pause
