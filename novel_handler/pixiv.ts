@@ -4,35 +4,29 @@ import type { ResultType } from ".";
 const regex = /[<>:"/\\|?*]/g;
 
 export async function pixiv_handler(urlobj: URL) {
-    if (urlobj.pathname.includes("/novel/series/")) {
-        return series_handler(urlobj);
-    } else {
-        return single_handler(urlobj);
-    }
+    return single_handler(urlobj);
 }
 
 async function single_handler(urlobj: URL) {
-
-    let this_novel_data
+    let this_novel_data;
     if (urlobj.pathname.includes("/novel/show")) {
-        const novel_id = urlobj.searchParams.get("id")
-        this_novel_data = await fetch(`https://www.pixiv.net/ajax/novel/${novel_id}`).then((res) => res.json());
+        const novel_id = urlobj.searchParams.get("id");
+        this_novel_data = await fetch(
+            `https://www.pixiv.net/ajax/novel/${novel_id}`
+        ).then((res) => res.json());
     } else if (urlobj.pathname.includes("/ajax/novel")) {
         this_novel_data = await fetch(urlobj).then((res) => res.json());
     } else {
-        throw new Error("An error happens with url: " + urlobj.href)
+        throw new Error("An error happens with url: " + urlobj.href);
     }
     // console.log(this_novel_data)
-    const paragraphs = this_novel_data.body.content
+    const paragraphs = this_novel_data.body.content;
     const paragraphArr = paragraphs.split("\n");
-    
-    
+
     const title = this_novel_data.body.title;
-    const series_title = this_novel_data.body.seriesNavData.title;
+    const series_title = this_novel_data.body?.seriesNavData?.title ?? title;
     const indexPrefix =
-        series_title +
-        " " +
-        this_novel_data.body.seriesNavData.order;
+        series_title + " " + (this_novel_data.body?.seriesNavData?.order ?? "");
 
     return [
         {
@@ -40,7 +34,7 @@ async function single_handler(urlobj: URL) {
             indexPrefix: indexPrefix.replaceAll(regex, " "),
             paragraphArr,
             series_title: series_title.replaceAll(regex, " "),
-            url: urlobj.href
+            url: urlobj.href,
         },
     ];
 }
@@ -63,7 +57,7 @@ async function series_handler(urlobj: URL) {
     ) {
         throw new Error("Series data has some error");
     }
-    const all_content_data = [] as ResultType
+    const all_content_data = [] as ResultType;
     let current_novel_id = firstNovelId;
     for (let i = 0; i < publishedContentCount; i++) {
         const this_novel_data = await fetch(
@@ -89,7 +83,7 @@ async function series_handler(urlobj: URL) {
                 indexPrefix,
                 paragraphArr: paragraphs.split("\n"),
                 series_title,
-                url: `https://www.pixiv.net/ajax/novel/${current_novel_id}`
+                url: `https://www.pixiv.net/ajax/novel/${current_novel_id}`,
             };
             current_novel_id = next_novel_id;
             console.log(`complete ${i}/${publishedContentCount}`);
