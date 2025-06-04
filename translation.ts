@@ -37,22 +37,14 @@ type TranslationParameter = {
 };
 
 export async function translation(params: TranslationParameter) {
-    const {
-        sleep_ms,
-        model,
-        provider,
-        auto_retry,
-        divide_line,
-        url_string,
-    } = params;
-
-    const urls = await url_string_handler(url_string)
+    const { sleep_ms, model, provider, divide_line, url_string } = params;
+    let { auto_retry } = params;
+    const urls = await url_string_handler(url_string);
 
     let b1 = multibar.create(urls.length, 0);
 
     let url_index = 0;
     while (url_index < urls.length) {
-        
         try {
             const novel_url = urls[url_index];
             const [{ series_title, paragraphArr, title, indexPrefix, url }] =
@@ -82,7 +74,9 @@ export async function translation(params: TranslationParameter) {
     
     ` + (await replace_words(sectionedText));
 
-            await fs.mkdir(`./output/${series_title}`, { recursive: true });
+            if (!(await fs.exists(`./output/${series_title}`))) {
+                await fs.mkdir(`./output/${series_title}`, { recursive: true });
+            }
 
             fs.writeFile(
                 `./output/${series_title}/${indexPrefix}-${title}_translated.txt`,
@@ -93,9 +87,7 @@ export async function translation(params: TranslationParameter) {
             }
 
             url_index++;
-
         } catch (err) {
-
             console.error(err);
             if (auto_retry) {
                 b1 = multibar.create(urls.length, 0);
@@ -104,6 +96,10 @@ export async function translation(params: TranslationParameter) {
             const result = await input_retry_or_stop();
             if (result === "retry") {
                 b1 = multibar.create(urls.length, 0);
+                continue;
+            } else if (result === "auto-retry") {
+                b1 = multibar.create(urls.length, 0);
+                auto_retry = true;
                 continue;
             } else if (result === "stop") {
                 throw new Error("Operation terminated");

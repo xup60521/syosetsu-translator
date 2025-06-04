@@ -36,6 +36,10 @@ export async function input_retry_or_stop() {
                 value: "retry",
             },
             {
+                name: "Retry (auto-retry)",
+                value: "auto-retry",
+            },
+            {
                 name: "Stop",
                 value: "stop",
             },
