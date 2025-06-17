@@ -18,6 +18,7 @@ import {
     input_start_from,
 } from "./utils";
 import { url_string_handler } from "./url_string_handler";
+import { handle_file } from "./handle_file";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -77,14 +78,8 @@ export async function translation(params: TranslationParameter) {
     
     ` + (await replace_words(sectionedText));
 
-            if (!(await fs.exists(`./output/${series_title}`))) {
-                await fs.mkdir(`./output/${series_title}`, { recursive: true });
-            }
-
-            fs.writeFile(
-                `./output/${series_title}/${indexPrefix}-${title}_translated.txt`,
-                content
-            );
+            await handle_file({ series_title, title, indexPrefix, content });
+            
             if (sleep_ms) {
                 await sleep(sleep_ms);
             }
