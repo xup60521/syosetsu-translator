@@ -8,6 +8,7 @@ import {
     input_auto_retry,
     input_divide_line,
     input_select_model,
+    input_start_from,
     input_url_string,
 } from "./utils";
 
@@ -54,25 +55,17 @@ async function translate_from_URL() {
     const divide_line = await input_divide_line();
     const url_string = await input_url_string();
     const auto_retry = await input_auto_retry();
+    const start_from = await input_start_from();
 
-    if (provider === "groq") {
-        await translation({
-            model,
-            provider,
-            url_string,
-            auto_retry,
-            divide_line,
-            sleep_ms: 60_000,
-        });
-    } else {
-        await translation({
-            model,
-            provider,
-            url_string,
-            auto_retry,
-            divide_line,
-        });
-    }
+    await translation({
+        model,
+        provider,
+        url_string,
+        auto_retry,
+        divide_line,
+        sleep_ms: provider === "groq" ? 60_000 : undefined,
+        start_from,
+    });
 }
 
 // async function translate_from_files() {
@@ -126,4 +119,3 @@ async function translate_from_URL() {
 //         translation_text_is_done = true;
 //     }
 // }
-

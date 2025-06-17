@@ -6,7 +6,7 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { select, input, checkbox, confirm } from "@inquirer/prompts";
 import { z } from "zod";
 
-const default_divide_line = 50;
+const default_divide_line = 30;
 
 const providerOption = [
     {
@@ -65,7 +65,10 @@ export async function input_divide_line() {
         .parse(
             Number(
                 await input({
-                    message: "Please enter a divideLine number (default to 50)",
+                    message:
+                        "Please enter a divideLine number (default to " +
+                        default_divide_line +
+                        ")",
                     default: String(default_divide_line),
                 })
             )
@@ -219,4 +222,18 @@ export async function input_url_string() {
         message: "Enter URLs (separated by spaces):",
     };
     return await input(inputQuestion);
+}
+
+export async function input_start_from() {
+    return z
+        .number()
+        .positive()
+        .parse(
+            Number(
+                await input({
+                    message: "Start from (default to " + 1 + ")",
+                    default: "1",
+                })
+            )
+        );
 }

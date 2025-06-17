@@ -15,6 +15,7 @@ import {
     input_select_model,
     input_url_string,
     input_retry_or_stop,
+    input_start_from,
 } from "./utils";
 import { url_string_handler } from "./url_string_handler";
 
@@ -34,16 +35,18 @@ type TranslationParameter = {
     auto_retry: boolean;
     divide_line: number;
     url_string: string;
+    start_from: number;
 };
 
 export async function translation(params: TranslationParameter) {
-    const { sleep_ms, model, provider, divide_line, url_string } = params;
+    const { sleep_ms, model, provider, divide_line, url_string, start_from } =
+        params;
     let { auto_retry } = params;
     const urls = await url_string_handler(url_string);
 
     let b1 = multibar.create(urls.length, 0);
 
-    let url_index = 0;
+    let url_index = start_from - 1;
     while (url_index < urls.length) {
         try {
             const novel_url = urls[url_index];
@@ -111,24 +114,17 @@ export async function translation(params: TranslationParameter) {
                     const divide_line = await input_divide_line();
                     const auto_retry = await input_auto_retry();
                     const url_string = urls.slice(url_index).join(" ");
-                    if (provider === "groq") {
-                        await translation({
-                            model,
-                            provider,
-                            url_string,
-                            auto_retry,
-                            divide_line,
-                            sleep_ms: 60_000,
-                        });
-                    } else {
-                        await translation({
-                            model,
-                            provider,
-                            url_string,
-                            auto_retry,
-                            divide_line,
-                        });
-                    }
+                    const start_from = await input_start_from();
+
+                    await translation({
+                        model,
+                        provider,
+                        url_string,
+                        auto_retry,
+                        divide_line,
+                        sleep_ms: provider === "groq" ? 60_000 : undefined,
+                        start_from,
+                    });
                 })();
             }
         }

@@ -1,12 +1,13 @@
 import handler from "./novel_handler";
 import fs from "node:fs/promises"
 import path from "node:path";
+import { url_string_handler } from "./url_string_handler";
 
 // import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-const url = "https://www.pixiv.net/novel/show.php?id=21378387 https://www.pixiv.net/novel/show.php?id=21308233 https://www.pixiv.net/novel/show.php?id=21333695 https://www.pixiv.net/novel/show.php?id=21339969 https://www.pixiv.net/novel/show.php?id=21347687 https://www.pixiv.net/novel/show.php?id=21362565 https://www.pixiv.net/novel/show.php?id=21372192 https://www.pixiv.net/novel/show.php?id=21427895 https://www.pixiv.net/novel/show.php?id=21154139 https://www.pixiv.net/novel/show.php?id=21469540 https://www.pixiv.net/novel/show.php?id=23692798";
-const data = await handler(url);
-console.log(data.length)
+const url = "https://www.pixiv.net/novel/series/1407117";
+const data = await url_string_handler(url)
+console.log(data.join(" "))
 
 // let text = `file_name: ${indexPrefix}-${title}_translated.txt\n`
 // text += `title: ${title}` + "\n"

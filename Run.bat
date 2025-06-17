@@ -1,2 +1,2 @@
-bun.exe run --bun ./index.ts
+powershell bun.exe run --bun ./index.ts
 pause
