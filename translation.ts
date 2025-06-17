@@ -143,24 +143,6 @@ export async function translateText(
         // console.log(divide_line * i, divide_line * (i + 1));
         buf.push(paragraphArr.slice(divide_line * i, divide_line * (i + 1)));
     }
-    // console.log(buf)
-    // const filteredBuf = buf.filter((d) => d.length !== 0);
-    // const bufText = await Promise.all(
-    //     filteredBuf.map(
-    //         (section) =>
-    //             new Promise((resolve) => {
-    //                 const fulltext = section.filter((d) => d !== "").join("\n");
-    //                 generateText({
-    //                     model,
-    //                     seed: Math.floor(10000 * Math.random()),
-    //                     prompt:
-    //                         "請仔細閱讀文章，理解並辨識其中所包含的人名、專有名詞，並翻譯成台灣慣用的繁體中文。人名與專有名詞無需翻譯，維持日文原文即可。僅輸出翻譯內容，無須加入額外的說明。 \n --- \n " +
-    //                         fulltext,
-    //                 }).then(({ text }) => resolve(text));
-    //             })
-    //     )
-    // );
-    // return bufText;
 
     const bufText = [];
     for await (const section of buf.filter((d) => d.length !== 0)) {
