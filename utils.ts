@@ -121,10 +121,6 @@ export async function input_select_model() {
                     value: "gemini-1.5-flash-8b-latest",
                 },
                 {
-                    name: "gemini-1.5-pro-latest",
-                    value: "gemini-1.5-pro-latest",
-                },
-                {
                     name: "gemini-2.0-flash-thinking-exp-01-21",
                     value: "gemini-2.0-flash-thinking-exp-01-21",
                 },
@@ -133,25 +129,29 @@ export async function input_select_model() {
                     value: "gemini-2.0-pro-exp-02-05",
                 },
                 {
-                    name: "gemini-2.0-flash-exp-image-generation",
-                    value: "gemini-2.0-flash-exp-image-generation",
+                    name: "gemini-2.0-flash-preview-image-generation",
+                    value: "gemini-2.0-flash-preview-image-generation",
                 },
                 {
-                    name: "gemini-2.0-flash-001",
-                    value: "gemini-2.0-flash-001",
+                    name: "gemini-2.0-flash",
+                    value: "gemini-2.0-flash",
                 },
                 {
-                    name: "gemini-2.0-flash-lite-001",
-                    value: "gemini-2.0-flash-lite-001",
+                    name: "gemini-2.0-flash-lite",
+                    value: "gemini-2.0-flash-lite",
                 },
                 {
                     name: "gemini-2.5-pro-exp-03-25",
                     value: "gemini-2.5-pro-exp-03-25",
                 },
                 {
-                    name: "gemini-2.5-flash-preview-05-20",
-                    value: "gemini-2.5-flash-preview-05-20",
+                    name: "gemini-2.5-flash",
+                    value: "gemini-2.5-flash",
                 },
+                {
+                    name: "gemini-2.5-flash-lite-preview-06-17",
+                    value: "gemini-2.5-flash-lite-preview-06-17",
+                }
             ],
         });
         return { model: google(model), provider: "google" };
