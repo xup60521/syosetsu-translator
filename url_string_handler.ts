@@ -25,7 +25,8 @@ async function handle_pixiv(url: URL) {
         ).body;
         const novel_ids = series_content_titles.map(
             (d: { id: string; available: boolean }) =>
-                d.available ? `https://www.pixiv.net/novel/show.php?id=${d.id}` : null
+                // remove the condition to always return the URL
+                true ? `https://www.pixiv.net/novel/show.php?id=${d.id}` : null
         ).filter((d: string | null) => d) as string[];
         return novel_ids;
     } else if (url.pathname.includes("/novel/show")) {
