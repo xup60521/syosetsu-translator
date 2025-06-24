@@ -79,7 +79,7 @@ export async function translation(params: TranslationParameter) {
     ` + (await replace_words(sectionedText));
 
             await handle_file({ series_title, title, indexPrefix, content });
-            
+
             if (sleep_ms) {
                 await sleep(sleep_ms);
             }
@@ -99,6 +99,11 @@ export async function translation(params: TranslationParameter) {
                 b1 = multibar.create(urls.length, 0);
                 auto_retry = true;
                 continue;
+            } else if (result === "skip") {
+                url_index++;
+                b1.update(url_index, { filename: urls[url_index] });
+                continue;
+
             } else if (result === "stop") {
                 throw new Error("Operation terminated");
             } else if (result === "change_provider") {
