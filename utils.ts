@@ -38,6 +38,9 @@ export async function input_retry_or_stop() {
             {
                 name: "Retry (auto-retry)",
                 value: "auto-retry",
+            },{
+                name: "Skip this one",
+                value: "skip",
             },
             {
                 name: "Stop",
