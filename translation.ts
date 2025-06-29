@@ -103,7 +103,6 @@ export async function translation(params: TranslationParameter) {
                 url_index++;
                 b1.update(url_index, { filename: urls[url_index] });
                 continue;
-
             } else if (result === "stop") {
                 throw new Error("Operation terminated");
             } else if (result === "change_provider") {
@@ -131,7 +130,23 @@ export async function translation(params: TranslationParameter) {
     }
 
     multibar.stop();
-    return true;
+    return (async () => {
+        const { model, provider } = await input_select_model();
+        const divide_line = await input_divide_line();
+        const url_string = await input_url_string();
+        const auto_retry = await input_auto_retry();
+        const start_from = await input_start_from();
+
+        await translation({
+            model,
+            provider,
+            url_string,
+            auto_retry,
+            divide_line,
+            sleep_ms: provider === "groq" ? 60_000 : undefined,
+            start_from,
+        });
+    })();
 }
 
 export async function translateText(
@@ -156,13 +171,7 @@ export async function translateText(
             model,
             seed: Math.floor(10000 * Math.random()),
 
-            messages: [
-                {
-                    role: "user",
-                    content: [
-                        {
-                            type: "text",
-                            text: `
+            prompt: `
 # 指令：
 請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
 
@@ -171,15 +180,12 @@ export async function translateText(
 2.  其餘內容需翻譯成通順自然的台灣繁體中文。
 
 # 輸出要求：
-直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。`,
-                        },
-                        {
-                            type: "text",
-                            text: fulltext,
-                        },
-                    ],
-                },
-            ],
+直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
+
+---
+${fulltext}
+---
+`,
         });
         bufText.push(text);
     }
