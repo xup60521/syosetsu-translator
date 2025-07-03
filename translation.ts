@@ -104,7 +104,8 @@ export async function translation(params: TranslationParameter) {
                 b1.update(url_index, { filename: urls[url_index] });
                 continue;
             } else if (result === "stop") {
-                throw new Error("Operation terminated");
+                console.error("Operation terminated");
+                break
             } else if (result === "change_provider") {
                 multibar.stop();
 
@@ -112,8 +113,6 @@ export async function translation(params: TranslationParameter) {
                     const { model, provider } = await input_select_model();
                     const divide_line = await input_divide_line();
                     const auto_retry = await input_auto_retry();
-                    const url_string = urls.slice(url_index).join(" ");
-                    const start_from = await input_start_from();
 
                     await translation({
                         model,
@@ -122,7 +121,7 @@ export async function translation(params: TranslationParameter) {
                         auto_retry,
                         divide_line,
                         sleep_ms: provider === "groq" ? 60_000 : undefined,
-                        start_from,
+                        start_from: url_index + 1,
                     });
                 })();
             }
@@ -181,6 +180,9 @@ export async function translateText(
 
 # 輸出要求：
 直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
+
+# 其他注意事項
+請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。
 
 ---
 ${fulltext}
