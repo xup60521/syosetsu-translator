@@ -63,7 +63,7 @@ export async function translation(params: TranslationParameter) {
                     .replace(/(\r\n|\r|\n)/g, "\n\n");
             } catch (err) {
                 b1.stop();
-                console.error("An error occur when translating " + url);
+                console.error("\nAn error occurred when translating " + url);
                 throw new Error(err as any);
             }
 
