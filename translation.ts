@@ -17,7 +17,7 @@ import {
     input_retry_or_stop,
     input_start_from,
 } from "./utils";
-import { url_string_preprocess } from "./url_string_handler";
+import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
 
 const multibar = new cliProgress.MultiBar(
@@ -40,10 +40,11 @@ type TranslationParameter = {
 };
 
 export async function translation(params: TranslationParameter) {
-    const { sleep_ms, model, provider, divide_line, url_string, start_from } =
+    const { sleep_ms, model, divide_line, url_string, start_from } =
         params;
+    
     let { auto_retry } = params;
-    const urls = await url_string_preprocess(url_string);
+    const urls = await decompose_url(url_string);
 
     let b1 = multibar.create(urls.length, 0);
 
@@ -51,7 +52,7 @@ export async function translation(params: TranslationParameter) {
     while (url_index < urls.length) {
         try {
             const novel_url = urls[url_index];
-            const [{ series_title, paragraphArr, title, indexPrefix, url }] =
+            const [{ series_title, paragraphArr, title, indexPrefix, url, tags }] =
                 await handler(novel_url);
             b1.update(url_index + 1, { filename: url });
             let sectionedText = "";
@@ -75,8 +76,9 @@ export async function translation(params: TranslationParameter) {
     
     Model: ${model.modelId}
     Devide Line: ${divide_line}
+    Tags: ${tags?.join(", ") ?? ""}
     
-    ` + (await replace_words(sectionedText));
+    ` + (await replace_words(sectionedText, tags));
 
             await handle_file({ series_title, title, indexPrefix, content });
 

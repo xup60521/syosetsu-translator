@@ -1,14 +1,20 @@
-import type { CheerioAPI } from "cheerio";
+
 import { replace_keywords } from "./replace_keywords";
 import { promises as fs } from "fs";
 import path from "path";
 
-export async function replace_words(str: string) {
-    for (const [key, value] of Object.entries(replace_keywords).sort(
-        (a, b) => b[0].length - a[0].length
-    ) as [string, string][]) {
-        str = str.replaceAll(key, value);
-    }
+export async function replace_words(str: string, tags?: string[]): Promise<string> {
+    const novelSeriesList = Object.keys(replace_keywords);
+    novelSeriesList.forEach(series_name => {
+        if (tags?.includes(series_name)) {
+            for (const [key, value] of Object.entries(replace_keywords[series_name]).sort(
+                (a, b) => b[0].length - a[0].length
+            ) as [string, string][]) {
+                str = str.replaceAll(key, value);
+            }
+            
+        }
+    })
     return str;
 }
 
