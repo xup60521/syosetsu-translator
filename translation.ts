@@ -17,7 +17,7 @@ import {
     input_retry_or_stop,
     input_start_from,
 } from "./utils";
-import { url_string_handler } from "./url_string_handler";
+import { url_string_preprocess } from "./url_string_handler";
 import { handle_file } from "./handle_file";
 
 const multibar = new cliProgress.MultiBar(
@@ -43,7 +43,7 @@ export async function translation(params: TranslationParameter) {
     const { sleep_ms, model, provider, divide_line, url_string, start_from } =
         params;
     let { auto_retry } = params;
-    const urls = await url_string_handler(url_string);
+    const urls = await url_string_preprocess(url_string);
 
     let b1 = multibar.create(urls.length, 0);
 

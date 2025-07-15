@@ -1,4 +1,4 @@
-export async function url_string_handler(url_string: string) {
+export async function url_string_preprocess(url_string: string) {
     const urls = url_string.split(" ");
     const novel_urls: string[] = [];
     for await (const url of urls) {

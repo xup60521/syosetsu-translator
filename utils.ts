@@ -38,7 +38,8 @@ export async function input_retry_or_stop() {
             {
                 name: "Retry (auto-retry)",
                 value: "auto-retry",
-            },{
+            },
+            {
                 name: "Skip this one",
                 value: "skip",
             },
@@ -115,6 +116,7 @@ export async function input_select_model() {
         const model = await select({
             message: "Please select a model",
             choices: [
+                // 1.5
                 {
                     name: "gemini-1.5-flash-latest",
                     value: "gemini-1.5-flash-latest",
@@ -123,13 +125,10 @@ export async function input_select_model() {
                     name: "gemini-1.5-flash-8b-latest",
                     value: "gemini-1.5-flash-8b-latest",
                 },
+                // 2.0
                 {
                     name: "gemini-2.0-flash-thinking-exp-01-21",
                     value: "gemini-2.0-flash-thinking-exp-01-21",
-                },
-                {
-                    name: "gemini-2.0-pro-exp-02-05",
-                    value: "gemini-2.0-pro-exp-02-05",
                 },
                 {
                     name: "gemini-2.0-flash-preview-image-generation",
@@ -144,9 +143,10 @@ export async function input_select_model() {
                     value: "gemini-2.0-flash-lite",
                 },
                 {
-                    name: "gemini-2.5-pro-exp-03-25",
-                    value: "gemini-2.5-pro-exp-03-25",
+                    name: "gemini-2.0-pro-exp-02-05",
+                    value: "gemini-2.0-pro-exp-02-05",
                 },
+                // 2.5
                 {
                     name: "gemini-2.5-flash",
                     value: "gemini-2.5-flash",
@@ -154,7 +154,24 @@ export async function input_select_model() {
                 {
                     name: "gemini-2.5-flash-lite-preview-06-17",
                     value: "gemini-2.5-flash-lite-preview-06-17",
-                }
+                },
+                {
+                    name: "gemini-2.5-pro",
+                    value: "gemini-2.5-pro",
+                },
+                // Gemma 3 & 3n
+                {
+                    name: "gemma-3n-e4b-it",
+                    value: "gemma-3n-e4b-it",
+                },
+                {
+                    name: "gemma-3-12b-it",
+                    value: "gemma-3-12b-it",
+                },
+                {
+                    name: "gemma-3-27b-it",
+                    value: "gemma-3-27b-it",
+                },
             ],
         });
         return { model: google(model), provider: "google" };
@@ -239,4 +256,24 @@ export async function input_start_from() {
                 })
             )
         );
+}
+
+export function getDefaultModelWaitTime(props: {
+    model: LanguageModelV1;
+    provider: string;
+}) {
+    const { model, provider } = props;
+    if (provider === "groq") {
+        return 60_000; // 60 seconds
+    }
+    if (
+        provider === "google" &&
+        model.modelId === "gemini-2.5-flash-lite-preview-06-17"
+    ) {
+        return 4_000; // 4 seconds
+    }
+    if (model.modelId.includes("gemma")) {
+        return 2_000; // 2 seconds
+    }
+    return undefined; // No wait time
 }

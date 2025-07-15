@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 
 import path from "node:path";
 import {
+    getDefaultModelWaitTime,
     input_auto_retry,
     input_divide_line,
     input_select_model,
@@ -63,7 +64,7 @@ async function translate_from_URL() {
         url_string,
         auto_retry,
         divide_line,
-        sleep_ms: provider === "groq" ? 60_000 : undefined,
+        sleep_ms: getDefaultModelWaitTime({ model, provider }),
         start_from,
     });
 }
