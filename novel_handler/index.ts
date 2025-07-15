@@ -9,9 +9,17 @@ export type ResultType = {
     paragraphArr: string[];
     series_title: string;
     url: string;
+    tags?: string[];
 }[];
 
-export default async function handler(url: string) {
+/**
+ * This function takes an URL as input and extracts the novel detail.
+ *
+ * @param url - The URL of the novel to extract details from.
+ * @returns A promise that resolves to the extracted novel details as a ResultType.
+ * @throws Will throw an error if no handler is defined for the given URL origin.
+ */
+export default async function handler(url: string): Promise<ResultType> {
     
     const urlobj = new URL(url);
     let result: ResultType | undefined = undefined;
@@ -27,7 +35,3 @@ export default async function handler(url: string) {
     return result;
 }
 
-
-export async function decompose_series_into_novels() {
-    
-}

@@ -3,11 +3,11 @@ import type { ResultType } from ".";
 
 const regex = /[<>:"/\\|?*]/g;
 
-export async function pixiv_handler(urlobj: URL) {
+export async function pixiv_handler(urlobj: URL): Promise<ResultType> {
     return single_handler(urlobj);
 }
 
-async function single_handler(urlobj: URL) {
+async function single_handler(urlobj: URL): Promise<ResultType> {
     let this_novel_data;
     if (urlobj.pathname.includes("/novel/show")) {
         const novel_id = urlobj.searchParams.get("id");
@@ -22,9 +22,12 @@ async function single_handler(urlobj: URL) {
     // console.log(this_novel_data)
     const paragraphs = this_novel_data.body.content;
     const paragraphArr = paragraphs.split("\n");
+    const tags = this_novel_data.body?.tags?.tags?.map(
+        ({ tag }: { tag: string }) => tag
+    ) as string[] | undefined;
     const title = this_novel_data.body.title;
     const series_title = this_novel_data.body?.seriesNavData?.title ?? title;
-    const author = this_novel_data.body?.userName	
+    const author = this_novel_data.body?.userName;
     const indexPrefix =
         series_title + " " + (this_novel_data.body?.seriesNavData?.order ?? "");
 
@@ -35,6 +38,7 @@ async function single_handler(urlobj: URL) {
             paragraphArr,
             series_title: (series_title + " " + author).replaceAll(regex, " "),
             url: urlobj.href,
+            tags: tags,
         },
     ];
 }
