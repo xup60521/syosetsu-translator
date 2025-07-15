@@ -71,12 +71,12 @@ export async function translation(params: TranslationParameter) {
             const content =
                 `# ${title} 
     
-    URL: ${url}
-    ${indexPrefix}
-    
-    Model: ${model.modelId}
-    Devide Line: ${divide_line}
-    Tags: ${tags?.join(", ") ?? ""}
+URL: ${url}
+${indexPrefix}
+
+Model: ${model.modelId}
+Devide Line: ${divide_line}
+Tags: ${tags?.join(", ") ?? ""}
     
     ` + (await replace_words(sectionedText, tags));
 
