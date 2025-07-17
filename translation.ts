@@ -1,14 +1,7 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { ollama } from "ollama-ai-provider";
-import { createOllama } from "ollama-ai-provider";
-import { generateText, type LanguageModelV1 } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
-import { load } from "cheerio";
+
 import { replace_words } from "./replace";
-import fs from "node:fs/promises";
 import handler from "./novel_handler";
 import cliProgress from "cli-progress";
-import { select } from "@inquirer/prompts";
 import {
     input_auto_retry,
     input_divide_line,
@@ -19,6 +12,7 @@ import {
 } from "./utils";
 import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
+import { streamText, type LanguageModelV1 } from "ai";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -157,21 +151,18 @@ export async function translateText(
 ) {
     const numberOfLine = paragraphArr.length;
     const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
-    // console.log(numberOfLine,divide_line, numberOfSections)
     const buf: string[][] = [];
 
     for (let i = 0; i < numberOfSections; i++) {
-        // console.log(divide_line * i, divide_line * (i + 1));
         buf.push(paragraphArr.slice(divide_line * i, divide_line * (i + 1)));
     }
 
-    const bufText = [];
+    const bufText: string[] = [];
     for await (const section of buf.filter((d) => d.length !== 0)) {
         const fulltext = section.filter((d) => d !== "").join("\n");
-        const { text } = await generateText({
+        const stream = await streamText({
             model,
             seed: Math.floor(10000 * Math.random()),
-
             prompt: `
 # 指令：
 請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
@@ -191,6 +182,11 @@ ${fulltext}
 ---
 `,
         });
+
+        let text = "";
+        for await (const delta of stream.textStream) {
+            text += delta;
+        }
         bufText.push(text);
     }
     return bufText;
