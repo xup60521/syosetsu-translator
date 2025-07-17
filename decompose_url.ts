@@ -17,12 +17,12 @@ export async function decompose_url(url_string: string) {
     for await (const url of urls) {
         const urlobj = new URL(url);
         if (urlobj.host === "www.pixiv.net") {
-            const processed_urls = await handle_pixiv(urlobj);
+            const processed_urls = await decompose_pixiv(urlobj);
             if (processed_urls) {
                 novel_urls.push(...processed_urls);
             }
         } else if (urlobj.host === "ncode.syosetu.com" ) {
-            const processed_urls = await handle_syosetsu(urlobj);
+            const processed_urls = await decompose_syosetsu(urlobj);
             if (processed_urls) {
                 novel_urls.push(...processed_urls);
             }
@@ -43,7 +43,7 @@ export async function decompose_url(url_string: string) {
  * @param url - The URL object representing either a syosetsu novel list page or a direct episode page.
  * @returns A promise that resolves to an array of strings, each representing a decomposed episode URL.
  */
-async function handle_syosetsu(url: URL) {
+async function decompose_syosetsu(url: URL) {
     const decomposed_urls = [] as string[];
 
     const pathParts = url.pathname.split("/").filter(Boolean);
@@ -90,7 +90,7 @@ async function handle_syosetsu(url: URL) {
  * @param url - The URL object to process.
  * @returns A promise that resolves to an array of URLs for the novels in the series or the individual novel URL.
  */
-async function handle_pixiv(url: URL): Promise<string[]> {
+async function decompose_pixiv(url: URL): Promise<string[]> {
     const seriesMatch = url.pathname.match(/^\/novel\/series\/(\d+)\/?$/);
     if (seriesMatch) {
         const series_id = seriesMatch[1];
