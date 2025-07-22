@@ -183,11 +183,15 @@ ${fulltext}
 `,
         });
 
-        let text = "";
+        let streamedText = "";
         for await (const delta of stream.textStream) {
-            text += delta;
+            streamedText += delta;
         }
-        bufText.push(text);
+        const reg = /^[\t\n ]*$/;
+        if (reg.test(streamedText)) {
+            throw new Error("The translation result is empty, please check your model or input.");
+        }
+        bufText.push(streamedText);
     }
     return bufText;
 }
