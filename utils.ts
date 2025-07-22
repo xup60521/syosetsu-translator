@@ -5,27 +5,15 @@ import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { select, input, checkbox, confirm } from "@inquirer/prompts";
 import { z } from "zod";
+import {
+    providerOption,
+    googleModelList,
+    openaiModelList,
+    groqModelList,
+    openRouterModelList,
+} from "./model_list";
 
 const default_divide_line = 30;
-
-const providerOption = [
-    {
-        name: "Google",
-        value: "google",
-    },
-    {
-        name: "OpenAI",
-        value: "openai",
-    },
-    {
-        name: "Groq",
-        value: "groq",
-    },
-    {
-        name: "OpenRouter",
-        value: "openrouter",
-    },
-];
 
 export async function input_retry_or_stop() {
     return await select({
@@ -115,64 +103,7 @@ export async function input_select_model() {
         });
         const model = await select({
             message: "Please select a model",
-            choices: [
-                // 1.5
-                {
-                    name: "gemini-1.5-flash-latest",
-                    value: "gemini-1.5-flash-latest",
-                },
-                {
-                    name: "gemini-1.5-flash-8b-latest",
-                    value: "gemini-1.5-flash-8b-latest",
-                },
-                // 2.0
-                {
-                    name: "gemini-2.0-flash-thinking-exp-01-21",
-                    value: "gemini-2.0-flash-thinking-exp-01-21",
-                },
-                {
-                    name: "gemini-2.0-flash-preview-image-generation",
-                    value: "gemini-2.0-flash-preview-image-generation",
-                },
-                {
-                    name: "gemini-2.0-flash",
-                    value: "gemini-2.0-flash",
-                },
-                {
-                    name: "gemini-2.0-flash-lite",
-                    value: "gemini-2.0-flash-lite",
-                },
-                {
-                    name: "gemini-2.0-pro-exp-02-05",
-                    value: "gemini-2.0-pro-exp-02-05",
-                },
-                // 2.5
-                {
-                    name: "gemini-2.5-flash",
-                    value: "gemini-2.5-flash",
-                },
-                {
-                    name: "gemini-2.5-flash-lite-preview-06-17",
-                    value: "gemini-2.5-flash-lite-preview-06-17",
-                },
-                {
-                    name: "gemini-2.5-pro",
-                    value: "gemini-2.5-pro",
-                },
-                // Gemma 3 & 3n
-                {
-                    name: "gemma-3n-e4b-it",
-                    value: "gemma-3n-e4b-it",
-                },
-                {
-                    name: "gemma-3-12b-it",
-                    value: "gemma-3-12b-it",
-                },
-                {
-                    name: "gemma-3-27b-it",
-                    value: "gemma-3-27b-it",
-                },
-            ],
+            choices: googleModelList,
         });
         return { model: google(model), provider: "google" };
     } else if (provider === "openai") {
@@ -182,13 +113,7 @@ export async function input_select_model() {
         });
         const model = await select({
             message: "Please select a model",
-            choices: [
-                { name: "o3-mini-2025-01-31", value: "o3-mini-2025-01-31" },
-                {
-                    name: "gpt-4o-mini-2024-07-18",
-                    value: "gpt-4o-mini-2024-07-18",
-                },
-            ],
+            choices: openaiModelList,
         });
         return { model: openai(model) as LanguageModelV1, provider: "openai" };
     } else if (provider === "groq") {
@@ -197,37 +122,19 @@ export async function input_select_model() {
         });
         const model = await select({
             message: "Please select a model",
-            choices: [
-                {
-                    name: "llama-3.3-70b-versatile",
-                    value: "llama-3.3-70b-versatile",
-                },
-                {
-                    name: "llama-3.1-8b-instant",
-                    value: "llama-3.1-8b-instant",
-                },
-                {
-                    name: "meta-llama/llama-4-scout-17b-16e-instruct",
-                    value: "meta-llama/llama-4-scout-17b-16e-instruct",
-                },
-            ],
+            choices: groqModelList,
         });
         return { model: groq(model) as LanguageModelV1, provider: "groq" };
     } else if (provider === "openrouter") {
         const openrouter = createOpenRouter({
             apiKey: process.env.OPENROUTER_KEY,
         });
-        const model = await select({
+        const modelId = await select({
             message: "Please select a model",
-            choices: [
-                {
-                    name: "openrouter/optimus-alpha",
-                    value: "openrouter/optimus-alpha",
-                },
-            ],
+            choices: openRouterModelList,
         });
         return {
-            model: openrouter.chat(model) as LanguageModelV1,
+            model: openrouter.languageModel(modelId) as LanguageModelV1,
             provider: "openrouter",
         };
     } else {
@@ -274,6 +181,10 @@ export function getDefaultModelWaitTime(props: {
     }
     if (model.modelId.includes("gemma")) {
         return 2_000; // 2 seconds
+    }
+    if (model.modelId.includes("qwen/qwq-32b:free")) {
+        // 1 min
+        return 60_000; // 60 seconds
     }
     return undefined; // No wait time
 }
