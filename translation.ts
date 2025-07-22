@@ -20,7 +20,7 @@ const multibar = new cliProgress.MultiBar(
         hideCursor: true,
         format: " {bar} | {filename} | {value}/{total}",
     },
-    cliProgress.Presets.shades_grey
+    cliProgress.Presets.shades_classic
 );
 
 type TranslationParameter = {
@@ -157,13 +157,23 @@ export async function translateText(
         buf.push(paragraphArr.slice(divide_line * i, divide_line * (i + 1)));
     }
 
+    // Create a single progress bar for sections
+    const sectionBar = multibar.create(
+        buf.filter((d) => d.length !== 0).length,
+        0,
+        { filename: "Translating Sections" },
+        cliProgress.Presets.rect
+    );
+
     const bufText: string[] = [];
-    for await (const section of buf.filter((d) => d.length !== 0)) {
-        const fulltext = section.filter((d) => d !== "").join("\n");
-        const stream = await streamText({
-            model,
-            seed: Math.floor(10000 * Math.random()),
-            prompt: `
+    let sectionIndex = 0;
+    try {
+        for await (const section of buf.filter((d) => d.length !== 0)) {
+            const fulltext = section.filter((d) => d !== "").join("\n");
+            const stream = streamText({
+                model,
+                seed: Math.floor(10000 * Math.random()),
+                prompt: `
 # 指令：
 請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
 
@@ -181,17 +191,24 @@ export async function translateText(
 ${fulltext}
 ---
 `,
-        });
+            });
 
-        let streamedText = "";
-        for await (const delta of stream.textStream) {
-            streamedText += delta;
+            let streamedText = "";
+            for await (const delta of stream.textStream) {
+                streamedText += delta;
+            }
+            const reg = /^[\t\n ]*$/;
+            if (reg.test(streamedText)) {
+                throw new Error("The translation result is empty, please check your model or input.");
+            }
+            bufText.push(streamedText);
+            sectionIndex++;
+            sectionBar.update(sectionIndex);
         }
-        const reg = /^[\t\n ]*$/;
-        if (reg.test(streamedText)) {
-            throw new Error("The translation result is empty, please check your model or input.");
-        }
-        bufText.push(streamedText);
+        sectionBar.stop();
+    } catch (err) {
+        sectionBar.stop();
+        throw err;
     }
     return bufText;
 }
