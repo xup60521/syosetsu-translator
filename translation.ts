@@ -206,8 +206,11 @@ ${fulltext}
             sectionBar.update(sectionIndex);
         }
         sectionBar.stop();
+        multibar.remove(sectionBar);
+
     } catch (err) {
         sectionBar.stop();
+        multibar.remove(sectionBar);
         throw err;
     }
     return bufText;
