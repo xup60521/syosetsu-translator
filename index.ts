@@ -1,9 +1,8 @@
-import { select, input, checkbox, confirm } from "@inquirer/prompts";
-import { replace_words, replaceTextInFiles } from "./replace";
-import { translateText, translation } from "./translation";
-import fs from "node:fs/promises";
+import { select } from "@inquirer/prompts";
+import { replaceTextInFiles } from "./replace";
+import { translation } from "./translation";
 
-import path from "node:path";
+import 'dotenv/config'
 import {
     getDefaultModelWaitTime,
     input_auto_retry,

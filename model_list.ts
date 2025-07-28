@@ -18,15 +18,15 @@ export const providerOption = [
 ];
 
 export const googleModelList = [
-    // 1.5
-    {
-        name: "gemini-1.5-flash-latest",
-        value: "gemini-1.5-flash-latest",
-    },
-    {
-        name: "gemini-1.5-flash-8b-latest",
-        value: "gemini-1.5-flash-8b-latest",
-    },
+    // // 1.5
+    // {
+    //     name: "gemini-1.5-flash-latest",
+    //     value: "gemini-1.5-flash-latest",
+    // },
+    // {
+    //     name: "gemini-1.5-flash-8b-latest",
+    //     value: "gemini-1.5-flash-8b-latest",
+    // },
     // 2.0
     {
         name: "gemini-2.0-flash-thinking-exp-01-21",

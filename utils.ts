@@ -171,13 +171,10 @@ export function getDefaultModelWaitTime(props: {
 }) {
     const { model, provider } = props;
     if (provider === "groq") {
-        return 60_000; // 60 seconds
+        return 2_000; // 2 seconds
     }
-    if (
-        provider === "google" &&
-        model.modelId === "gemini-2.5-flash-lite"
-    ) {
-        return 4_000; // 4 seconds
+    if (model.modelId === "gemini-2.5-flash-lite") {
+        return 10_000; // 10 seconds
     }
     if (model.modelId.includes("gemma")) {
         return 2_000; // 2 seconds
@@ -191,7 +188,7 @@ export function getDefaultModelWaitTime(props: {
 
 export function checkContentIfTranslatedOrNot({
     originalContent,
-    translatedContent
+    translatedContent,
 }: {
     originalContent: string;
     translatedContent: string;

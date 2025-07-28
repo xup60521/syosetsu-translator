@@ -1,4 +1,3 @@
-
 import { replace_words } from "./replace";
 import handler from "./novel_handler";
 import cliProgress from "cli-progress";
@@ -9,11 +8,12 @@ import {
     input_url_string,
     input_retry_or_stop,
     input_start_from,
+    getDefaultModelWaitTime,
 } from "./utils";
 import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
 import { streamText, type LanguageModelV1 } from "ai";
-import stringSimilarity from "string-similarity-js";
+import { stringSimilarity } from "string-similarity-js";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -35,9 +35,8 @@ type TranslationParameter = {
 };
 
 export async function translation(params: TranslationParameter) {
-    const { sleep_ms, model, divide_line, url_string, start_from } =
-        params;
-    
+    const { sleep_ms, model, divide_line, url_string, start_from } = params;
+
     let { auto_retry } = params;
     const urls = await decompose_url(url_string);
 
@@ -47,13 +46,19 @@ export async function translation(params: TranslationParameter) {
     while (url_index < urls.length) {
         try {
             const novel_url = urls[url_index];
-            const [{ series_title, paragraphArr, title, indexPrefix, url, tags }] =
-                await handler(novel_url);
+            const [
+                { series_title, paragraphArr, title, indexPrefix, url, tags },
+            ] = await handler(novel_url);
             b1.update(url_index + 1, { filename: url });
             let sectionedText = "";
             try {
                 sectionedText = (
-                    await translateText(paragraphArr, divide_line, model)
+                    await translateText(
+                        paragraphArr,
+                        divide_line,
+                        model,
+                        sleep_ms
+                    )
                 )
                     .join("\n")
                     .replace(/(\r\n|\r|\n)/g, "\n\n");
@@ -77,10 +82,6 @@ Tags: ${tags?.join(", ") ?? ""}
 
             await handle_file({ series_title, title, indexPrefix, content });
 
-            if (sleep_ms) {
-                await sleep(sleep_ms);
-            }
-
             url_index++;
         } catch (err) {
             console.error(err);
@@ -102,7 +103,7 @@ Tags: ${tags?.join(", ") ?? ""}
                 continue;
             } else if (result === "stop") {
                 console.error("Operation terminated");
-                break
+                break;
             } else if (result === "change_provider") {
                 multibar.stop();
 
@@ -117,7 +118,7 @@ Tags: ${tags?.join(", ") ?? ""}
                         url_string,
                         auto_retry,
                         divide_line,
-                        sleep_ms: provider === "groq" ? 60_000 : undefined,
+                        sleep_ms: getDefaultModelWaitTime({ model, provider }),
                         start_from: url_index + 1,
                     });
                 })();
@@ -139,7 +140,7 @@ Tags: ${tags?.join(", ") ?? ""}
             url_string,
             auto_retry,
             divide_line,
-            sleep_ms: provider === "groq" ? 60_000 : undefined,
+            sleep_ms: getDefaultModelWaitTime({ model, provider }),
             start_from,
         });
     })();
@@ -148,7 +149,8 @@ Tags: ${tags?.join(", ") ?? ""}
 export async function translateText(
     paragraphArr: string[],
     divide_line: number,
-    model: LanguageModelV1
+    model: LanguageModelV1,
+    sleep_ms?: number
 ) {
     const numberOfLine = paragraphArr.length;
     const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
@@ -167,7 +169,7 @@ export async function translateText(
     );
 
     const bufText: string[] = [];
-    
+
     try {
         let filteredSections = buf.filter((d) => d.length !== 0);
         let sectionIndex = 0;
@@ -204,21 +206,29 @@ export async function translateText(
             }
             const reg = /^[\t\n ]*$/;
             if (reg.test(streamedText)) {
-                throw new Error("The translation result is empty, please check your model or input.");
+                throw new Error(
+                    "The translation result is empty, please check your model or input."
+                );
             }
             // if the translated and original content is too similar, re-translate this section
             if (stringSimilarity(streamedText, fulltext) > 0.9) {
-                console.warn("The translation result is too similar to the original content, re-translating this section...");
-                sectionBar.update(sectionIndex + 1, { filename: "Re-translating Section" });
+                console.warn(
+                    "The translation result is too similar to the original content, re-translating this section..."
+                );
+                sectionBar.update(sectionIndex + 1, {
+                    filename: "Re-translating Section",
+                });
                 continue;
             }
             bufText.push(streamedText);
             sectionBar.update(sectionIndex + 1);
+            if (sleep_ms) {
+                await sleep(sleep_ms);
+            }
             sectionIndex++;
         }
         sectionBar.stop();
         multibar.remove(sectionBar);
-
     } catch (err) {
         sectionBar.stop();
         throw err;
