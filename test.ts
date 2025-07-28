@@ -7,7 +7,7 @@ async function main() {
     });
 
     const model = openrouter.languageModel(
-        "qwen/qwq-32b:free"
+        "deepseek/deepseek-chat-v3-0324:free"
     );
     const { text } = await generateText({
         model: model,

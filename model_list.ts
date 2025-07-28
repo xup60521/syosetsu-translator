@@ -54,8 +54,8 @@ export const googleModelList = [
         value: "gemini-2.5-flash",
     },
     {
-        name: "gemini-2.5-flash-lite-preview-06-17",
-        value: "gemini-2.5-flash-lite-preview-06-17",
+        name: "gemini-2.5-flash-lite",
+        value: "gemini-2.5-flash-lite",
     },
     {
         name: "gemini-2.5-pro",
@@ -119,6 +119,11 @@ export const openRouterModelList = [
         name: "moonshotai/kimi-k2:free",
         value: "moonshotai/kimi-k2:free",
     },
+    // deepseek/deepseek-chat-v3-0324:free
+    {
+        name: "deepseek/deepseek-chat-v3-0324:free",
+        value: "deepseek/deepseek-chat-v3-0324:free",
+    },
     // deepseek/deepseek-r1-distill-llama-70b:free
     {
         name: "deepseek/deepseek-r1-distill-llama-70b:free",
@@ -129,4 +134,5 @@ export const openRouterModelList = [
         name: "qwen/qwq-32b:free",
         value: "qwen/qwq-32b:free",
     },
+    
 ];
