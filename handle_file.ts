@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import * as fs from "node:fs/promises";
 export async function handle_file({
     series_title,
     title,
@@ -10,8 +10,14 @@ export async function handle_file({
     indexPrefix: string;
     content: string;
 }) {
-    if (!(await fs.exists(`./output/${series_title}`))) {
+    try {
         await fs.mkdir(`./output/${series_title}`, { recursive: true });
+    } catch (error) {
+        console.error(
+            `Error creating directory "./output/${series_title}":`,
+            error
+        );
+        // Handle the error appropriately, perhaps re-throw if it's critical
     }
 
     fs.writeFile(

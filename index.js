@@ -50817,15 +50817,18 @@ async function decompose_pixiv(url) {
 }
 
 // handle_file.ts
-import fs2 from "node:fs/promises";
+import * as fs2 from "node:fs/promises";
 async function handle_file({
   series_title,
   title,
   indexPrefix,
   content
 }) {
-  if (!await fs2.exists(`./output/${series_title}`)) {
+  try {
     await fs2.mkdir(`./output/${series_title}`, { recursive: true });
+    console.log(`Directory "./output/${series_title}" ensured to exist.`);
+  } catch (error) {
+    console.error(`Error creating directory "./output/${series_title}":`, error);
   }
   fs2.writeFile(`./output/${series_title}/${indexPrefix}-${title}_translated.txt`, content);
 }
