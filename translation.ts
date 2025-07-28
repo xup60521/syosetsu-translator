@@ -210,7 +210,6 @@ ${fulltext}
 
     } catch (err) {
         sectionBar.stop();
-        multibar.remove(sectionBar);
         throw err;
     }
     return bufText;
