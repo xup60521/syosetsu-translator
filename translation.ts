@@ -13,6 +13,7 @@ import {
 import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
 import { streamText, type LanguageModelV1 } from "ai";
+import stringSimilarity from "string-similarity-js";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -166,31 +167,35 @@ export async function translateText(
     );
 
     const bufText: string[] = [];
-    let sectionIndex = 0;
+    
     try {
-        for await (const section of buf.filter((d) => d.length !== 0)) {
+        let filteredSections = buf.filter((d) => d.length !== 0);
+        let sectionIndex = 0;
+        while (sectionIndex < filteredSections.length) {
+            const section = filteredSections[sectionIndex];
             const fulltext = section.filter((d) => d !== "").join("\n");
             const stream = streamText({
                 model,
                 seed: Math.floor(10000 * Math.random()),
+                temperature: 0.1,
                 prompt: `
-# 指令：
-請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
+        # 指令：
+        請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
 
-# 翻譯規則：
-1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。
-2.  其餘內容需翻譯成通順自然的台灣繁體中文。
+        # 翻譯規則：
+        1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。
+        2.  其餘內容需翻譯成通順自然的台灣繁體中文。
 
-# 輸出要求：
-直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
+        # 輸出要求：
+        直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
 
-# 其他注意事項
-請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。
+        # 其他注意事項
+        請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。
 
----
-${fulltext}
----
-`,
+        ---
+        ${fulltext}
+        ---
+        `,
             });
 
             let streamedText = "";
@@ -201,9 +206,15 @@ ${fulltext}
             if (reg.test(streamedText)) {
                 throw new Error("The translation result is empty, please check your model or input.");
             }
+            // if the translated and original content is too similar, re-translate this section
+            if (stringSimilarity(streamedText, fulltext) > 0.9) {
+                console.warn("The translation result is too similar to the original content, re-translating this section...");
+                sectionBar.update(sectionIndex + 1, { filename: "Re-translating Section" });
+                continue;
+            }
             bufText.push(streamedText);
+            sectionBar.update(sectionIndex + 1);
             sectionIndex++;
-            sectionBar.update(sectionIndex);
         }
         sectionBar.stop();
         multibar.remove(sectionBar);

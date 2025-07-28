@@ -175,7 +175,7 @@ export function getDefaultModelWaitTime(props: {
     }
     if (
         provider === "google" &&
-        model.modelId === "gemini-2.5-flash-lite-preview-06-17"
+        model.modelId === "gemini-2.5-flash-lite"
     ) {
         return 4_000; // 4 seconds
     }
@@ -187,4 +187,18 @@ export function getDefaultModelWaitTime(props: {
         return 60_000; // 60 seconds
     }
     return undefined; // No wait time
+}
+
+export function checkContentIfTranslatedOrNot({
+    originalContent,
+    translatedContent
+}: {
+    originalContent: string;
+    translatedContent: string;
+}) {
+    // Create a regex that delete all white-space, newline, tabs, etc. Only keep the english, japanese, and chinese characters.
+    const regex = /[^\u4e00-\u9fa5a-zA-Z0-9]+/g;
+    const original = originalContent.replace(regex, "");
+    const translated = translatedContent.replace(regex, "");
+    return original !== translated;
 }
