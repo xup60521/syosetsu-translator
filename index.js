@@ -27256,6 +27256,8 @@ var replace_keywords = {
     リィンズベルフィード: "琳姿貝兒菲"
   }
 };
+replace_keywords["#本好き"] = replace_keywords["本好きの下剋上"];
+replace_keywords["本好き"] = replace_keywords["本好きの下剋上"];
 
 // replace.ts
 import { promises as fs } from "fs";
@@ -27269,6 +27271,13 @@ async function replace_words(str, tags) {
       }
     }
   });
+  if (!tags || tags.length === 0) {
+    for (const [series_name, keywords] of Object.entries(replace_keywords)) {
+      for (const [key2, value] of Object.entries(keywords).sort((a, b) => b[0].length - a[0].length)) {
+        str = str.replaceAll(key2, value);
+      }
+    }
+  }
   return str;
 }
 async function replaceTextInFiles() {
@@ -50826,7 +50835,6 @@ async function handle_file({
 }) {
   try {
     await fs2.mkdir(`./output/${series_title}`, { recursive: true });
-    console.log(`Directory "./output/${series_title}" ensured to exist.`);
   } catch (error) {
     console.error(`Error creating directory "./output/${series_title}":`, error);
   }
