@@ -15,6 +15,16 @@ export async function replace_words(str: string, tags?: string[]): Promise<strin
             
         }
     })
+    // If no tags are provided, replace all keywords
+    if (!tags || tags.length === 0) {
+        for (const [series_name, keywords] of Object.entries(replace_keywords)) {
+            for (const [key, value] of Object.entries(keywords).sort(
+                (a, b) => b[0].length - a[0].length
+            ) as [string, string][]) {
+                str = str.replaceAll(key, value);
+            }
+        }
+    }
     return str;
 }
 

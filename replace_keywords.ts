@@ -1,4 +1,4 @@
-export const replace_keywords: Record<string, Record<string, string>> = {
+const replace_keywords: Record<string, Record<string, string>> = {
     本好きの下剋上: {
         東屋: "涼亭",
         ハンネローレ: "漢娜蘿蕾",
@@ -387,3 +387,8 @@ export const replace_keywords: Record<string, Record<string, string>> = {
         リィンズベルフィード: "琳姿貝兒菲",
     },
 } as const;
+
+replace_keywords["#本好き"] = replace_keywords["本好きの下剋上"];
+replace_keywords["本好き"] = replace_keywords["本好きの下剋上"];
+
+export { replace_keywords };
