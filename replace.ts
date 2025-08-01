@@ -1,30 +1,50 @@
-
 import { replace_keywords } from "./replace_keywords";
 import { promises as fs } from "fs";
 import path from "path";
 
-export async function replace_words(str: string, tags?: string[]): Promise<string> {
+type IdentifyProperties = {
+    series_title: string;
+    title: string;
+    tags?: string[];
+};
+
+export async function replace_words(
+    str: string,
+    identify_properties?: IdentifyProperties
+): Promise<string> {
+    const { series_title, title, tags } = identify_properties || {};
     const novelSeriesList = Object.keys(replace_keywords);
-    novelSeriesList.forEach(series_name => {
+    novelSeriesList.forEach((series_name) => {
         if (tags?.includes(series_name)) {
-            for (const [key, value] of Object.entries(replace_keywords[series_name]).sort(
-                (a, b) => b[0].length - a[0].length
-            ) as [string, string][]) {
+            // check if series_name is in tags
+            for (const [key, value] of Object.entries(
+                replace_keywords[series_name]
+            ).sort((a, b) => b[0].length - a[0].length) as [string, string][]) {
                 str = str.replaceAll(key, value);
             }
-            
-        }
-    })
-    // If no tags are provided, replace all keywords
-    if (!tags || tags.length === 0) {
-        for (const [series_name, keywords] of Object.entries(replace_keywords)) {
-            for (const [key, value] of Object.entries(keywords).sort(
-                (a, b) => b[0].length - a[0].length
-            ) as [string, string][]) {
+        } else if (series_title?.includes(series_name)) {
+            // if series_title includes series_name, replace all keywords
+            for (const [key, value] of Object.entries(
+                replace_keywords[series_name]
+            ).sort((a, b) => b[0].length - a[0].length) as [string, string][]) {
+                str = str.replaceAll(key, value);
+            }
+        } else if (title?.includes(series_name)) {
+            // if title includes series_name, replace all keywords
+            for (const [key, value] of Object.entries(
+                replace_keywords[series_name]
+            ).sort((a, b) => b[0].length - a[0].length) as [string, string][]) {
+                str = str.replaceAll(key, value);
+            }
+        } else if (str.includes(series_name)) {
+            // if str includes series_name, replace all keywords
+            for (const [key, value] of Object.entries(
+                replace_keywords[series_name]
+            ).sort((a, b) => b[0].length - a[0].length) as [string, string][]) {
                 str = str.replaceAll(key, value);
             }
         }
-    }
+    });
     return str;
 }
 
