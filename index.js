@@ -27262,22 +27262,28 @@ replace_keywords["本好き"] = replace_keywords["本好きの下剋上"];
 // replace.ts
 import { promises as fs } from "fs";
 import path from "path";
-async function replace_words(str, tags) {
+async function replace_words(str, identify_properties) {
+  const { series_title, title, tags } = identify_properties || {};
   const novelSeriesList = Object.keys(replace_keywords);
   novelSeriesList.forEach((series_name) => {
     if (tags?.includes(series_name)) {
       for (const [key2, value] of Object.entries(replace_keywords[series_name]).sort((a, b) => b[0].length - a[0].length)) {
         str = str.replaceAll(key2, value);
       }
-    }
-  });
-  if (!tags || tags.length === 0) {
-    for (const [series_name, keywords] of Object.entries(replace_keywords)) {
-      for (const [key2, value] of Object.entries(keywords).sort((a, b) => b[0].length - a[0].length)) {
+    } else if (series_title?.includes(series_name)) {
+      for (const [key2, value] of Object.entries(replace_keywords[series_name]).sort((a, b) => b[0].length - a[0].length)) {
+        str = str.replaceAll(key2, value);
+      }
+    } else if (title?.includes(series_name)) {
+      for (const [key2, value] of Object.entries(replace_keywords[series_name]).sort((a, b) => b[0].length - a[0].length)) {
+        str = str.replaceAll(key2, value);
+      }
+    } else if (str.includes(series_name)) {
+      for (const [key2, value] of Object.entries(replace_keywords[series_name]).sort((a, b) => b[0].length - a[0].length)) {
         str = str.replaceAll(key2, value);
       }
     }
-  }
+  });
   return str;
 }
 async function replaceTextInFiles() {
@@ -50834,11 +50840,25 @@ async function handle_file({
   content
 }) {
   try {
-    await fs2.mkdir(`./output/${series_title}`, { recursive: true });
+    await ensureDir(`./output/${series_title}`);
   } catch (error) {
-    console.error(`Error creating directory "./output/${series_title}":`, error);
+    console.error(`Error ensuring directory "./output/${series_title}":`, error);
   }
   fs2.writeFile(`./output/${series_title}/${indexPrefix}-${title}_translated.txt`, content);
+}
+async function ensureDir(path2) {
+  try {
+    const stats = await fs2.stat(path2);
+    if (!stats.isDirectory()) {
+      throw new Error(`"${path2}" exists and is not a directory.`);
+    }
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      await fs2.mkdir(path2, { recursive: true });
+    } else {
+      throw err;
+    }
+  }
 }
 
 // ../../node_modules/zod-to-json-schema/dist/esm/Options.js
@@ -56071,7 +56091,7 @@ Model: ${model.modelId}
 Devide Line: ${divide_line}
 Tags: ${tags?.join(", ") ?? ""}
     
-    ` + await replace_words(sectionedText, tags);
+    ` + await replace_words(sectionedText, { series_title, title, tags });
       await handle_file({ series_title, title, indexPrefix, content });
       url_index++;
     } catch (err) {
