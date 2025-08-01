@@ -11,17 +11,34 @@ export async function handle_file({
     content: string;
 }) {
     try {
-        await fs.mkdir(`./output/${series_title}`, { recursive: true });
+        await ensureDir(`./output/${series_title}`);
     } catch (error) {
         console.error(
-            `Error creating directory "./output/${series_title}":`,
+            `Error ensuring directory "./output/${series_title}":`,
             error
         );
-        // Handle the error appropriately, perhaps re-throw if it's critical
     }
 
     fs.writeFile(
         `./output/${series_title}/${indexPrefix}-${title}_translated.txt`,
         content
     );
+}
+
+async function ensureDir(path: string) {
+    try {
+        const stats = await fs.stat(path);
+        if (!stats.isDirectory()) {
+            throw new Error(`"${path}" exists and is not a directory.`);
+        }
+        // Directory exists, nothing to do
+    } catch (err: any) {
+        if (err.code === "ENOENT") {
+            // Path does not exist, safe to create
+            await fs.mkdir(path, { recursive: true });
+        } else {
+            // Some other error (e.g., permission denied)
+            throw err;
+        }
+    }
 }
