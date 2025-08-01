@@ -134,5 +134,9 @@ export const openRouterModelList = [
         name: "qwen/qwq-32b:free",
         value: "qwen/qwq-32b:free",
     },
-    
+    // microsoft/mai-ds-r1:free
+    {
+        name: "microsoft/mai-ds-r1:free",
+        value: "microsoft/mai-ds-r1:free",
+    }
 ];
