@@ -78,7 +78,7 @@ Model: ${model.modelId}
 Devide Line: ${divide_line}
 Tags: ${tags?.join(", ") ?? ""}
     
-    ` + (await replace_words(sectionedText, tags));
+    ` + (await replace_words(sectionedText, { series_title, title, tags }));
 
             await handle_file({ series_title, title, indexPrefix, content });
 
