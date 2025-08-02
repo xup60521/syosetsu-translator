@@ -3,19 +3,34 @@ import type { ResultType } from ".";
 
 const regex = /[<>:"/\\|?*]/g;
 
-export async function pixiv_handler(urlobj: URL): Promise<ResultType> {
-    return single_handler(urlobj);
+export async function pixiv_handler(
+    urlobj: URL,
+    { with_Cookies }: { with_Cookies?: boolean }
+): Promise<ResultType> {
+    return single_handler(urlobj, { with_Cookies });
 }
 
-async function single_handler(urlobj: URL): Promise<ResultType> {
+async function single_handler(
+    urlobj: URL,
+    { with_Cookies }: { with_Cookies?: boolean }
+): Promise<ResultType> {
     let this_novel_data;
+    let fetchOptions: RequestInit = {};
+    if (with_Cookies) {
+        fetchOptions.headers = {
+            Cookie: process.env.PIXIV_COOKIES ?? "",
+        };
+    }
     if (urlobj.pathname.includes("/novel/show")) {
         const novel_id = urlobj.searchParams.get("id");
         this_novel_data = await fetch(
-            `https://www.pixiv.net/ajax/novel/${novel_id}`
+            `https://www.pixiv.net/ajax/novel/${novel_id}`,
+            fetchOptions
         ).then((res) => res.json());
     } else if (urlobj.pathname.includes("/ajax/novel")) {
-        this_novel_data = await fetch(urlobj).then((res) => res.json());
+        this_novel_data = await fetch(urlobj, fetchOptions).then((res) =>
+            res.json()
+        );
     } else {
         throw new Error("An error happens with url: " + urlobj.href);
     }

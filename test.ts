@@ -1,48 +1,6 @@
-import { replace_words } from "./replace";
-import { replace_keywords } from "./replace_keywords";
+import { generateText } from "ai";
+import { input_select_model } from "./utils";
 
-const content = `# 設定説明
-
-URL: https://www.pixiv.net/novel/show.php?id=22479414
-ローゼマインの子供達 1
-
-Model: gemini-2.5-flash
-Devide Line: 60
-Tags: #本好き, #フェルマイ, #本編終了後
-
-    這是本篇故事結束後的アレキサンドリア。
-
-在ハンネローネ的招贅ディッター之前。
-
-孩子們的名字是虛構的。
-
-フェルマイ的長女 クレオパトラ
-
-因為ローゼマイン堅持アレキサンドリア的公主非クレオパトラ莫屬，フェルディナンド只好放棄。
-
-詳細內容將在本文中說明。
-
-フェルマイ的長男 フェルナンド
-
-因為我在小說和漫畫中都是這樣讀的，所以很想使用這個名字。
-
-當我在動畫中得知是フェルディナンド這個名字時，我一個人感到很不好意思。
-
-フェルマイ的次女 小野小町
-
-這也是ローゼマイン暴走後的結果所取的名字。ローゼマイン的第一人選是楊貴妃，
-
-但因為遭到フェルディナンド和兩位侍從的強烈反對，フェルディナンド只好無奈放棄，才決定了這個名字。
-
-詳細內容將在本文中說明。
-
-フェルマイ的次男 アレキサンダー
-
-フェルディナンド說服ローゼマイン，表示希望有一個冠以アレキサンドリア之名的孩子。
-
-孩子們登場會是之後的事了。敬請見諒。
-
-故事將從ローゼマイン從ドレッファングーア紡織的絲線中平安歸來後的暴走開始。`;
-
-const replaced_content = await replace_words(content);
-console.log(replaced_content);
+const model = await input_select_model();
+const { text } = await generateText({ model: model.model, prompt: "Hello, world!" });
+console.log(text);
