@@ -4,6 +4,7 @@ import type { LanguageModelV1 } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { select, input, checkbox, confirm } from "@inquirer/prompts";
+import { createOllama } from "ollama-ai-provider";
 import { z } from "zod";
 import {
     providerOption,
@@ -14,6 +15,13 @@ import {
 } from "./model_list";
 
 const default_divide_line = 30;
+
+export async function input_with_cookies_or_not() {
+    return await confirm({
+        message: "Use cookies for translation?",
+        default: false,
+    });
+}
 
 export async function input_retry_or_stop() {
     return await select({
@@ -136,6 +144,52 @@ export async function input_select_model() {
         return {
             model: openrouter.languageModel(modelId) as LanguageModelV1,
             provider: "openrouter",
+        };
+    } else if (provider === "ollama") {
+        let ollama_url = await select({
+            message: "Please select the Ollama URL",
+            choices: [
+                {
+                    name: "Local (http://localhost:11434/api)",
+                    value: "http://localhost:11434/api",
+                },
+                {
+                    name: "Hamachi (http://25.37.31.169:11434/api)",
+                    value: "http://25.37.31.169:11434/api",
+                },
+                {
+                    name: "Custom URL",
+                    value: "custom",
+                },
+            ],
+        })
+        if (ollama_url === "custom") {
+            ollama_url = await input({
+                message: "Please enter the Ollama URL",
+                validate: (input) => {
+                    if (input.startsWith("http://") || input.startsWith("https://")) {
+                        return true;
+                    }
+                    return "Please enter a valid URL starting with http:// or https://";
+                }
+            });
+        }
+        const ollama = createOllama({
+            baseURL: ollama_url,
+        });
+        const modelList = (
+            await fetch(ollama_url + "/tags").then((res) => res.json())
+        ).models.map(({ model }: { model: string }) => ({
+            name: model,
+            value: model,
+        })) as { name: string; value: string }[];
+        const modelId = await select({
+            message: "Please select a model",
+            choices: modelList,
+        });
+        return {
+            model: ollama.languageModel(modelId) as LanguageModelV1,
+            provider: "ollama",
         };
     } else {
         throw new Error("Model is not specified");

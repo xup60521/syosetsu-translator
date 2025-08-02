@@ -15,6 +15,10 @@ export const providerOption = [
         name: "OpenRouter",
         value: "openrouter",
     },
+    {
+        name: "Ollama",
+        value: "ollama",
+    }
 ];
 
 export const googleModelList = [
