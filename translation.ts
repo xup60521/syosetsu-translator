@@ -9,11 +9,13 @@ import {
     input_retry_or_stop,
     input_start_from,
     getDefaultModelWaitTime,
+    input_with_cookies_or_not,
 } from "./utils";
 import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
 import { streamText, type LanguageModelV1 } from "ai";
 import { stringSimilarity } from "string-similarity-js";
+import { count } from "node:console";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -32,10 +34,18 @@ type TranslationParameter = {
     divide_line: number;
     url_string: string;
     start_from: number;
+    with_Cookies?: boolean;
 };
 
 export async function translation(params: TranslationParameter) {
-    const { sleep_ms, model, divide_line, url_string, start_from } = params;
+    const {
+        sleep_ms,
+        model,
+        divide_line,
+        url_string,
+        start_from,
+        with_Cookies,
+    } = params;
 
     let { auto_retry } = params;
     const urls = await decompose_url(url_string);
@@ -48,17 +58,17 @@ export async function translation(params: TranslationParameter) {
             const novel_url = urls[url_index];
             const [
                 { series_title, paragraphArr, title, indexPrefix, url, tags },
-            ] = await handler(novel_url);
+            ] = await handler(novel_url, { with_Cookies });
             b1.update(url_index + 1, { filename: url });
             let sectionedText = "";
             try {
                 sectionedText = (
-                    await translateText(
+                    await translateText({
                         paragraphArr,
                         divide_line,
                         model,
-                        sleep_ms
-                    )
+                        sleep_ms,
+                    })
                 )
                     .join("\n")
                     .replace(/(\r\n|\r|\n)/g, "\n\n");
@@ -111,6 +121,7 @@ Tags: ${tags?.join(", ") ?? ""}
                     const { model, provider } = await input_select_model();
                     const divide_line = await input_divide_line();
                     const auto_retry = await input_auto_retry();
+                    const with_Cookies = await input_with_cookies_or_not();
 
                     await translation({
                         model,
@@ -120,6 +131,7 @@ Tags: ${tags?.join(", ") ?? ""}
                         divide_line,
                         sleep_ms: getDefaultModelWaitTime({ model, provider }),
                         start_from: url_index + 1,
+                        with_Cookies,
                     });
                 })();
             }
@@ -133,6 +145,7 @@ Tags: ${tags?.join(", ") ?? ""}
         const url_string = await input_url_string();
         const auto_retry = await input_auto_retry();
         const start_from = await input_start_from();
+        const with_Cookies = await input_with_cookies_or_not();
 
         await translation({
             model,
@@ -142,16 +155,20 @@ Tags: ${tags?.join(", ") ?? ""}
             divide_line,
             sleep_ms: getDefaultModelWaitTime({ model, provider }),
             start_from,
+            with_Cookies
         });
     })();
 }
 
-export async function translateText(
-    paragraphArr: string[],
-    divide_line: number,
-    model: LanguageModelV1,
-    sleep_ms?: number
-) {
+type TranslateTextParams = {
+    paragraphArr: string[];
+    divide_line: number;
+    model: LanguageModelV1;
+    sleep_ms?: number;
+};
+
+export async function translateText(params: TranslateTextParams) {
+    const { paragraphArr, divide_line, model, sleep_ms } = params;
     const numberOfLine = paragraphArr.length;
     const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
     const buf: string[][] = [];
@@ -173,6 +190,7 @@ export async function translateText(
     try {
         let filteredSections = buf.filter((d) => d.length !== 0);
         let sectionIndex = 0;
+        const retry_count_map = new Map<number, number>();
         while (sectionIndex < filteredSections.length) {
             const section = filteredSections[sectionIndex];
             const fulltext = section.filter((d) => d !== "").join("\n");
@@ -206,18 +224,25 @@ export async function translateText(
             }
             const reg = /^[\t\n ]*$/;
             if (reg.test(streamedText)) {
-                throw new Error(
-                    "The translation result is empty, please check your model or input."
+                retry_count_map.set(
+                    sectionIndex,
+                    (retry_count_map.get(sectionIndex) || 0) + 1
                 );
+                console.warn(
+                    `The translation result is empty, retrying section ${sectionIndex + 1}...`
+                );
+                if (retry_count_map.get(sectionIndex) ?? 0 > 3) {
+                    throw new Error(
+                        "The translation result is empty after 3 retries, additional action is required."
+                    );
+                }
+                continue;
             }
             // if the translated and original content is too similar, re-translate this section
             if (stringSimilarity(streamedText, fulltext) > 0.9) {
                 console.warn(
                     "The translation result is too similar to the original content, re-translating this section..."
                 );
-                sectionBar.update(sectionIndex + 1, {
-                    filename: "Re-translating Section",
-                });
                 continue;
             }
             bufText.push(streamedText);
