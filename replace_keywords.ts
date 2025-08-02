@@ -26,7 +26,6 @@ const replace_keywords: Record<string, Record<string, string>> = {
         ギレッセンマイヤー: "格里森邁亞",
         ラオブルート: "勞布隆托",
         フェルディナンド: "斐迪南",
-        フェルディナント: "斐迪南",
         エグランティーヌ: "艾格蘭緹娜",
         レティーツィア: "萊蒂希雅",
         ヒルデブラント: "錫爾布蘭德",
@@ -390,5 +389,6 @@ const replace_keywords: Record<string, Record<string, string>> = {
 
 replace_keywords["#本好き"] = replace_keywords["本好きの下剋上"];
 replace_keywords["本好き"] = replace_keywords["本好きの下剋上"];
+replace_keywords["本ゲコ"] = replace_keywords["本好きの下剋上"];
 
 export { replace_keywords };
