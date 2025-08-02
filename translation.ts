@@ -245,6 +245,8 @@ export async function translateText(params: TranslateTextParams) {
                 );
                 continue;
             }
+            // Remove <think> tags and their content
+            streamedText = streamedText.replace(/<think>[\s\S]*?<\/think>/g, "");
             bufText.push(streamedText);
             sectionBar.update(sectionIndex + 1);
             if (sleep_ms) {
