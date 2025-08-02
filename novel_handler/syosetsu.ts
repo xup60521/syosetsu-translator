@@ -1,7 +1,12 @@
 import { load, type CheerioAPI } from "cheerio";
+import type { ResultType } from ".";
 
-export async function syosetsu_handler(urlobj: URL) {
-    const res = await fetch(urlobj).then((res) => res.text());
+export async function syosetsu_handler(urlobj: URL, { with_Cookies }: { with_Cookies?: boolean }): Promise<ResultType> {
+    const res = await fetch(urlobj, {
+        headers: {
+            ...(with_Cookies ? { Cookie: process.env.SYOSSETSU_COOKIES } : {}),
+        },
+    }).then((res) => res.text());
     const $ = load(res);
     const paragraphArr: string[] = [];
     const title = $(".p-novel__title").text();

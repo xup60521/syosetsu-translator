@@ -19,16 +19,16 @@ export type ResultType = {
  * @returns A promise that resolves to the extracted novel details as a ResultType.
  * @throws Will throw an error if no handler is defined for the given URL origin.
  */
-export default async function handler(url: string): Promise<ResultType> {
-    
+export default async function handler(url: string, { with_Cookies }: { with_Cookies?: boolean }): Promise<ResultType> {
+
     const urlobj = new URL(url);
     let result: ResultType | undefined = undefined;
     switch (urlobj.origin) {
         case "https://ncode.syosetu.com":
-            result = await syosetsu_handler(urlobj)
+            result = await syosetsu_handler(urlobj, { with_Cookies });
             break;
         case "https://www.pixiv.net":
-            result = await pixiv_handler(urlobj)
+            result = await pixiv_handler(urlobj, { with_Cookies });
             break;
     }
     if (!result) throw new Error("handler is not defined");

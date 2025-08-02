@@ -10,6 +10,7 @@ import {
     input_select_model,
     input_start_from,
     input_url_string,
+    input_with_cookies_or_not,
 } from "./utils";
 
 const options = [
@@ -56,6 +57,7 @@ async function translate_from_URL() {
     const url_string = await input_url_string();
     const auto_retry = await input_auto_retry();
     const start_from = await input_start_from();
+    const with_Cookies = await input_with_cookies_or_not();
 
     await translation({
         model,
@@ -65,6 +67,7 @@ async function translate_from_URL() {
         divide_line,
         sleep_ms: getDefaultModelWaitTime({ model, provider }),
         start_from,
+        with_Cookies,
     });
 }
 
