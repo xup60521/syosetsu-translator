@@ -18,7 +18,7 @@ export const providerOption = [
     {
         name: "Ollama",
         value: "ollama",
-    }
+    },
 ];
 
 export const googleModelList = [
@@ -142,5 +142,10 @@ export const openRouterModelList = [
     {
         name: "microsoft/mai-ds-r1:free",
         value: "microsoft/mai-ds-r1:free",
-    }
+    },
+    // z-ai/glm-4.5-air:free
+    {
+        name: "z-ai/glm-4.5-air:free",
+        value: "z-ai/glm-4.5-air:free",
+    },
 ];
