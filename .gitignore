@@ -9,3 +9,5 @@ translate_from_files/
 test.ts
 
 dist/
+
+send_file_to_termux.bat
