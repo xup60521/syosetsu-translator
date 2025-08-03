@@ -5,6 +5,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { select, input, confirm, number } from "@inquirer/prompts";
 import { createOllama } from "ollama-ai-provider";
+import { createGeminiProvider } from "ai-sdk-provider-gemini-cli";
 import { z } from "zod";
 import {
     providerOption,
@@ -12,6 +13,7 @@ import {
     openaiModelList,
     groqModelList,
     openRouterModelList,
+    geminiCLIModelList,
 } from "./model_list";
 
 const default_divide_line = 30;
@@ -121,6 +123,15 @@ export async function input_select_model() {
             choices: googleModelList,
         });
         return { model: google(model), provider: "google" };
+    } else if (provider === "gemini-cli") {
+        const gemini = createGeminiProvider({
+            authType: "oauth-personal",
+        });
+        const model = await select({
+            message: "Please select a model",
+            choices: geminiCLIModelList,
+        });
+        return { model: gemini(model), provider: "gemini-cli" };
     } else if (provider === "openai") {
         const openai = createOpenAI({
             apiKey: process.env.OPENAI_KEY!,

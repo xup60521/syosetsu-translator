@@ -4,6 +4,10 @@ export const providerOption = [
         value: "google",
     },
     {
+        name: "Gemini-CLI",
+        value: "gemini-cli",
+    },
+    {
         name: "OpenAI",
         value: "openai",
     },
@@ -77,6 +81,18 @@ export const googleModelList = [
     {
         name: "gemma-3-27b-it",
         value: "gemma-3-27b-it",
+    },
+];
+
+export const geminiCLIModelList = [
+    {
+        name: "gemini-2.5-flash",
+        value: "gemini-2.5-flash",
+    },
+    // gemini-2.5-pro
+    {
+        name: "gemini-2.5-pro",
+        value: "gemini-2.5-pro",
     },
 ];
 
