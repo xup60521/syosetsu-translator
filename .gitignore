@@ -11,3 +11,5 @@ test.ts
 dist/
 
 send_file_to_termux.bat
+
+index.js
