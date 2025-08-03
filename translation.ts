@@ -155,7 +155,7 @@ Tags: ${tags?.join(", ") ?? ""}
             divide_line,
             sleep_ms: getDefaultModelWaitTime({ model, provider }),
             start_from,
-            with_Cookies
+            with_Cookies,
         });
     })();
 }
@@ -191,15 +191,15 @@ export async function translateText(params: TranslateTextParams) {
         let filteredSections = buf.filter((d) => d.length !== 0);
         let sectionIndex = 0;
         const retry_count_map = new Map<number, number>();
+        const similarity_map = new Map<number, number>();
         while (sectionIndex < filteredSections.length) {
             const section = filteredSections[sectionIndex];
             const fulltext = section.filter((d) => d !== "").join("\n");
-            const stream = streamText({
-                model,
-                seed: Math.floor(10000 * Math.random()),
-                temperature: 0.1,
-                prompt: `
-        # 指令：
+            const retry_due_to_too_similar_times =
+                similarity_map.get(sectionIndex) ?? 0;
+            const translation_prompt =
+                retry_due_to_too_similar_times % 2 === 0
+                    ? `# 指令：
         請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
 
         # 翻譯規則：
@@ -210,7 +210,17 @@ export async function translateText(params: TranslateTextParams) {
         直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
 
         # 其他注意事項
-        請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。
+        請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。`
+                    : `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
+After the translation is done, re-check the result and keep:
+1. The article is indeed translated into traditional Chinese (Taiwan).
+2. Proper nouns are in their original Japanese form.`;
+            const stream = streamText({
+                model,
+                seed: Math.floor(10000 * Math.random()),
+                temperature: 0.1,
+                prompt: `
+        ${translation_prompt}
 
         ---
         ${fulltext}
@@ -229,12 +239,17 @@ export async function translateText(params: TranslateTextParams) {
                     (retry_count_map.get(sectionIndex) || 0) + 1
                 );
                 console.warn(
-                    `The translation result is empty, retrying section ${sectionIndex + 1}...`
+                    `The translation result is empty, retrying section ${
+                        sectionIndex + 1
+                    }...`
                 );
                 if (retry_count_map.get(sectionIndex) ?? 0 > 3) {
                     throw new Error(
                         "The translation result is empty after 3 retries, additional action is required."
                     );
+                }
+                if (sleep_ms) {
+                    await sleep(sleep_ms);
                 }
                 continue;
             }
@@ -243,10 +258,20 @@ export async function translateText(params: TranslateTextParams) {
                 console.warn(
                     "The translation result is too similar to the original content, re-translating this section..."
                 );
+                similarity_map.set(
+                    sectionIndex,
+                    (similarity_map.get(sectionIndex) || 0) + 1
+                );
+                if (sleep_ms) {
+                    await sleep(sleep_ms);
+                }
                 continue;
             }
             // Remove <think> tags and their content
-            streamedText = streamedText.replace(/<think>[\s\S]*?<\/think>/g, "");
+            streamedText = streamedText.replace(
+                /<think>[\s\S]*?<\/think>/g,
+                ""
+            );
             bufText.push(streamedText);
             sectionBar.update(sectionIndex + 1);
             if (sleep_ms) {
