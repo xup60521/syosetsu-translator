@@ -3,7 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModelV1 } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { select, input, checkbox, confirm } from "@inquirer/prompts";
+import { select, input, confirm, number } from "@inquirer/prompts";
 import { createOllama } from "ollama-ai-provider";
 import { z } from "zod";
 import {
@@ -61,17 +61,24 @@ export async function input_auto_retry() {
 export async function input_divide_line() {
     return z
         .number()
-        .positive()
+        .min(1)
+        .default(default_divide_line)
         .parse(
-            Number(
-                await input({
-                    message:
-                        "Please enter a divideLine number (default to " +
-                        default_divide_line +
-                        ")",
-                    default: String(default_divide_line),
-                })
-            )
+            await number({
+                message:
+                    "Please enter a divideLine number (default to " +
+                    default_divide_line +
+                    ")",
+                default: default_divide_line,
+                validate: (input) => {
+                    // only greater than 0 is allowed
+                    const value = Number(input);
+                    if (isNaN(value) || value < 1) {
+                        return "Please enter a valid number greater than 0";
+                    }
+                    return true;
+                },
+            })
         );
 }
 
@@ -162,16 +169,19 @@ export async function input_select_model() {
                     value: "custom",
                 },
             ],
-        })
+        });
         if (ollama_url === "custom") {
             ollama_url = await input({
                 message: "Please enter the Ollama URL",
                 validate: (input) => {
-                    if (input.startsWith("http://") || input.startsWith("https://")) {
+                    if (
+                        input.startsWith("http://") ||
+                        input.startsWith("https://")
+                    ) {
                         return true;
                     }
                     return "Please enter a valid URL starting with http:// or https://";
-                }
+                },
             });
         }
         const ollama = createOllama({
@@ -197,23 +207,43 @@ export async function input_select_model() {
 }
 
 export async function input_url_string() {
-    const inputQuestion = {
-        type: "input",
-        name: "inputValues",
-        message: "Enter URLs (separated by spaces):",
-    };
-    return await input(inputQuestion);
+    return await input({
+        message: "Please enter the URLs (separated by spaces)",
+        validate: (input) => {
+            const urls = input.split(" ").filter((url) => url.trim() !== "");
+            if (urls.length === 0) {
+                return "Please enter at least one URL";
+            }
+            for (const url of urls) {
+                try {
+                    new URL(url);
+                } catch {
+                    return `Invalid URL: ${url}`;
+                }
+            }
+            return true;
+        },
+    });
 }
 
 export async function input_start_from() {
     return z
         .number()
         .positive()
+        .min(1)
+        .default(1)
         .parse(
             Number(
-                await input({
+                await number({
                     message: "Start from (default to " + 1 + ")",
-                    default: "1",
+                    default: 1,
+                    validate: (input) => {
+                        const value = Number(input);
+                        if (isNaN(value) || value < 1) {
+                            return "Please enter a valid number greater than 0";
+                        }
+                        return true;
+                    },
                 })
             )
         );
@@ -225,7 +255,7 @@ export function getDefaultModelWaitTime(props: {
 }) {
     const { model, provider } = props;
     if (provider === "groq") {
-        return 2_000; // 2 seconds
+        return 10_000; // 10 seconds
     }
     if (model.modelId === "gemini-2.5-flash-lite") {
         return 10_000; // 10 seconds
