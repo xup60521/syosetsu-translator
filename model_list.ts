@@ -105,6 +105,16 @@ export const openaiModelList = [
 ];
 
 export const groqModelList = [
+    // openai/gpt-oss-120b
+    {
+        name: "openai/gpt-oss-120b",
+        value: "openai/gpt-oss-120b",
+    },
+    // openai/gpt-oss-20b
+    {
+        name: "openai/gpt-oss-20b",
+        value: "openai/gpt-oss-20b",
+    },
     {
         name: "llama-3.3-70b-versatile",
         value: "llama-3.3-70b-versatile",
@@ -149,10 +159,15 @@ export const openRouterModelList = [
         name: "deepseek/deepseek-r1-distill-llama-70b:free",
         value: "deepseek/deepseek-r1-distill-llama-70b:free",
     },
-    // qwen/qwq-32b:free
+    // qwen/qwen3-coder:free
     {
-        name: "qwen/qwq-32b:free",
-        value: "qwen/qwq-32b:free",
+        name: "qwen/qwen3-coder:free",
+        value: "qwen/qwen3-coder:free",
+    },
+    // qwen/qwen3-235b-a22b:free
+    {
+        name: "qwen/qwen3-235b-a22b:free",
+        value: "qwen/qwen3-235b-a22b:free",
     },
     // microsoft/mai-ds-r1:free
     {
