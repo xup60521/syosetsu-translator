@@ -131,7 +131,7 @@ export async function input_select_model() {
             message: "Please select a model",
             choices: geminiCLIModelList,
         });
-        return { model: gemini(model), provider: "gemini-cli" };
+        return { model: gemini(model) as LanguageModelV1, provider: "gemini-cli" };
     } else if (provider === "openai") {
         const openai = createOpenAI({
             apiKey: process.env.OPENAI_KEY!,
@@ -266,7 +266,10 @@ export function getDefaultModelWaitTime(props: {
 }) {
     const { model, provider } = props;
     if (provider === "groq") {
-        return 10_000; // 10 seconds
+        return 16_000; // 16 seconds
+    }
+    if (model.modelId === "deepseek-r1-distill-llama-70b") {
+        return 30_000; // 30 seconds
     }
     if (model.modelId === "gemini-2.5-flash-lite") {
         return 10_000; // 10 seconds
