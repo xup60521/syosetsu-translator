@@ -218,7 +218,7 @@ After the translation is done, re-check the result and keep:
             const stream = streamText({
                 model,
                 seed: Math.floor(10000 * Math.random()),
-                temperature: 0.1,
+                temperature: 0.0,
                 prompt: `
         ${translation_prompt}
 
