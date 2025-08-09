@@ -42,7 +42,8 @@ async function single_handler(
     ) as string[] | undefined;
     const title = this_novel_data.body.title;
     const series_title = this_novel_data.body?.seriesNavData?.title ?? title;
-    const author = this_novel_data.body?.userName;
+    // after removing through regex, delete the additional whitespaces on the right
+    const author = this_novel_data.body?.userName.replaceAll(regex, " ").trimEnd();
     const indexPrefix =
         series_title + " " + (this_novel_data.body?.seriesNavData?.order ?? "");
 

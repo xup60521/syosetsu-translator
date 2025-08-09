@@ -18,9 +18,9 @@ export async function handle_file({
             error
         );
     }
-
+    const file_path_and_name = `./output/${series_title}/${indexPrefix}-${title}_translated.txt`;
     fs.writeFile(
-        `./output/${series_title}/${indexPrefix}-${title}_translated.txt`,
+        file_path_and_name,
         content
     );
 }
