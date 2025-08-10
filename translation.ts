@@ -11,6 +11,7 @@ import {
     getDefaultModelWaitTime,
     input_with_cookies_or_not,
     getTranslationPrompt,
+    type ResultType,
 } from "./utils";
 import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
@@ -26,77 +27,44 @@ const multibar = new cliProgress.MultiBar(
     cliProgress.Presets.shades_classic
 );
 
-type TranslationParameter = {
+type DoTranslationProps = {
     sleep_ms?: number;
     model: LanguageModelV1;
-    provider: string;
-    auto_retry: boolean;
     divide_line: number;
-    url_string: string;
-    start_from: number;
     with_Cookies?: boolean;
 };
+
+type TranslationParameter = {
+    provider: string;
+    auto_retry: boolean;
+    url_string: string;
+    start_from: number;
+} & DoTranslationProps & {};
 
 export async function translation(params: TranslationParameter) {
     const {
         sleep_ms,
         model,
         divide_line,
+        with_Cookies,
         url_string,
         start_from,
-        with_Cookies,
     } = params;
 
     let { auto_retry } = params;
     const urls = await decompose_url(url_string);
-
     let b1 = multibar.create(urls.length, 0);
-
     let url_index = start_from - 1;
     while (url_index < urls.length) {
         try {
             const novel_url = urls[url_index];
-            const {
-                series_title,
-                paragraphArr,
-                title,
-                indexPrefix,
-                url,
-                tags,
-            } = await novel_handler(novel_url, { with_Cookies });
-            b1.update(url_index + 1, { filename: url });
-            let sectionedText = "";
-            try {
-                sectionedText = (
-                    await translateText({
-                        paragraphArr,
-                        divide_line,
-                        model,
-                        sleep_ms,
-                    })
-                )
-                    .join("\n")
-                    .replace(/(\r\n|\r|\n)/g, "\n\n");
-            } catch (err) {
-                b1.stop();
-                console.error("\nAn error occurred when translating " + url);
-                throw new Error(err as any);
-            }
-
-            const content =
-                `# ${title} 
-    
-URL: ${url}
-${indexPrefix}
-
-Model: ${model.modelId}
-Devide Line: ${divide_line}
-Tags: ${tags?.join(", ") ?? ""}
-    
-    ` + (await replace_words(sectionedText, { series_title, title, tags }));
-
-            await handle_file({ series_title, title, indexPrefix, content });
-
+            b1.update(url_index + 1, { filename: novel_url });
+            await doTranslation(novel_url, {
+                sleep_ms,
+                model,
+                divide_line,
+                with_Cookies,
+            });
             url_index++;
         } catch (err) {
             console.error(err);
@@ -165,6 +133,41 @@ Tags: ${tags?.join(", ") ?? ""}
     })();
 }
 
+async function doTranslation(novel_url: string, props: DoTranslationProps) {
+    const { sleep_ms, model, divide_line, with_Cookies } = props;
+    const { series_title, paragraphArr, title, indexPrefix, url, tags } =
+        await novel_handler(novel_url, { with_Cookies });
+
+    const translationResult = await translateText({
+        paragraphArr,
+        divide_line,
+        model,
+        sleep_ms,
+    });
+
+    if (!translationResult.success) {
+        console.error("\nAn error occurred when translating " + url);
+        throw new Error(translationResult.error);
+    }
+    const sectionedText = translationResult.value
+        .join("\n")
+        .replace(/(\r\n|\r|\n)/g, "\n\n");
+
+    const content =
+        `# ${title} 
+    
+URL: ${url}
+${indexPrefix}
+
+Model: ${model.modelId}
+Devide Line: ${divide_line}
+Tags: ${tags?.join(", ") ?? ""}
+    
+` + (await replace_words(sectionedText, { series_title, title, tags }));
+
+    await handle_file({ series_title, title, indexPrefix, content });
+}
+
 type TranslateTextParams = {
     paragraphArr: string[];
     divide_line: number;
@@ -172,7 +175,9 @@ type TranslateTextParams = {
     sleep_ms?: number;
 };
 
-export async function translateText(params: TranslateTextParams) {
+export async function translateText(
+    params: TranslateTextParams
+): Promise<ResultType<string[], any>> {
     const { paragraphArr, divide_line, model, sleep_ms } = params;
     const numberOfLine = paragraphArr.length;
     const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
@@ -272,11 +277,11 @@ export async function translateText(params: TranslateTextParams) {
         }
         sectionBar.stop();
         multibar.remove(sectionBar);
+        return { success: true, value: bufText };
     } catch (err) {
         sectionBar.stop();
-        throw err;
+        return { success: false, error: err };
     }
-    return bufText;
 }
 
 function sleep(ms: number) {
