@@ -16,7 +16,6 @@ import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
 import { streamText, type LanguageModelV1 } from "ai";
 import { stringSimilarity } from "string-similarity-js";
-import { count } from "node:console";
 
 const multibar = new cliProgress.MultiBar(
     {

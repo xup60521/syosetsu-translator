@@ -7,6 +7,7 @@ import { load } from "cheerio";
  * processes each URL, and returns an array of URLs. If a URL points to a novel series
  * (e.g., on www.pixiv.net), it decomposes the series into URLs for each episode.
  * Otherwise, it returns the original URLs.
+ * Also, this function can probably throw fetch error. Since it has not occur yet, no error-handler for this type of error is implemented yet.
  *
  * @param url_string - A string containing one or more URLs separated by spaces.
  * @returns A promise that resolves to an array of URLs, each representing an episode or the original URL.
@@ -21,7 +22,7 @@ export async function decompose_url(url_string: string) {
             if (processed_urls) {
                 novel_urls.push(...processed_urls);
             }
-        } else if (urlobj.host === "ncode.syosetu.com" ) {
+        } else if (urlobj.host === "ncode.syosetu.com") {
             const processed_urls = await decompose_syosetsu(urlobj);
             if (processed_urls) {
                 novel_urls.push(...processed_urls);

@@ -8,6 +8,18 @@ type IdentifyProperties = {
     tags?: string[];
 };
 
+
+/**
+ * Replaces specific keywords in the input string based on the provided identification properties.
+ *
+ * The function checks for the presence of series names in the `tags`, `series_title`, `title`, or the input string itself.
+ * If a match is found, it replaces all occurrences of the corresponding keywords (sorted by key length descending)
+ * with their mapped values from the `replace_keywords` object.
+ *
+ * @param str - The input string in which to perform replacements.
+ * @param identify_properties - Optional properties used to identify which keyword replacements to apply.
+ * @returns A promise that resolves to the string with the appropriate keywords replaced.
+ */
 export async function replace_words(
     str: string,
     identify_properties?: IdentifyProperties
