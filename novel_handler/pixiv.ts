@@ -43,20 +43,20 @@ async function single_handler(
     const title = this_novel_data.body.title;
     const series_title = this_novel_data.body?.seriesNavData?.title ?? title;
     // after removing through regex, delete the additional whitespaces on the right
-    const author = this_novel_data.body?.userName.replaceAll(regex, " ").trimEnd();
+    const author = this_novel_data.body?.userName
+        .replaceAll(regex, " ")
+        .trimEnd();
     const indexPrefix =
         series_title + " " + (this_novel_data.body?.seriesNavData?.order ?? "");
 
-    return [
-        {
-            title: title.replaceAll(regex, " "),
-            indexPrefix: indexPrefix.replaceAll(regex, " "),
-            paragraphArr,
-            series_title: (series_title + " " + author).replaceAll(regex, " "),
-            url: urlobj.href,
-            tags: tags,
-        },
-    ];
+    return {
+        title: title.replaceAll(regex, " "),
+        indexPrefix: indexPrefix.replaceAll(regex, " "),
+        paragraphArr,
+        series_title: (series_title + " " + author).replaceAll(regex, " "),
+        url: urlobj.href,
+        tags: tags,
+    };
 }
 
 interface PreloadContent {

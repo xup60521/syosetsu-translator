@@ -1,5 +1,5 @@
 import { replace_words } from "./replace";
-import handler from "./novel_handler";
+import { novel_handler } from "./novel_handler";
 import cliProgress from "cli-progress";
 import {
     input_auto_retry,
@@ -57,9 +57,14 @@ export async function translation(params: TranslationParameter) {
     while (url_index < urls.length) {
         try {
             const novel_url = urls[url_index];
-            const [
-                { series_title, paragraphArr, title, indexPrefix, url, tags },
-            ] = await handler(novel_url, { with_Cookies });
+            const {
+                series_title,
+                paragraphArr,
+                title,
+                indexPrefix,
+                url,
+                tags,
+            } = await novel_handler(novel_url, { with_Cookies });
             b1.update(url_index + 1, { filename: url });
             let sectionedText = "";
             try {
