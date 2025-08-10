@@ -3,7 +3,7 @@ import { syosetsu_handler } from "./syosetsu";
 import { z } from "zod";
 import { pixiv_handler } from "./pixiv";
 
-export type ResultType = {
+export type NovelHandlerResultType = {
     title: string;
     indexPrefix: string;
     paragraphArr: string[];
@@ -22,9 +22,9 @@ export type ResultType = {
 export async function novel_handler(
     url: string,
     { with_Cookies }: { with_Cookies?: boolean }
-): Promise<ResultType> {
+): Promise<NovelHandlerResultType> {
     const urlobj = new URL(url);
-    let result: ResultType | undefined = undefined;
+    let result: NovelHandlerResultType | undefined = undefined;
     switch (urlobj.origin) {
         case "https://ncode.syosetu.com":
             result = await syosetsu_handler(urlobj, { with_Cookies });

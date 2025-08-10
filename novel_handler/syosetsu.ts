@@ -1,10 +1,10 @@
 import { load, type CheerioAPI } from "cheerio";
-import type { ResultType } from ".";
+import type { NovelHandlerResultType } from ".";
 
 export async function syosetsu_handler(
     urlobj: URL,
     { with_Cookies }: { with_Cookies?: boolean }
-): Promise<ResultType> {
+): Promise<NovelHandlerResultType> {
     const res = await fetch(urlobj, {
         headers: {
             ...(with_Cookies ? { Cookie: process.env.SYOSSETSU_COOKIES } : {}),

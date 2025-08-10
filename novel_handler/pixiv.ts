@@ -1,19 +1,19 @@
 import { load, type CheerioAPI } from "cheerio";
-import type { ResultType } from ".";
+import type { NovelHandlerResultType } from ".";
 
 const regex = /[<>:"/\\|?*]/g;
 
 export async function pixiv_handler(
     urlobj: URL,
     { with_Cookies }: { with_Cookies?: boolean }
-): Promise<ResultType> {
+): Promise<NovelHandlerResultType> {
     return single_handler(urlobj, { with_Cookies });
 }
 
 async function single_handler(
     urlobj: URL,
     { with_Cookies }: { with_Cookies?: boolean }
-): Promise<ResultType> {
+): Promise<NovelHandlerResultType> {
     let this_novel_data;
     let fetchOptions: RequestInit = {};
     if (with_Cookies) {
