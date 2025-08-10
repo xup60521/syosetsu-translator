@@ -131,7 +131,10 @@ export async function input_select_model() {
             message: "Please select a model",
             choices: geminiCLIModelList,
         });
-        return { model: gemini(model) as LanguageModelV1, provider: "gemini-cli" };
+        return {
+            model: gemini(model) as LanguageModelV1,
+            provider: "gemini-cli",
+        };
     } else if (provider === "openai") {
         const openai = createOpenAI({
             apiKey: process.env.OPENAI_KEY!,
@@ -296,4 +299,57 @@ export function checkContentIfTranslatedOrNot({
     const original = originalContent.replace(regex, "");
     const translated = translatedContent.replace(regex, "");
     return original !== translated;
+}
+
+export function getTranslationPrompt(props: {
+    similarity_retry_count: number;
+    modelId: string;
+}) {
+    const { similarity_retry_count, modelId } = props;
+    if (modelId === "llama-3.3-70b-versatile" || modelId === "gemini-2.5-flash-lite") {
+        return oddTranslationPrompt(similarity_retry_count);
+    }
+    return evenTranslationPrompt(similarity_retry_count);
+}
+
+function evenTranslationPrompt(similarity_retry_count: number) {
+    if (similarity_retry_count % 2 === 0) {
+        return `# 指令：
+            請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
+
+            # 翻譯規則：
+            1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。
+            2.  其餘內容需翻譯成通順自然的台灣繁體中文。
+
+            # 輸出要求：
+            直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
+
+            # 其他注意事項
+            請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。`;
+    }
+    return `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
+After the translation is done, re-check the result and keep:
+1. The article is indeed translated into traditional Chinese (Taiwan).
+2. Proper nouns are in their original Japanese form.`;
+}
+
+export function oddTranslationPrompt(similarity_retry_count: number) {
+    if (similarity_retry_count % 2 === 1) {
+        return `# 指令：
+            請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
+
+            # 翻譯規則：
+            1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。
+            2.  其餘內容需翻譯成通順自然的台灣繁體中文。
+
+            # 輸出要求：
+            直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
+
+            # 其他注意事項
+            請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。`;
+    }
+    return `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
+After the translation is done, re-check the result and keep:
+1. The article is indeed translated into traditional Chinese (Taiwan).
+2. Proper nouns are in their original Japanese form.`;
 }

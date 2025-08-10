@@ -10,6 +10,7 @@ import {
     input_start_from,
     getDefaultModelWaitTime,
     input_with_cookies_or_not,
+    getTranslationPrompt,
 } from "./utils";
 import { decompose_url } from "./decompose_url";
 import { handle_file } from "./handle_file";
@@ -195,26 +196,12 @@ export async function translateText(params: TranslateTextParams) {
         while (sectionIndex < filteredSections.length) {
             const section = filteredSections[sectionIndex];
             const fulltext = section.filter((d) => d !== "").join("\n");
-            const retry_due_to_too_similar_times =
+            const similarity_retry_count =
                 similarity_map.get(sectionIndex) ?? 0;
-            const translation_prompt =
-                retry_due_to_too_similar_times % 2 === 0
-                    ? `# 指令：
-        請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
-
-        # 翻譯規則：
-        1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。
-        2.  其餘內容需翻譯成通順自然的台灣繁體中文。
-
-        # 輸出要求：
-        直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
-
-        # 其他注意事項
-        請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。`
-                    : `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
-After the translation is done, re-check the result and keep:
-1. The article is indeed translated into traditional Chinese (Taiwan).
-2. Proper nouns are in their original Japanese form.`;
+            const translation_prompt = getTranslationPrompt({
+                similarity_retry_count,
+                modelId: model.modelId,
+            });
             const stream = streamText({
                 model,
                 seed: Math.floor(10000 * Math.random()),
@@ -239,9 +226,9 @@ After the translation is done, re-check the result and keep:
                     (retry_count_map.get(sectionIndex) || 0) + 1
                 );
                 console.warn(
-                    `The translation result is empty, retrying section ${
+                    `\nThe translation result is empty, retrying section ${
                         sectionIndex + 1
-                    }...`
+                    }...\n`
                 );
                 if (retry_count_map.get(sectionIndex) ?? 0 > 3) {
                     throw new Error(
