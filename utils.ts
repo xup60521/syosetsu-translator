@@ -49,7 +49,7 @@ export async function input_retry_or_stop() {
                 name: "Change Provider",
                 value: "change_provider",
             },
-        ],
+        ] as const,
     });
 }
 
@@ -306,7 +306,10 @@ export function getTranslationPrompt(props: {
     modelId: string;
 }) {
     const { similarity_retry_count, modelId } = props;
-    if (modelId === "llama-3.3-70b-versatile" || modelId === "gemini-2.5-flash-lite") {
+    if (
+        modelId === "llama-3.3-70b-versatile" ||
+        modelId === "gemini-2.5-flash-lite"
+    ) {
         return oddTranslationPrompt(similarity_retry_count);
     }
     return evenTranslationPrompt(similarity_retry_count);
@@ -352,4 +355,12 @@ export function oddTranslationPrompt(similarity_retry_count: number) {
 After the translation is done, re-check the result and keep:
 1. The article is indeed translated into traditional Chinese (Taiwan).
 2. Proper nouns are in their original Japanese form.`;
+}
+
+export type ResultType<T, E> = {
+    success: true;
+    value: T;
+} | {
+    success: false;
+    error: E
 }
