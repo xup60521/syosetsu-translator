@@ -1,6 +1,6 @@
 import { select } from "@inquirer/prompts";
-import { replaceTextInFiles } from "./replace";
-import { translation } from "./translation";
+import { replaceTextInFiles } from "./src/replace";
+import { translation } from "./src/translation";
 
 import 'dotenv/config'
 import {
@@ -11,7 +11,7 @@ import {
     input_start_from,
     input_url_string,
     input_with_cookies_or_not,
-} from "./utils";
+} from "./src/utils";
 
 const options = [
     {
