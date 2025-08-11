@@ -13,7 +13,7 @@ import {
     getTranslationPrompt,
     type ResultType,
 } from "./utils";
-import { decompose_url } from "./decompose_url";
+import { decompose_url } from "./novel_handler/decompose_url";
 import { handle_file } from "./handle_file";
 import { streamText, type LanguageModelV1 } from "ai";
 import { stringSimilarity } from "string-similarity-js";
