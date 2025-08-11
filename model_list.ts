@@ -145,6 +145,11 @@ export const groqModelList = [
 ];
 
 export const openRouterModelList = [
+    // openai/gpt-oss-20b:free
+    {
+        name: "openai/gpt-oss-20b:free",
+        value: "openai/gpt-oss-20b:free"
+    },
     {
         name: "moonshotai/kimi-k2:free",
         value: "moonshotai/kimi-k2:free",
