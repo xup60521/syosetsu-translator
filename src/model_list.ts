@@ -1,3 +1,10 @@
+export type ModelIdType =
+    | (typeof googleModelList)[number]["value"]
+    | (typeof geminiCLIModelList)[number]["value"]
+    | (typeof openaiModelList)[number]["value"]
+    | (typeof groqModelList)[number]["value"]
+    | (typeof openRouterModelList)[number]["value"];
+
 export const providerOption = [
     {
         name: "Google",
@@ -82,7 +89,7 @@ export const googleModelList = [
         name: "gemma-3-27b-it",
         value: "gemma-3-27b-it",
     },
-];
+] as const;
 
 export const geminiCLIModelList = [
     {
@@ -94,7 +101,7 @@ export const geminiCLIModelList = [
         name: "gemini-2.5-pro",
         value: "gemini-2.5-pro",
     },
-];
+] as const;
 
 export const openaiModelList = [
     { name: "o3-mini-2025-01-31", value: "o3-mini-2025-01-31" },
@@ -102,7 +109,7 @@ export const openaiModelList = [
         name: "gpt-4o-mini-2024-07-18",
         value: "gpt-4o-mini-2024-07-18",
     },
-];
+] as const;
 
 export const groqModelList = [
     // moonshotai/kimi-k2-instruct
@@ -143,7 +150,7 @@ export const groqModelList = [
     },
     {
         name: "compound-beta",
-        value: "compound-beta"
+        value: "compound-beta",
     },
     // qwen/qwen3-32b
     {
@@ -197,4 +204,4 @@ export const openRouterModelList = [
         name: "z-ai/glm-4.5-air:free",
         value: "z-ai/glm-4.5-air:free",
     },
-];
+] as const;

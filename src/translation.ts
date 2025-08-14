@@ -102,7 +102,7 @@ export async function translation(params: TranslationParameter) {
                         url_string,
                         auto_retry,
                         divide_line,
-                        sleep_ms: getDefaultModelWaitTime({ model, provider }),
+                        sleep_ms: getDefaultModelWaitTime({ modelId: model.modelId, provider }),
                         start_from: url_index + 1,
                         with_Cookies,
                     });
@@ -126,7 +126,7 @@ export async function translation(params: TranslationParameter) {
             url_string,
             auto_retry,
             divide_line,
-            sleep_ms: getDefaultModelWaitTime({ model, provider }),
+            sleep_ms: getDefaultModelWaitTime({ modelId: model.modelId, provider }),
             start_from,
             with_Cookies,
         });

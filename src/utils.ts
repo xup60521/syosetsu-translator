@@ -14,6 +14,7 @@ import {
     groqModelList,
     openRouterModelList,
     geminiCLIModelList,
+    type ModelIdType,
 } from "./model_list";
 
 const default_divide_line = 30;
@@ -166,55 +167,55 @@ export async function input_select_model() {
             model: openrouter.languageModel(modelId) as LanguageModelV1,
             provider: "openrouter",
         };
-    // } else if (provider === "ollama") {
-    //     let ollama_url = await select({
-    //         message: "Please select the Ollama URL",
-    //         choices: [
-    //             {
-    //                 name: "Local (http://localhost:11434/api)",
-    //                 value: "http://localhost:11434/api",
-    //             },
-    //             {
-    //                 name: "Hamachi (http://25.37.31.169:11434/api)",
-    //                 value: "http://25.37.31.169:11434/api",
-    //             },
-    //             {
-    //                 name: "Custom URL",
-    //                 value: "custom",
-    //             },
-    //         ],
-    //     });
-    //     if (ollama_url === "custom") {
-    //         ollama_url = await input({
-    //             message: "Please enter the Ollama URL",
-    //             validate: (input) => {
-    //                 if (
-    //                     input.startsWith("http://") ||
-    //                     input.startsWith("https://")
-    //                 ) {
-    //                     return true;
-    //                 }
-    //                 return "Please enter a valid URL starting with http:// or https://";
-    //             },
-    //         });
-    //     }
-    //     const ollama = createOllama({
-    //         baseURL: ollama_url,
-    //     });
-    //     const modelList = (
-    //         await fetch(ollama_url + "/tags").then((res) => res.json())
-    //     ).models.map(({ model }: { model: string }) => ({
-    //         name: model,
-    //         value: model,
-    //     })) as { name: string; value: string }[];
-    //     const modelId = await select({
-    //         message: "Please select a model",
-    //         choices: modelList,
-    //     });
-    //     return {
-    //         model: ollama.languageModel(modelId) as LanguageModelV1,
-    //         provider: "ollama",
-    //     };
+        // } else if (provider === "ollama") {
+        //     let ollama_url = await select({
+        //         message: "Please select the Ollama URL",
+        //         choices: [
+        //             {
+        //                 name: "Local (http://localhost:11434/api)",
+        //                 value: "http://localhost:11434/api",
+        //             },
+        //             {
+        //                 name: "Hamachi (http://25.37.31.169:11434/api)",
+        //                 value: "http://25.37.31.169:11434/api",
+        //             },
+        //             {
+        //                 name: "Custom URL",
+        //                 value: "custom",
+        //             },
+        //         ],
+        //     });
+        //     if (ollama_url === "custom") {
+        //         ollama_url = await input({
+        //             message: "Please enter the Ollama URL",
+        //             validate: (input) => {
+        //                 if (
+        //                     input.startsWith("http://") ||
+        //                     input.startsWith("https://")
+        //                 ) {
+        //                     return true;
+        //                 }
+        //                 return "Please enter a valid URL starting with http:// or https://";
+        //             },
+        //         });
+        //     }
+        //     const ollama = createOllama({
+        //         baseURL: ollama_url,
+        //     });
+        //     const modelList = (
+        //         await fetch(ollama_url + "/tags").then((res) => res.json())
+        //     ).models.map(({ model }: { model: string }) => ({
+        //         name: model,
+        //         value: model,
+        //     })) as { name: string; value: string }[];
+        //     const modelId = await select({
+        //         message: "Please select a model",
+        //         choices: modelList,
+        //     });
+        //     return {
+        //         model: ollama.languageModel(modelId) as LanguageModelV1,
+        //         provider: "ollama",
+        //     };
     } else {
         throw new Error("Model is not specified");
     }
@@ -264,23 +265,24 @@ export async function input_start_from() {
 }
 
 export function getDefaultModelWaitTime(props: {
-    model: LanguageModelV1;
-    provider: string;
+    modelId: string;
+    provider: (typeof providerOption)[number]["value"];
 }) {
-    const { model, provider } = props;
-    if (provider === "groq") {
-        return 16_000; // 16 seconds
+    const { provider } = props;
+    const modelId = props.modelId as ModelIdType
+    if (provider === "groq" && modelId === "openai/gpt-oss-120b") {
+        return 20_000; // 20 seconds
     }
-    if (model.modelId === "deepseek-r1-distill-llama-70b") {
+    if (modelId === "deepseek-r1-distill-llama-70b") {
         return 30_000; // 30 seconds
     }
-    if (model.modelId === "gemini-2.5-flash-lite") {
+    if (modelId === "gemini-2.5-flash-lite") {
         return 10_000; // 10 seconds
     }
-    if (model.modelId.includes("gemma")) {
+    if (modelId.includes("gemma")) {
         return 2_000; // 2 seconds
     }
-    if (model.modelId.includes("qwen/qwq-32b:free")) {
+    if (modelId.includes("qwen/qwq-32b:free")) {
         // 1 min
         return 60_000; // 60 seconds
     }
@@ -305,10 +307,14 @@ export function getTranslationPrompt(props: {
     similarity_retry_count: number;
     modelId: string;
 }) {
-    const { similarity_retry_count, modelId } = props;
+    const { similarity_retry_count } = props;
+    const modelId = props.modelId as ModelIdType
     if (
         modelId === "llama-3.3-70b-versatile" ||
-        modelId === "gemini-2.5-flash-lite"
+        modelId === "gemini-2.5-flash-lite" ||
+        modelId === "openai/gpt-oss-120b" ||
+        modelId === "openai/gpt-oss-20b" ||
+        modelId === "openai/gpt-oss-20b:free"
     ) {
         return oddTranslationPrompt(similarity_retry_count);
     }
@@ -317,7 +323,19 @@ export function getTranslationPrompt(props: {
 
 function evenTranslationPrompt(similarity_retry_count: number) {
     if (similarity_retry_count % 2 === 0) {
-        return `# 指令：
+        return ch_prompt;
+    }
+    return en_prompt;
+}
+
+export function oddTranslationPrompt(similarity_retry_count: number) {
+    if (similarity_retry_count % 2 === 1) {
+        return ch_prompt;
+    }
+    return en_prompt;
+}
+
+const ch_prompt = `# 指令：
             請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
 
             # 翻譯規則：
@@ -329,8 +347,8 @@ function evenTranslationPrompt(similarity_retry_count: number) {
 
             # 其他注意事項
             請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。`;
-    }
-    return `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
+
+const en_prompt = `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
 After the translation is done, re-check the result and keep:
 
 1. The article is indeed translated into traditional Chinese (Taiwan).
@@ -345,33 +363,13 @@ Now you understand the translation rule, here's the instruction of how you will 
 5. If somehow the article is entirely untranslated, please go back to step 1 and make sure to actually translate the article this time.
 
 The article will be presented in the following section.`;
-}
 
-export function oddTranslationPrompt(similarity_retry_count: number) {
-    if (similarity_retry_count % 2 === 1) {
-        return `# 指令：
-            請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
-
-            # 翻譯規則：
-            1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。
-            2.  其餘內容需翻譯成通順自然的台灣繁體中文。
-
-            # 輸出要求：
-            直接輸出翻譯後的完整文章，不要包含任何說明、標題或原文。
-
-            # 其他注意事項
-            請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。`;
-    }
-    return `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
-After the translation is done, re-check the result and keep:
-1. The article is indeed translated into traditional Chinese (Taiwan).
-2. Proper nouns are in their original Japanese form.`;
-}
-
-export type ResultType<T, E> = {
-    success: true;
-    value: T;
-} | {
-    success: false;
-    error: E
-}
+export type ResultType<T, E> =
+    | {
+          success: true;
+          value: T;
+      }
+    | {
+          success: false;
+          error: E;
+      };

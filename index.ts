@@ -2,7 +2,7 @@ import { select } from "@inquirer/prompts";
 import { replaceTextInFiles } from "./src/replace";
 import { translation } from "./src/translation";
 
-import 'dotenv/config'
+import "dotenv/config";
 import {
     getDefaultModelWaitTime,
     input_auto_retry,
@@ -65,7 +65,7 @@ async function translate_from_URL() {
         url_string,
         auto_retry,
         divide_line,
-        sleep_ms: getDefaultModelWaitTime({ model, provider }),
+        sleep_ms: getDefaultModelWaitTime({ modelId: model.modelId, provider }),
         start_from,
         with_Cookies,
     });
