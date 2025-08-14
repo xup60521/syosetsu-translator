@@ -4,7 +4,7 @@ import type { LanguageModelV1 } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { select, input, confirm, number } from "@inquirer/prompts";
-import { createOllama } from "ollama-ai-provider";
+// import { createOllama } from "ollama-ai-provider";
 import { createGeminiProvider } from "ai-sdk-provider-gemini-cli";
 import { z } from "zod";
 import {
@@ -166,55 +166,55 @@ export async function input_select_model() {
             model: openrouter.languageModel(modelId) as LanguageModelV1,
             provider: "openrouter",
         };
-    } else if (provider === "ollama") {
-        let ollama_url = await select({
-            message: "Please select the Ollama URL",
-            choices: [
-                {
-                    name: "Local (http://localhost:11434/api)",
-                    value: "http://localhost:11434/api",
-                },
-                {
-                    name: "Hamachi (http://25.37.31.169:11434/api)",
-                    value: "http://25.37.31.169:11434/api",
-                },
-                {
-                    name: "Custom URL",
-                    value: "custom",
-                },
-            ],
-        });
-        if (ollama_url === "custom") {
-            ollama_url = await input({
-                message: "Please enter the Ollama URL",
-                validate: (input) => {
-                    if (
-                        input.startsWith("http://") ||
-                        input.startsWith("https://")
-                    ) {
-                        return true;
-                    }
-                    return "Please enter a valid URL starting with http:// or https://";
-                },
-            });
-        }
-        const ollama = createOllama({
-            baseURL: ollama_url,
-        });
-        const modelList = (
-            await fetch(ollama_url + "/tags").then((res) => res.json())
-        ).models.map(({ model }: { model: string }) => ({
-            name: model,
-            value: model,
-        })) as { name: string; value: string }[];
-        const modelId = await select({
-            message: "Please select a model",
-            choices: modelList,
-        });
-        return {
-            model: ollama.languageModel(modelId) as LanguageModelV1,
-            provider: "ollama",
-        };
+    // } else if (provider === "ollama") {
+    //     let ollama_url = await select({
+    //         message: "Please select the Ollama URL",
+    //         choices: [
+    //             {
+    //                 name: "Local (http://localhost:11434/api)",
+    //                 value: "http://localhost:11434/api",
+    //             },
+    //             {
+    //                 name: "Hamachi (http://25.37.31.169:11434/api)",
+    //                 value: "http://25.37.31.169:11434/api",
+    //             },
+    //             {
+    //                 name: "Custom URL",
+    //                 value: "custom",
+    //             },
+    //         ],
+    //     });
+    //     if (ollama_url === "custom") {
+    //         ollama_url = await input({
+    //             message: "Please enter the Ollama URL",
+    //             validate: (input) => {
+    //                 if (
+    //                     input.startsWith("http://") ||
+    //                     input.startsWith("https://")
+    //                 ) {
+    //                     return true;
+    //                 }
+    //                 return "Please enter a valid URL starting with http:// or https://";
+    //             },
+    //         });
+    //     }
+    //     const ollama = createOllama({
+    //         baseURL: ollama_url,
+    //     });
+    //     const modelList = (
+    //         await fetch(ollama_url + "/tags").then((res) => res.json())
+    //     ).models.map(({ model }: { model: string }) => ({
+    //         name: model,
+    //         value: model,
+    //     })) as { name: string; value: string }[];
+    //     const modelId = await select({
+    //         message: "Please select a model",
+    //         choices: modelList,
+    //     });
+    //     return {
+    //         model: ollama.languageModel(modelId) as LanguageModelV1,
+    //         provider: "ollama",
+    //     };
     } else {
         throw new Error("Model is not specified");
     }
@@ -332,8 +332,19 @@ function evenTranslationPrompt(similarity_retry_count: number) {
     }
     return `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
 After the translation is done, re-check the result and keep:
+
 1. The article is indeed translated into traditional Chinese (Taiwan).
-2. Proper nouns are in their original Japanese form.`;
+2. Proper nouns are in their original Japanese form.
+
+Now you understand the translation rule, here's the instruction of how you will translate the article.
+
+1. Go through the entire article and understand what it says. Don't translate yet.
+2. Identify the proper nouns and understand the context around them. Don't translate yet.
+3. Around the proper nouns, based on the understanding of the context, now you can translate the article without changing proper nouns. (keep proper nouns their original form).
+4. Revise the translation result. If you accidentally translate the proper nouns, this is the chance you can fix it. If the proper noun is in Japanese, you should keep it in its original Japanese form.
+5. If somehow the article is entirely untranslated, please go back to step 1 and make sure to actually translate the article this time.
+
+The article will be presented in the following section.`;
 }
 
 export function oddTranslationPrompt(similarity_retry_count: number) {

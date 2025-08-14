@@ -19,10 +19,10 @@ export const providerOption = [
         name: "OpenRouter",
         value: "openrouter",
     },
-    {
-        name: "Ollama",
-        value: "ollama",
-    },
+    // {
+    //     name: "Ollama",
+    //     value: "ollama",
+    // },
 ];
 
 export const googleModelList = [
@@ -105,6 +105,11 @@ export const openaiModelList = [
 ];
 
 export const groqModelList = [
+    // moonshotai/kimi-k2-instruct
+    {
+        name: "moonshotai/kimi-k2-instruct",
+        value: "moonshotai/kimi-k2-instruct",
+    },
     // openai/gpt-oss-120b
     {
         name: "openai/gpt-oss-120b",
@@ -123,32 +128,40 @@ export const groqModelList = [
         name: "llama-3.1-8b-instant",
         value: "llama-3.1-8b-instant",
     },
+    // llama3-70b-8192
+    {
+        name: "llama3-70b-8192",
+        value: "llama3-70b-8192",
+    },
+    {
+        name: "meta-llama/llama-4-maverick-17b-128e-instruct",
+        value: "meta-llama/llama-4-maverick-17b-128e-instruct",
+    },
     {
         name: "meta-llama/llama-4-scout-17b-16e-instruct",
         value: "meta-llama/llama-4-scout-17b-16e-instruct",
+    },
+    {
+        name: "compound-beta",
+        value: "compound-beta"
     },
     // qwen/qwen3-32b
     {
         name: "qwen/qwen3-32b",
         value: "qwen/qwen3-32b",
     },
-    // moonshotai/kimi-k2-instruct
-    {
-        name: "moonshotai/kimi-k2-instruct",
-        value: "moonshotai/kimi-k2-instruct",
-    },
     // deepseek-r1-distill-llama-70b
     {
         name: "deepseek-r1-distill-llama-70b",
         value: "deepseek-r1-distill-llama-70b",
     },
-];
+] as const;
 
 export const openRouterModelList = [
     // openai/gpt-oss-20b:free
     {
         name: "openai/gpt-oss-20b:free",
-        value: "openai/gpt-oss-20b:free"
+        value: "openai/gpt-oss-20b:free",
     },
     {
         name: "moonshotai/kimi-k2:free",
