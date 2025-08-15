@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 
 type IdentifyProperties = {
-    series_title: string;
+    series_title_and_author: string;
     title: string;
     tags?: string[];
 };
@@ -12,7 +12,7 @@ type IdentifyProperties = {
 /**
  * Replaces specific keywords in the input string based on the provided identification properties.
  *
- * The function checks for the presence of series names in the `tags`, `series_title`, `title`, or the input string itself.
+ * The function checks for the presence of series names in the `tags`, `series_title_and_author`, `title`, or the input string itself.
  * If a match is found, it replaces all occurrences of the corresponding keywords (sorted by key length descending)
  * with their mapped values from the `replace_keywords` object.
  *
@@ -24,7 +24,7 @@ export async function replace_words(
     str: string,
     identify_properties?: IdentifyProperties
 ): Promise<string> {
-    const { series_title, title, tags } = identify_properties || {};
+    const { series_title_and_author, title, tags } = identify_properties || {};
     const novelSeriesList = Object.keys(replace_keywords);
     novelSeriesList.forEach((series_name) => {
         if (tags?.includes(series_name)) {
@@ -34,8 +34,8 @@ export async function replace_words(
             ).sort((a, b) => b[0].length - a[0].length) as [string, string][]) {
                 str = str.replaceAll(key, value);
             }
-        } else if (series_title?.includes(series_name)) {
-            // if series_title includes series_name, replace all keywords
+        } else if (series_title_and_author?.includes(series_name)) {
+            // if series_title_and_author includes series_name, replace all keywords
             for (const [key, value] of Object.entries(
                 replace_keywords[series_name]
             ).sort((a, b) => b[0].length - a[0].length) as [string, string][]) {

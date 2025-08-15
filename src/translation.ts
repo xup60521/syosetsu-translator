@@ -102,7 +102,10 @@ export async function translation(params: TranslationParameter) {
                         url_string,
                         auto_retry,
                         divide_line,
-                        sleep_ms: getDefaultModelWaitTime({ modelId: model.modelId, provider }),
+                        sleep_ms: getDefaultModelWaitTime({
+                            modelId: model.modelId,
+                            provider,
+                        }),
                         start_from: url_index + 1,
                         with_Cookies,
                     });
@@ -126,7 +129,10 @@ export async function translation(params: TranslationParameter) {
             url_string,
             auto_retry,
             divide_line,
-            sleep_ms: getDefaultModelWaitTime({ modelId: model.modelId, provider }),
+            sleep_ms: getDefaultModelWaitTime({
+                modelId: model.modelId,
+                provider,
+            }),
             start_from,
             with_Cookies,
         });
@@ -135,8 +141,15 @@ export async function translation(params: TranslationParameter) {
 
 async function doTranslation(novel_url: string, props: DoTranslationProps) {
     const { sleep_ms, model, divide_line, with_Cookies } = props;
-    const { series_title, paragraphArr, title, indexPrefix, url, tags } =
-        await novel_handler(novel_url, { with_Cookies });
+    const {
+        series_title_and_author,
+        paragraphArr,
+        title,
+        indexPrefix,
+        url,
+        tags,
+        author,
+    } = await novel_handler(novel_url, { with_Cookies });
 
     const translationResult = await translateText({
         paragraphArr,
@@ -157,15 +170,21 @@ async function doTranslation(novel_url: string, props: DoTranslationProps) {
         `# ${title} 
     
 URL: ${url}
+Author: ${author}
 ${indexPrefix}
 
 Model: ${model.modelId}
 Devide Line: ${divide_line}
 Tags: ${tags?.join(", ") ?? ""}
     
-` + (await replace_words(sectionedText, { series_title, title, tags }));
+` +
+        (await replace_words(sectionedText, {
+            series_title_and_author,
+            title,
+            tags,
+        }));
 
-    await handle_file({ series_title, title, indexPrefix, content });
+    await handle_file({ series_title_and_author, title, indexPrefix, content });
 }
 
 type TranslateTextParams = {

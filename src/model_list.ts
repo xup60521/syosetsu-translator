@@ -3,7 +3,8 @@ export type ModelIdType =
     | (typeof geminiCLIModelList)[number]["value"]
     | (typeof openaiModelList)[number]["value"]
     | (typeof groqModelList)[number]["value"]
-    | (typeof openRouterModelList)[number]["value"];
+    | (typeof openRouterModelList)[number]["value"]
+    | (typeof mistralAIModelList)[number]["value"];
 
 export const providerOption = [
     {
@@ -30,7 +31,11 @@ export const providerOption = [
     //     name: "Ollama",
     //     value: "ollama",
     // },
-];
+    {
+        name: "Mistral AI",
+        value: "mistral-ai",
+    },
+] as const;
 
 export const googleModelList = [
     // // 1.5
@@ -203,5 +208,52 @@ export const openRouterModelList = [
     {
         name: "z-ai/glm-4.5-air:free",
         value: "z-ai/glm-4.5-air:free",
+    },
+] as const;
+
+export const mistralAIModelList = [
+    {
+        name: "Mistral Large 2.1",
+        value: "mistral-large-2411",
+    },
+    {
+        name: "Mistral Medium 3",
+        value: "mistral-medium-2505",
+    },
+    {
+        name: "Mistral Medium 3.1",
+        value: "mistral-medium-2508",
+    },
+    {
+        name: "Magistral Medium 1.1",
+        value: "magistral-medium-2507",
+    },
+    {
+        name: "Magistral Medium 1",
+        value: "magistral-medium-2506",
+    },
+    {
+        name: "Mistral Small 2",
+        value: "mistral-small-2407",
+    },
+    {
+        name: "Ministral 8B",
+        value: "ministral-8b-2410",
+    },
+    {
+        name: "Magistral Small 1",
+        value: "magistral-small-2506",
+    },
+    {
+        name: "Mistral Small 3.1",
+        value: "mistral-small-2503",
+    },
+    {
+        name: "Mistral Small 3",
+        value: "mistral-small-2501",
+    },
+    {
+        name: "Mistral Nemo 12B",
+        value: "open-mistral-nemo",
     },
 ] as const;

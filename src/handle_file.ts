@@ -1,24 +1,24 @@
 import * as fs from "node:fs/promises";
 export async function handle_file({
-    series_title,
+    series_title_and_author,
     title,
     indexPrefix,
     content,
 }: {
-    series_title: string;
+    series_title_and_author: string;
     title: string;
     indexPrefix: string;
     content: string;
 }) {
     try {
-        await ensureDir(`./output/${series_title}`);
+        await ensureDir(`./output/${series_title_and_author}`);
     } catch (error) {
         console.error(
-            `Error ensuring directory "./output/${series_title}":`,
+            `Error ensuring directory "./output/${series_title_and_author}":`,
             error
         );
     }
-    const file_path_and_name = `./output/${series_title}/${indexPrefix}-${title}_translated.txt`;
+    const file_path_and_name = `./output/${series_title_and_author}/${indexPrefix}-${title}_translated.txt`;
     fs.writeFile(
         file_path_and_name,
         content

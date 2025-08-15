@@ -7,8 +7,10 @@ export type NovelHandlerResultType = {
     title: string;
     indexPrefix: string;
     paragraphArr: string[];
+    series_title_and_author: string;
     series_title: string;
     url: string;
+    author: string;
     tags?: string[];
 };
 

@@ -4,6 +4,7 @@ import type { LanguageModelV1 } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { select, input, confirm, number } from "@inquirer/prompts";
+import { createMistral } from "@ai-sdk/mistral";
 // import { createOllama } from "ollama-ai-provider";
 import { createGeminiProvider } from "ai-sdk-provider-gemini-cli";
 import { z } from "zod";
@@ -15,6 +16,7 @@ import {
     openRouterModelList,
     geminiCLIModelList,
     type ModelIdType,
+    mistralAIModelList,
 } from "./model_list";
 
 const default_divide_line = 30;
@@ -216,6 +218,18 @@ export async function input_select_model() {
         //         model: ollama.languageModel(modelId) as LanguageModelV1,
         //         provider: "ollama",
         //     };
+    } else if (provider === "mistral-ai") {
+        const mistral = createMistral({
+            apiKey: process.env.MISTRAL_KEY,
+        });
+        const modelId = await select({
+            message: "Please select a model",
+            choices: mistralAIModelList,
+        });
+        return {
+            model: mistral.languageModel(modelId) as LanguageModelV1,
+            provider: "mistral-ai",
+        };
     } else {
         throw new Error("Model is not specified");
     }
@@ -266,10 +280,10 @@ export async function input_start_from() {
 
 export function getDefaultModelWaitTime(props: {
     modelId: string;
-    provider: (typeof providerOption)[number]["value"];
+    provider: string;
 }) {
-    const { provider } = props;
-    const modelId = props.modelId as ModelIdType
+    const provider = props.provider as (typeof providerOption)[number]["value"];
+    const modelId = props.modelId as ModelIdType;
     if (provider === "groq" && modelId === "openai/gpt-oss-120b") {
         return 20_000; // 20 seconds
     }
@@ -308,13 +322,14 @@ export function getTranslationPrompt(props: {
     modelId: string;
 }) {
     const { similarity_retry_count } = props;
-    const modelId = props.modelId as ModelIdType
+    const modelId = props.modelId as ModelIdType;
     if (
         modelId === "llama-3.3-70b-versatile" ||
         modelId === "gemini-2.5-flash-lite" ||
         modelId === "openai/gpt-oss-120b" ||
         modelId === "openai/gpt-oss-20b" ||
-        modelId === "openai/gpt-oss-20b:free"
+        modelId === "openai/gpt-oss-20b:free" ||
+        mistralAIModelList.map(d => d.value as string).includes(modelId)
     ) {
         return oddTranslationPrompt(similarity_retry_count);
     }

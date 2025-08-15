@@ -53,8 +53,13 @@ async function single_handler(
         title: title.replaceAll(regex, " "),
         indexPrefix: indexPrefix.replaceAll(regex, " "),
         paragraphArr,
-        series_title: (series_title + " " + author).replaceAll(regex, " "),
+        series_title_and_author: (series_title + " " + author).replaceAll(
+            regex,
+            " "
+        ),
+        series_title,
         url: urlobj.href,
+        author,
         tags: tags,
     };
 }

@@ -17,16 +17,22 @@ export async function syosetsu_handler(
         const $element = $(element);
         paragraphArr.push($element.text());
     });
-    const series_title = $("div.c-announce:nth-child(2) > a").text();
+
+    const series_title = $(
+        "div.c-announce:nth-child(2) > a:nth-child(1)"
+    ).text();
+    const author = $("div.c-announce:nth-child(2) > a:nth-child(2)").text();
     const tags = getNovelTags(urlobj);
 
     return {
         title: title,
         indexPrefix: urlobj.pathname.replaceAll("/", " ").trim(),
         paragraphArr,
-        series_title,
+        series_title_and_author: series_title + " " + author,
         url: urlobj.href,
         tags: tags,
+        series_title,
+        author,
     };
 }
 
