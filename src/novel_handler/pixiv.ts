@@ -1,5 +1,6 @@
 import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from ".";
+import { getCookiesFromRedis } from "../redis";
 
 const regex = /[<>:"/\\|?*]/g;
 
@@ -14,27 +15,44 @@ async function single_handler(
     urlobj: URL,
     { with_Cookies }: { with_Cookies?: boolean }
 ): Promise<NovelHandlerResultType> {
-    let this_novel_data;
-    let fetchOptions: RequestInit = {};
+    let this_novel_response;
+    const fetchOptions: RequestInit = {};
+    fetchOptions.headers = {};
     if (with_Cookies) {
-        fetchOptions.headers = {
-            Cookie: process.env.PIXIV_COOKIES ?? "",
-        };
+        const currentCookie = await getCookiesFromRedis({
+            websiteType: "pixiv",
+        });
+
+        fetchOptions.headers.Cookie = currentCookie || "";
     }
     if (urlobj.pathname.includes("/novel/show")) {
         const novel_id = urlobj.searchParams.get("id");
-        this_novel_data = await fetch(
+        this_novel_response = await fetch(
             `https://www.pixiv.net/ajax/novel/${novel_id}`,
             fetchOptions
-        ).then((res) => res.json());
-    } else if (urlobj.pathname.includes("/ajax/novel")) {
-        this_novel_data = await fetch(urlobj, fetchOptions).then((res) =>
-            res.json()
         );
+    } else if (urlobj.pathname.includes("/ajax/novel")) {
+        this_novel_response = await fetch(urlobj, fetchOptions);
     } else {
         throw new Error("An error happens with url: " + urlobj.href);
     }
-    // console.log(this_novel_data)
+
+    // Cookies
+    // const setCookieHeaders: string[] = [];
+    // this_novel_response.headers.forEach((value: string, name: string) => {
+    //     if (name.toLowerCase() === "set-cookie") {
+    //         setCookieHeaders.push(value);
+    //     }
+    // });
+    // if (setCookieHeaders.length > 0) {
+    //     await setCookiesToRedis({
+    //         websiteType: "pixiv",
+    //         set_cookies: setCookieHeaders,
+    //     });
+    // }
+
+    const this_novel_data = await this_novel_response.json();
+
     const paragraphs = this_novel_data.body.content;
     const paragraphArr = paragraphs.split("\n");
     const tags = this_novel_data.body?.tags?.tags?.map(
@@ -62,66 +80,4 @@ async function single_handler(
         author,
         tags: tags,
     };
-}
-
-interface PreloadContent {
-    timestamp: string;
-    novel: Novel;
-}
-
-interface Novel {
-    [id: string]: NovelID;
-}
-
-interface NovelID {
-    description: string;
-    id: string;
-    title: string;
-    pageCount: number;
-    content: string;
-    coverUrl: string;
-    suggestedSettings: SuggestedSettings;
-    isBookmarkable: boolean;
-    bookmarkData: null;
-    likeData: boolean;
-    pollData: null;
-    marker: null;
-    seriesNavData: SeriesNavData;
-    descriptionBoothId: null;
-    descriptionYoutubeId: null;
-    comicPromotion: null;
-    fanboxPromotion: null;
-    contestBanners: any[];
-    contestData: null;
-    request: null;
-    imageResponseOutData: any[];
-    imageResponseData: any[];
-    imageResponseCount: number;
-}
-
-interface SeriesNavData {
-    seriesType: string;
-    seriesId: number;
-    title: string;
-    isConcluded: boolean;
-    isReplaceable: boolean;
-    isWatched: boolean;
-    isNotifying: boolean;
-    order: number;
-    prev: Next;
-    next: Next;
-}
-
-interface Next {
-    title: string;
-    order: number;
-    id: string;
-    available: boolean;
-}
-
-interface SuggestedSettings {
-    viewMode: number;
-    themeBackground: number;
-    themeSize: null;
-    themeSpacing: null;
 }
