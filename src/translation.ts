@@ -115,28 +115,7 @@ export async function translation(params: TranslationParameter) {
     }
 
     multibar.stop();
-    return (async () => {
-        const { model, provider } = await input_select_model();
-        const divide_line = await input_divide_line();
-        const url_string = await input_url_string();
-        const auto_retry = await input_auto_retry();
-        const start_from = await input_start_from();
-        const with_Cookies = await input_with_cookies_or_not();
-
-        await translation({
-            model,
-            provider,
-            url_string,
-            auto_retry,
-            divide_line,
-            sleep_ms: getDefaultModelWaitTime({
-                modelId: model.modelId,
-                provider,
-            }),
-            start_from,
-            with_Cookies,
-        });
-    })();
+    return;
 }
 
 async function doTranslation(novel_url: string, props: DoTranslationProps) {

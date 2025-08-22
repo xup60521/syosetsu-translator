@@ -2,7 +2,7 @@ import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from ".";
 import { getCookiesFromRedis } from "../redis";
 
-const regex = /[<>:"/\\|?*]/g;
+export const regex = /[<>:"/\\|?*]/g;
 
 export async function pixiv_handler(
     urlobj: URL,

@@ -30,6 +30,7 @@
     "dotenv": "^16.6.1",
     "es-cookie": "^1.5.0",
     "ink": "^6.2.2",
+    "inquirer-select-pro": "^1.0.0-alpha.9",
     "string-similarity-js": "^2.1.4",
     "zod": "^3.25.76"
   }
