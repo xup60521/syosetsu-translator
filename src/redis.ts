@@ -100,15 +100,6 @@ export async function updateCookiesToRedis(props: {
     const setCookiesStr = setCookieArr.join("; ")
     const setCookiesJSON = Cookies.parse(setCookiesStr)
 
-    // let newCookiesStr = ""
-    // Object.keys(originalCookiesJSON).forEach(key => {
-    //     if (key in setCookiesJSON) {
-    //         newCookiesStr += `${key}=${setCookiesJSON[key]}; `
-    //     } else {
-    //         newCookiesStr += `${key}=${originalCookiesJSON[key]}; `
-    //     }
-    // })
-
     const newCookiesJSON = structuredClone(originalCookiesJSON)
     Object.keys(originalCookiesJSON).forEach(key => {
         if (key in setCookiesJSON) {
@@ -117,7 +108,18 @@ export async function updateCookiesToRedis(props: {
     })
 
     // console.log(newCookiesJSON)
+    const newCookiesStr = cookiesJSONToString(newCookiesJSON)
     const key = websiteType    
-    const newCookiesStr = Object.keys(newCookiesJSON).map(key => `${key}=${newCookiesJSON[key]}`).join("; ")
     await redis.set(key, newCookiesStr)
+}
+
+/**
+ * Converts a JSON object of cookies into a cookie string separated by ';'.
+ * @param cookiesJSON The object where keys are cookie names and values are cookie values.
+ * @returns A cookie string (e.g., "name1=value1; name2=value2").
+ */
+export function cookiesJSONToString(cookiesJSON: Record<string, string>): string {
+    return Object.entries(cookiesJSON)
+        .map(([key, value]) => `${key}=${value}`)
+        .join("; ");
 }
