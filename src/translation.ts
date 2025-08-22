@@ -169,10 +169,10 @@ async function doTranslation(novel_url: string, props: DoTranslationProps) {
     const content =
         `# ${title} 
     
-URL: ${url}
-Author: ${author}
 ${indexPrefix}
 
+URL: ${url}
+Author: ${author}
 Model: ${model.modelId}
 Devide Line: ${divide_line}
 Tags: ${tags?.join(", ") ?? ""}

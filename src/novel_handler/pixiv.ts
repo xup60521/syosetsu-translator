@@ -38,21 +38,10 @@ async function single_handler(
     }
 
     // Cookies
-    // const setCookieHeaders: string[] = [];
-    // this_novel_response.headers.forEach((value: string, name: string) => {
-    //     if (name.toLowerCase() === "set-cookie") {
-    //         setCookieHeaders.push(value);
-    //     }
-    // });
-    // if (setCookieHeaders.length > 0) {
-    //     await setCookiesToRedis({
-    //         websiteType: "pixiv",
-    //         set_cookies: setCookieHeaders,
-    //     });
-    // }
+    const set_cookies = this_novel_response.headers.getSetCookie()
 
+    
     const this_novel_data = await this_novel_response.json();
-
     const paragraphs = this_novel_data.body.content;
     const paragraphArr = paragraphs.split("\n");
     const tags = this_novel_data.body?.tags?.tags?.map(

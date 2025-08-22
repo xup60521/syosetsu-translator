@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import * as Cookies from "es-cookie";
 
 // Initialize Redis client. This uses environment variables (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN).
 // Make sure these are set in your environment where the script runs.
@@ -87,3 +88,36 @@ export async function getCookiesFromRedis(props: {
     return undefined;
 }
 
+export async function updateCookiesToRedis(props: {
+    websiteType: WebsiteType;
+    setCookieArr: string[];
+}) {
+    const { websiteType, setCookieArr } = props;
+    if (!setCookieArr || setCookieArr.length === 0) return;
+    const originalCookiesStr = (await getCookiesFromRedis({ websiteType }))!;
+    const originalCookiesJSON = Cookies.parse(originalCookiesStr);
+
+    const setCookiesStr = setCookieArr.join("; ")
+    const setCookiesJSON = Cookies.parse(setCookiesStr)
+
+    // let newCookiesStr = ""
+    // Object.keys(originalCookiesJSON).forEach(key => {
+    //     if (key in setCookiesJSON) {
+    //         newCookiesStr += `${key}=${setCookiesJSON[key]}; `
+    //     } else {
+    //         newCookiesStr += `${key}=${originalCookiesJSON[key]}; `
+    //     }
+    // })
+
+    const newCookiesJSON = structuredClone(originalCookiesJSON)
+    Object.keys(originalCookiesJSON).forEach(key => {
+        if (key in setCookiesJSON) {
+            newCookiesJSON[key] = setCookiesJSON[key]
+        }
+    })
+
+    // console.log(newCookiesJSON)
+    const key = websiteType    
+    const newCookiesStr = Object.keys(newCookiesJSON).map(key => `${key}=${newCookiesJSON[key]}`).join("; ")
+    await redis.set(key, newCookiesStr)
+}
