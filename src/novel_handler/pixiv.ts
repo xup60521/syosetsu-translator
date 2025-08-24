@@ -1,8 +1,8 @@
 import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from ".";
-import { getCookiesFromRedis } from "../redis";
+import { getCookiesFromRedis, updateCookiesToRedis } from "../redis";
 
-export const regex = /[<>:"/\\|?*]/g;
+export const windowsFileEscapeRegex = /[<>:"/\\|?*]/g;
 
 export async function pixiv_handler(
     urlobj: URL,
@@ -38,9 +38,12 @@ async function single_handler(
     }
 
     // Cookies
-    const set_cookies = this_novel_response.headers.getSetCookie()
+    const set_cookies = this_novel_response.headers.getSetCookie();
+    await updateCookiesToRedis({
+        websiteType: "pixiv",
+        setCookieArr: set_cookies,
+    });
 
-    
     const this_novel_data = await this_novel_response.json();
     const paragraphs = this_novel_data.body.content;
     const paragraphArr = paragraphs.split("\n");
@@ -51,17 +54,17 @@ async function single_handler(
     const series_title = this_novel_data.body?.seriesNavData?.title ?? title;
     // after removing through regex, delete the additional whitespaces on the right
     const author = this_novel_data.body?.userName
-        .replaceAll(regex, " ")
+        .replaceAll(windowsFileEscapeRegex, " ")
         .trimEnd();
     const indexPrefix =
         series_title + " " + (this_novel_data.body?.seriesNavData?.order ?? "");
 
     return {
-        title: title.replaceAll(regex, " "),
-        indexPrefix: indexPrefix.replaceAll(regex, " "),
+        title: title.replaceAll(windowsFileEscapeRegex, " "),
+        indexPrefix: indexPrefix.replaceAll(windowsFileEscapeRegex, " "),
         paragraphArr,
         series_title_and_author: (series_title + " " + author).replaceAll(
-            regex,
+            windowsFileEscapeRegex,
             " "
         ),
         series_title,

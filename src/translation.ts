@@ -12,6 +12,7 @@ import {
     input_with_cookies_or_not,
     getTranslationPrompt,
     type ResultType,
+    chunkArray,
 } from "./utils";
 import { decompose_url } from "./novel_handler/decompose_url";
 import { handle_file } from "./handle_file";
@@ -177,13 +178,15 @@ export async function translateText(
     params: TranslateTextParams
 ): Promise<ResultType<string[], any>> {
     const { paragraphArr, divide_line, model, sleep_ms } = params;
-    const numberOfLine = paragraphArr.length;
-    const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
-    const buf: string[][] = [];
 
-    for (let i = 0; i < numberOfSections; i++) {
-        buf.push(paragraphArr.slice(divide_line * i, divide_line * (i + 1)));
-    }
+    // const numberOfLine = paragraphArr.length;
+    // const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
+    // const buf: string[][] = [];
+    // for (let i = 0; i < numberOfSections; i++) {
+    //     buf.push(paragraphArr.slice(divide_line * i, divide_line * (i + 1)));
+    // }
+
+    const buf = chunkArray(paragraphArr, divide_line);
 
     // Create a single progress bar for sections
     const sectionBar = multibar.create(
