@@ -137,14 +137,17 @@ async function translate_from_pixiv_user() {
         return;
     }
     console.log("Seires that are not translated");
-    console.info(notYetIncludedSeries);
+    // console.info(notYetIncludedSeries);
 
     const toTranslateUrls = await multipleSelect({
         message: "Choose series to translate",
-        options: notYetIncludedSeries.map((d) => ({
-            name: d.series_title_and_author,
-            value: `https://www.pixiv.net/novel/series/${d.series_id}`,
-        })),
+        options: notYetIncludedSeries.map((d) => {
+            const url = `https://www.pixiv.net/novel/series/${d.series_id}`;
+            return {
+                name: d.series_title_and_author + " " + url,
+                value: url,
+            };
+        }),
     });
 
     const { model, provider } = await input_select_model();
