@@ -93,24 +93,20 @@ export async function updateCookiesToRedis(props: {
     setCookieArr: string[];
 }) {
     const { websiteType, setCookieArr } = props;
+    // console.log(setCookieArr);
     if (!setCookieArr || setCookieArr.length === 0) return;
     const originalCookiesStr = (await getCookiesFromRedis({ websiteType }))!;
     const originalCookiesJSON = Cookies.parse(originalCookiesStr);
 
-    const setCookiesStr = setCookieArr.join("; ")
-    const setCookiesJSON = Cookies.parse(setCookiesStr)
-
-    const newCookiesJSON = structuredClone(originalCookiesJSON)
-    Object.keys(originalCookiesJSON).forEach(key => {
-        if (key in setCookiesJSON) {
-            newCookiesJSON[key] = setCookiesJSON[key]
-        }
-    })
+    const newCookiesJSON = updateCookieFromSetCookie(
+        originalCookiesJSON,
+        setCookieArr
+    );
 
     // console.log(newCookiesJSON)
-    const newCookiesStr = cookiesJSONToString(newCookiesJSON)
-    const key = websiteType    
-    await redis.set(key, newCookiesStr)
+    const newCookiesStr = cookiesJSONToString(newCookiesJSON);
+    const key = websiteType;
+    await redis.set(key, newCookiesStr);
 }
 
 /**
@@ -118,8 +114,35 @@ export async function updateCookiesToRedis(props: {
  * @param cookiesJSON The object where keys are cookie names and values are cookie values.
  * @returns A cookie string (e.g., "name1=value1; name2=value2").
  */
-export function cookiesJSONToString(cookiesJSON: Record<string, string>): string {
+export function cookiesJSONToString(
+    cookiesJSON: Record<string, string>
+): string {
     return Object.entries(cookiesJSON)
-        .map(([key, value]) => `${key}=${value}`)
+        .map(
+            ([key, value]) =>
+                `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+        )
         .join("; ");
+}
+
+type CookieObject = Record<string, string>;
+
+function updateCookieFromSetCookie(
+    original: CookieObject,
+    getSetCookie: string[]
+): CookieObject {
+    // Clone the original to avoid mutation
+    const updated = structuredClone(original);
+
+    for (const setCookie of getSetCookie) {
+        // Each set-cookie string is like "key=value; Path=/; ..."
+        const [cookiePart] = setCookie.split(";");
+        const [key, ...valueParts] = cookiePart.split("=");
+        const value = valueParts.join("=");
+
+        // Update the cookie object
+        updated[key.trim()] = value.trim();
+    }
+
+    return updated;
 }

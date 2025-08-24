@@ -21,10 +21,10 @@ import {
 
 const default_divide_line = 30;
 
-export async function input_with_cookies_or_not() {
+export async function input_with_cookies_or_not(props?: {default: boolean}) {
     return await confirm({
         message: "Use cookies for translation?",
-        default: false,
+        default: props?.default,
     });
 }
 

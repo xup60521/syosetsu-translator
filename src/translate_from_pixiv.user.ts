@@ -37,7 +37,9 @@ export async function translate_from_pixiv_user() {
         },
     });
     const urlObj = new URL(url);
-    const fetch_user_data_with_Cookies = await input_with_cookies_or_not();
+    const fetch_user_data_with_Cookies = await input_with_cookies_or_not({
+        default: true,
+    });
     const fetchOptions: RequestInit = {};
     fetchOptions.headers = {};
     if (fetch_user_data_with_Cookies) {
@@ -143,9 +145,10 @@ async function getNotYetTranslatedSeriesOptions(
                 series_id: props.id,
             };
         });
+    // console.log(authorFolderNamesAndSeriesId);
+
     const notYetIncludedSeries = [] as typeof authorFolderNamesAndSeriesId;
     const outputFolders = await fs.readdir("./output");
-    console.log(authorFolderNamesAndSeriesId);
     authorFolderNamesAndSeriesId.forEach((data) => {
         if (
             !outputFolders.includes(data.series_title_and_author) &&
