@@ -43,16 +43,9 @@ type TranslationParameter = {
 } & DoTranslationProps & {};
 
 export async function translation(params: TranslationParameter) {
-    const {
-        sleep_ms,
-        model,
-        divide_line,
-        with_Cookies,
-        url_string,
-        start_from,
-    } = params;
+    const { sleep_ms, model, divide_line, url_string, start_from } = params;
 
-    let { auto_retry } = params;
+    let { auto_retry, with_Cookies } = params;
     const urls = await decompose_url(url_string);
     let b1 = multibar.create(urls.length, 0);
     let url_index = start_from - 1;
@@ -84,6 +77,10 @@ export async function translation(params: TranslationParameter) {
             } else if (result === "skip") {
                 url_index++;
                 b1.update(url_index, { filename: urls[url_index] });
+                continue;
+            } else if (result === "retry_with_cookies") {
+                b1 = multibar.create(urls.length, 0);
+                with_Cookies = true;
                 continue;
             } else if (result === "stop") {
                 console.error("Operation terminated");

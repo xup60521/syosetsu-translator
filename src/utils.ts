@@ -41,6 +41,10 @@ export async function input_retry_or_stop() {
                 value: "auto-retry",
             },
             {
+                name: "Retry (with cookies)",
+                value: "retry_with_cookies",
+            },
+            {
                 name: "Skip this one",
                 value: "skip",
             },
@@ -52,6 +56,7 @@ export async function input_retry_or_stop() {
                 name: "Change Provider",
                 value: "change_provider",
             },
+            
         ] as const,
     });
 }
