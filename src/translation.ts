@@ -296,7 +296,6 @@ export async function translateText(
                         sectionBar.update(sectionIndex + 1);
                         sectionIndex++;
                         continue;
-
                     } else if (retrySectionAnswer === "retry_all") {
                         throw new Error(
                             "Retry the entire translation due to repeated empty translation results."
@@ -322,6 +321,18 @@ export async function translateText(
                 }
                 continue;
             }
+
+            // if the result is too unsimilar (probably complete different output)
+            if (stringSimilarity(streamedText, fulltext) < 0.01) {
+                console.warn(
+                    "The translation result is too dissimilar from the original content, re-translating this section..."
+                );
+                if (sleep_ms) {
+                    await sleep(sleep_ms);
+                }
+                continue;
+            }
+
             // Remove <think> tags and their content
             streamedText = streamedText.replace(
                 /<think>[\s\S]*?<\/think>/g,
