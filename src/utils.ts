@@ -21,7 +21,7 @@ import {
 
 const default_divide_line = 30;
 
-export async function input_with_cookies_or_not(props?: {default: boolean}) {
+export async function input_with_cookies_or_not(props?: { default: boolean }) {
     return await confirm({
         message: "Use cookies for translation?",
         default: props?.default,
@@ -56,7 +56,6 @@ export async function input_retry_or_stop() {
                 name: "Change Provider",
                 value: "change_provider",
             },
-            
         ] as const,
     });
 }
@@ -334,7 +333,10 @@ export function getTranslationPrompt(props: {
         modelId === "openai/gpt-oss-120b" ||
         modelId === "openai/gpt-oss-20b" ||
         modelId === "openai/gpt-oss-20b:free" ||
-        mistralAIModelList.map(d => d.value as string).includes(modelId)
+        mistralAIModelList.map((d) => d.value as string).includes(modelId) ||
+        modelId === "moonshotai/kimi-k2-instruct" ||
+        modelId === "moonshotai/kimi-k2:free" ||
+        modelId === 'gemini-2.5-flash'
     ) {
         return oddTranslationPrompt(similarity_retry_count);
     }
@@ -394,16 +396,14 @@ export type ResultType<T, E> =
           error: E;
       };
 
-
 export function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
-  if (chunkSize <= 0) {
-    throw new Error("Chunk size must be a positive number.");
-  }
+    if (chunkSize <= 0) {
+        throw new Error("Chunk size must be a positive number.");
+    }
 
-  const result: T[][] = [];
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    result.push(arr.slice(i, i + chunkSize));
-  }
-  return result;
+    const result: T[][] = [];
+    for (let i = 0; i < arr.length; i += chunkSize) {
+        result.push(arr.slice(i, i + chunkSize));
+    }
+    return result;
 }
-

@@ -18,6 +18,7 @@ import { decompose_url } from "./novel_handler/decompose_url";
 import { handle_file } from "./handle_file";
 import { streamText, type LanguageModelV1 } from "ai";
 import { stringSimilarity } from "string-similarity-js";
+import { select } from "@inquirer/prompts";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -29,10 +30,10 @@ const multibar = new cliProgress.MultiBar(
 );
 
 type DoTranslationProps = {
-    sleep_ms?: number;
     model: LanguageModelV1;
     divide_line: number;
     with_Cookies?: boolean;
+    provider: string;
 };
 
 type TranslationParameter = {
@@ -43,7 +44,7 @@ type TranslationParameter = {
 } & DoTranslationProps & {};
 
 export async function translation(params: TranslationParameter) {
-    const { sleep_ms, model, divide_line, url_string, start_from } = params;
+    const { model, divide_line, url_string, start_from, provider } = params;
 
     let { auto_retry, with_Cookies } = params;
     const urls = await decompose_url(url_string);
@@ -54,10 +55,10 @@ export async function translation(params: TranslationParameter) {
             const novel_url = urls[url_index];
             b1.update(url_index + 1, { filename: novel_url });
             await doTranslation(novel_url, {
-                sleep_ms,
                 model,
                 divide_line,
                 with_Cookies,
+                provider,
             });
             url_index++;
         } catch (err) {
@@ -100,10 +101,6 @@ export async function translation(params: TranslationParameter) {
                         url_string,
                         auto_retry,
                         divide_line,
-                        sleep_ms: getDefaultModelWaitTime({
-                            modelId: model.modelId,
-                            provider,
-                        }),
                         start_from: url_index + 1,
                         with_Cookies,
                     });
@@ -117,7 +114,7 @@ export async function translation(params: TranslationParameter) {
 }
 
 async function doTranslation(novel_url: string, props: DoTranslationProps) {
-    const { sleep_ms, model, divide_line, with_Cookies } = props;
+    const { model, divide_line, with_Cookies, provider } = props;
     const {
         series_title_and_author,
         paragraphArr,
@@ -132,7 +129,7 @@ async function doTranslation(novel_url: string, props: DoTranslationProps) {
         paragraphArr,
         divide_line,
         model,
-        sleep_ms,
+        provider,
     });
 
     if (!translationResult.success) {
@@ -168,13 +165,18 @@ type TranslateTextParams = {
     paragraphArr: string[];
     divide_line: number;
     model: LanguageModelV1;
-    sleep_ms?: number;
+    provider: string;
 };
 
 export async function translateText(
     params: TranslateTextParams
 ): Promise<ResultType<string[], any>> {
-    const { paragraphArr, divide_line, model, sleep_ms } = params;
+    const { paragraphArr, divide_line } = params;
+    let { model, provider } = params;
+    let sleep_ms = getDefaultModelWaitTime({
+        modelId: model.modelId,
+        provider,
+    });
 
     // const numberOfLine = paragraphArr.length;
     // const numberOfSections = Math.floor(numberOfLine / divide_line) + 2;
@@ -226,6 +228,8 @@ export async function translateText(
             for await (const delta of stream.textStream) {
                 streamedText += delta;
             }
+
+            // handle empty translation result
             const reg = /^[\t\n ]*$/;
             if (reg.test(streamedText)) {
                 retry_count_map.set(
@@ -237,10 +241,67 @@ export async function translateText(
                         sectionIndex + 1
                     }...\n`
                 );
+
+                // Check if the retry count exceeds the limit
                 if (retry_count_map.get(sectionIndex) ?? 0 > 3) {
-                    throw new Error(
-                        "The translation result is empty after 3 retries, additional action is required."
+                    console.warn(
+                        `The translation result is empty after 3 retries, additional action is required for section ${
+                            sectionIndex + 1
+                        }...\n`
                     );
+                    const retrySectionAnswer = await select({
+                        message:
+                            "The translation result is empty after 3 retries. What would you like to do?",
+                        choices: [
+                            {
+                                name: "Retry this section with same model",
+                                value: "retry_same",
+                            },
+                            {
+                                name: "Retry this section with different model",
+                                value: "retry_different",
+                            },
+                            {
+                                name: "Skip this section",
+                                value: "skip",
+                            },
+                            {
+                                name: "Retry the entire translation",
+                                value: "retry_all",
+                            },
+                        ] as const,
+                    });
+                    if (retrySectionAnswer === "retry_same") {
+                        retry_count_map.set(sectionIndex, 0);
+                        continue;
+                    } else if (retrySectionAnswer === "retry_different") {
+                        // Retry with a different model
+                        retry_count_map.set(sectionIndex, 0);
+                        const newModelAndProvider = await input_select_model();
+                        model = newModelAndProvider.model;
+                        provider = newModelAndProvider.provider;
+                        sleep_ms = getDefaultModelWaitTime({
+                            modelId: model.modelId,
+                            provider,
+                        });
+                        bufText.push(
+                            `\n\n[This section was retried with a different model: ${model.modelId}]\n\n`
+                        );
+                        continue;
+                    } else if (retrySectionAnswer === "skip") {
+                        // Skip this section
+                        bufText.push(
+                            `\n\n[This section was skipped due to repeated empty translation results.]\n\n`
+                        );
+                        sectionBar.update(sectionIndex + 1);
+                        sectionIndex++;
+                        continue;
+
+                    } else if (retrySectionAnswer === "retry_all") {
+                        throw new Error(
+                            "Retry the entire translation due to repeated empty translation results."
+                        );
+                    }
                 }
                 if (sleep_ms) {
                     await sleep(sleep_ms);

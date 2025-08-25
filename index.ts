@@ -77,7 +77,6 @@ async function translate_from_URL() {
         url_string,
         auto_retry,
         divide_line,
-        sleep_ms: getDefaultModelWaitTime({ modelId: model.modelId, provider }),
         start_from,
         with_Cookies,
     });
