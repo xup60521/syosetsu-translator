@@ -5,6 +5,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { select, input, confirm, number } from "@inquirer/prompts";
 import { createMistral } from "@ai-sdk/mistral";
+import { createCerebras } from "@ai-sdk/cerebras";
 // import { createOllama } from "ollama-ai-provider";
 import { createGeminiProvider } from "ai-sdk-provider-gemini-cli";
 import { z } from "zod";
@@ -17,6 +18,7 @@ import {
     geminiCLIModelList,
     type ModelIdType,
     mistralAIModelList,
+    cerebrasModelList,
 } from "./model_list";
 
 const default_divide_line = 30;
@@ -234,6 +236,18 @@ export async function input_select_model() {
             model: mistral.languageModel(modelId) as LanguageModelV1,
             provider: "mistral-ai",
         };
+    } else if (provider === "cerebras") {
+        const cerebras = createCerebras({
+            apiKey: process.env.CEREBRAS_KEY,
+        });
+        const modelId = await select({
+            message: "Please select a model",
+            choices: cerebrasModelList,
+        });
+        return {
+            model: cerebras.languageModel(modelId) as LanguageModelV1,
+            provider: "cerebras",
+        };
     } else {
         throw new Error("Model is not specified");
     }
@@ -324,9 +338,11 @@ export function checkContentIfTranslatedOrNot({
 export function getTranslationPrompt(props: {
     similarity_retry_count: number;
     modelId: string;
+    provider: string;
 }) {
     const { similarity_retry_count } = props;
     const modelId = props.modelId as ModelIdType;
+    const provider = props.provider as (typeof providerOption)[number]["value"];
     if (
         modelId === "llama-3.3-70b-versatile" ||
         modelId === "gemini-2.5-flash-lite" ||
@@ -336,7 +352,8 @@ export function getTranslationPrompt(props: {
         mistralAIModelList.map((d) => d.value as string).includes(modelId) ||
         modelId === "moonshotai/kimi-k2-instruct" ||
         modelId === "moonshotai/kimi-k2:free" ||
-        modelId === 'gemini-2.5-flash'
+        modelId === "gemini-2.5-flash" ||
+        provider === "cerebras"
     ) {
         return oddTranslationPrompt(similarity_retry_count);
     }

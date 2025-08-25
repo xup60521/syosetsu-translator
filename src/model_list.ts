@@ -35,6 +35,10 @@ export const providerOption = [
         name: "Mistral AI",
         value: "mistral-ai",
     },
+    {
+        name: "Cerebras",
+        value: "cerebras",
+    },
 ] as const;
 
 export const googleModelList = [
@@ -255,5 +259,44 @@ export const mistralAIModelList = [
     {
         name: "Mistral Nemo 12B",
         value: "open-mistral-nemo",
+    },
+] as const;
+
+export const cerebrasModelList = [
+    {
+        name: "gpt-oss-120b",
+        value: "gpt-oss-120b",
+    },
+    {
+        name: "llama-3.3-70b",
+        value: "llama-3.3-70b",
+    },
+    {
+        name: "llama-4-maverick-17b-128e-instruct",
+        value: "llama-4-maverick-17b-128e-instruct",
+    },
+    {
+        name: "llama-4-scout-17b-16e-instruct",
+        value: "llama-4-scout-17b-16e-instruct",
+    },
+    {
+        name: "llama3.1-8b",
+        value: "llama3.1-8b",
+    },
+    {
+        name: "qwen-3-235b-a22b-instruct-2507",
+        value: "qwen-3-235b-a22b-instruct-2507",
+    },
+    {
+        name: "qwen-3-235b-a22b-thinking-2507",
+        value: "qwen-3-235b-a22b-thinking-2507",
+    },
+    {
+        name: "qwen-3-32b",
+        value: "qwen-3-32b",
+    },
+    {
+        name: "qwen-3-coder-480b",
+        value: "qwen-3-coder-480b",
     },
 ] as const;

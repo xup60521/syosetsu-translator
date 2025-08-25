@@ -210,6 +210,7 @@ export async function translateText(
             const translation_prompt = getTranslationPrompt({
                 similarity_retry_count,
                 modelId: model.modelId,
+                provider,
             });
             const stream = streamText({
                 model,

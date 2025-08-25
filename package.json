@@ -14,6 +14,7 @@
     "start": "bun run --bun ./index.ts"
   },
   "dependencies": {
+    "@ai-sdk/cerebras": "0.2.16",
     "@ai-sdk/google": "^1.2.22",
     "@ai-sdk/groq": "^1.2.9",
     "@ai-sdk/mistral": "^1.2.8",
