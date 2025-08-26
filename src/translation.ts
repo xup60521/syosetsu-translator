@@ -329,7 +329,10 @@ export async function translateText(
                 continue;
             }
             // if the translated and original content is too similar, re-translate this section
-            if (stringSimilarity(translatedText, originalText) > 0.95) {
+            if (
+                stringSimilarity(translatedText, originalText) > 0.95 &&
+                translatedText.length > 30
+            ) {
                 console.warn(
                     "The translation result is too similar to the original content, re-translating this section..."
                 );
@@ -343,16 +346,20 @@ export async function translateText(
                 continue;
             }
 
-            // if the result is too unsimilar (probably complete different output)
-            if (stringSimilarity(translatedText, originalText) < 0.01) {
-                console.warn(
-                    "The translation result is too dissimilar from the original content, re-translating this section..."
-                );
-                if (sleep_ms) {
-                    await sleep(sleep_ms);
-                }
-                continue;
-            }
+            // Danger: sometimes the model can repond "請提供文章內容，我將依照指示進行翻譯。"
+            // which is not a issue here since it is due to the margin of being chunked.
+
+            // // if the result is too unsimilar (probably complete different output)
+            // if (stringSimilarity(translatedText, originalText) < 0.01) {
+            //     console.warn(
+            //         "The translation result is too dissimilar from the original content, re-translating this section..."
+            //     );
+            //     console.log(translatedText)
+            //     if (sleep_ms) {
+            //         await sleep(sleep_ms);
+            //     }
+            //     continue;
+            // }
 
             // Remove <think> tags and their content
             translatedText = translatedText.replace(
@@ -444,7 +451,7 @@ async function twoStepTranslateText(
         "\n```";
 
     // Save secondPrompt to a txt file in the root folder
-    fs.writeFile("./second_prompt.txt", secondPrompt);
+    // fs.writeFile("./second_prompt.txt", secondPrompt);
 
     // Optionally, you can still log it if needed
     // console.log(secondPrompt);
