@@ -71,14 +71,20 @@ export async function input_auto_retry() {
 
 export async function input_divide_line(modelId?: string) {
     let divide_line = default_divide_line;
-    const model_id = modelId as ModelIdType
+    const model_id = modelId as ModelIdType;
     if (
         model_id === "llama-3.3-70b-versatile" ||
         model_id === "llama3-70b-8192" ||
-        model_id === "llama-3.3-70b"
+        model_id === "llama-3.3-70b" ||
+        model_id === "gpt-oss-120b" ||
+        model_id === "openai/gpt-oss-120b"
     ) {
         divide_line = 45;
-    } else if (model_id === "gemini-2.5-flash") {
+    } else if (
+        model_id === "gemini-2.5-flash" ||
+        model_id === "moonshotai/kimi-k2-instruct" ||
+        model_id === "moonshotai/kimi-k2:free"
+    ) {
         divide_line = 60;
     }
     return z

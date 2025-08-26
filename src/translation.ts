@@ -305,6 +305,7 @@ export async function translateText(
                             modelId: model.modelId,
                             provider,
                         });
+                        one_or_two_step = await input_one_or_two_step_translation();
                         bufText.push(
                             `\n\n[This section was retried with a different model: ${model.modelId}]\n\n`
                         );
@@ -340,6 +341,61 @@ export async function translateText(
                     sectionIndex,
                     (similarity_map.get(sectionIndex) || 0) + 1
                 );
+                if (similarity_map.get(sectionIndex) ?? 0 > 3) {
+                    const retrySectionAnswer = await select({
+                        message:
+                            "The translation result is too similar to the original content after 3 retries. What would you like to do?",
+                        choices: [
+                            {
+                                name: "Retry this section with same model",
+                                value: "retry_same",
+                            },
+                            {
+                                name: "Retry this section with different model",
+                                value: "retry_different",
+                            },
+                            {
+                                name: "Skip this section",
+                                value: "skip",
+                            },
+                            {
+                                name: "Retry the entire translation",
+                                value: "retry_all",
+                            },
+                        ] as const,
+                    });
+                    if (retrySectionAnswer === "retry_same") {
+                        similarity_map.set(sectionIndex, 0);
+                        continue;
+                    } else if (retrySectionAnswer === "retry_different") {
+                        // Retry with a different model
+                        similarity_map.set(sectionIndex, 0);
+                        const newModelAndProvider = await input_select_model();
+                        model = newModelAndProvider.model;
+                        provider = newModelAndProvider.provider;
+                        sleep_ms = getDefaultModelWaitTime({
+                            modelId: model.modelId,
+                            provider,
+                        });
+                        one_or_two_step = await input_one_or_two_step_translation();
+                        bufText.push(
+                            `\n\n[This section was retried with a different model: ${model.modelId}]\n\n`
+                        );
+                        continue;
+                    } else if (retrySectionAnswer === "skip") {
+                        // Skip this section
+                        bufText.push(
+                            `\n\n[This section was skipped due to repeated empty translation results.]\n\n`
+                        );
+                        sectionBar.update(sectionIndex + 1);
+                        sectionIndex++;
+                        continue;
+                    } else if (retrySectionAnswer === "retry_all") {
+                        throw new Error(
+                            "Retry the entire translation due to repeated similar translation results."
+                        );
+                    }
+                }
                 if (sleep_ms) {
                     await sleep(sleep_ms);
                 }
