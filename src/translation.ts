@@ -309,7 +309,7 @@ export async function translateText(
                 continue;
             }
             // if the translated and original content is too similar, re-translate this section
-            if (stringSimilarity(streamedText, fulltext) > 0.9) {
+            if (stringSimilarity(streamedText, fulltext) > 0.95) {
                 console.warn(
                     "The translation result is too similar to the original content, re-translating this section..."
                 );

@@ -49,5 +49,11 @@ function getNovelTags(urlobj: URL): [string] | undefined {
     if (silentWitchSeriesRegex.test(urlobj.pathname)) {
         return ["サイレント・ウィッチ"];
     }
+    // 痛いのは嫌なので防御力に極振りしたいと思います 怕痛的我，把防禦力點滿就對了
+    const scaredToHurtSeries = ["n0358dh"];
+    const scaredToHurtSeriesRegex = new RegExp(scaredToHurtSeries.join("|"));
+    if (scaredToHurtSeriesRegex.test(urlobj.pathname)) {
+        return ["痛いのは嫌なので防御力に極振りしたいと思います"];
+    }
     return undefined;
 }

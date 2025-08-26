@@ -305,6 +305,9 @@ export function getDefaultModelWaitTime(props: {
     if (provider === "groq" && modelId === "openai/gpt-oss-120b") {
         return 20_000; // 20 seconds
     }
+    if (provider === "cerebras") {
+        return 3_000; // 3 seconds
+    }
     if (modelId === "deepseek-r1-distill-llama-70b") {
         return 30_000; // 30 seconds
     }

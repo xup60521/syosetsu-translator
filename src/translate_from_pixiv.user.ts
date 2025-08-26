@@ -111,10 +111,6 @@ export async function translate_from_pixiv_user() {
         url_string: urlArr.join(" "),
         auto_retry,
         divide_line,
-        sleep_ms: getDefaultModelWaitTime({
-            modelId: model.modelId,
-            provider,
-        }),
         start_from,
         with_Cookies,
     });
