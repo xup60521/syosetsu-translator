@@ -69,18 +69,29 @@ export async function input_auto_retry() {
     });
 }
 
-export async function input_divide_line() {
+export async function input_divide_line(modelId?: string) {
+    let divide_line = default_divide_line;
+    const model_id = modelId as ModelIdType
+    if (
+        model_id === "llama-3.3-70b-versatile" ||
+        model_id === "llama3-70b-8192" ||
+        model_id === "llama-3.3-70b"
+    ) {
+        divide_line = 45;
+    } else if (model_id === "gemini-2.5-flash") {
+        divide_line = 60;
+    }
     return z
         .number()
         .min(1)
-        .default(default_divide_line)
+        .default(divide_line)
         .parse(
             await number({
                 message:
                     "Please enter a divideLine number (default to " +
-                    default_divide_line +
+                    divide_line +
                     ")",
-                default: default_divide_line,
+                default: divide_line,
                 validate: (input) => {
                     // only greater than 0 is allowed
                     const value = Number(input);
@@ -253,6 +264,22 @@ export async function input_select_model() {
     }
 }
 
+export async function input_one_or_two_step_translation() {
+    return await select({
+        message: "One-step or Two-step translation?",
+        choices: [
+            {
+                name: "One-step",
+                value: "one-step",
+            },
+            {
+                name: "Two-step",
+                value: "two-step",
+            },
+        ] as const,
+    });
+}
+
 export async function input_url_string() {
     return await input({
         message: "Please enter the URLs (separated by spaces)",
@@ -312,7 +339,7 @@ export function getDefaultModelWaitTime(props: {
         return 30_000; // 30 seconds
     }
     if (modelId === "gemini-2.5-flash-lite") {
-        return 10_000; // 10 seconds
+        return 2_000; // 2 seconds
     }
     if (modelId.includes("gemma")) {
         return 2_000; // 2 seconds

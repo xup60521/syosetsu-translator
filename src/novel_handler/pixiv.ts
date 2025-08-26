@@ -46,7 +46,7 @@ async function single_handler(
 
     const this_novel_data = await this_novel_response.json();
     const paragraphs = this_novel_data.body.content;
-    const paragraphArr = paragraphs.split("\n");
+    const paragraphArr = paragraphs.replaceAll("\n\n", "\n").split("\n");
     const tags = this_novel_data.body?.tags?.tags?.map(
         ({ tag }: { tag: string }) => tag
     ) as string[] | undefined;

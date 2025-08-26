@@ -4,7 +4,8 @@ export type ModelIdType =
     | (typeof openaiModelList)[number]["value"]
     | (typeof groqModelList)[number]["value"]
     | (typeof openRouterModelList)[number]["value"]
-    | (typeof mistralAIModelList)[number]["value"];
+    | (typeof mistralAIModelList)[number]["value"]
+    | (typeof cerebrasModelList)[number]["value"];
 
 export const providerOption = [
     {

@@ -42,6 +42,7 @@ const replace_keywords: Record<string, Record<string, string>> = {
         リンデンタール: "藍登塔爾",
         ジークリンデ: "齊格琳德",
         奇庫リンデ: "齊格琳德",
+        吉克琳達: "齊格琳德",
         ベルシュマン: "畢斯曼",
         ヴィルフリート: "韋菲利特",
         アナスタージウス: "亞納索塔瓊斯",
@@ -173,6 +174,7 @@ const replace_keywords: Record<string, Record<string, string>> = {
         フローレンツィア: "芙蘿洛翠亞",
         シャルロッテ: "夏綠蒂",
         メルヒオール: "麥西歐爾",
+        梅爾希奧爾: "麥西歐爾",
         エルヴィーラ: "艾薇拉",
         エックハルト: "艾克哈特",
         ランプレヒト: "蘭普雷特",
@@ -446,5 +448,6 @@ const replace_keywords: Record<string, Record<string, string>> = {
 replace_keywords["#本好き"] = replace_keywords["本好きの下剋上"];
 replace_keywords["本好き"] = replace_keywords["本好きの下剋上"];
 replace_keywords["本ゲコ"] = replace_keywords["本好きの下剋上"];
+replace_keywords["本好き【二次】"] = replace_keywords["本好きの下剋上"];
 
 export { replace_keywords };

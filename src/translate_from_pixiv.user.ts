@@ -6,6 +6,7 @@ import {
     getDefaultModelWaitTime,
     input_auto_retry,
     input_divide_line,
+    input_one_or_two_step_translation,
     input_select_model,
     input_start_from,
     input_with_cookies_or_not,
@@ -100,10 +101,11 @@ export async function translate_from_pixiv_user() {
     }
 
     const { model, provider } = await input_select_model();
-    const divide_line = await input_divide_line();
+    const divide_line = await input_divide_line(model.modelId);
     const auto_retry = await input_auto_retry();
     const start_from = await input_start_from();
     const with_Cookies = await input_with_cookies_or_not();
+    const one_or_two_step = await input_one_or_two_step_translation();
 
     return await translation({
         model,
@@ -113,6 +115,7 @@ export async function translate_from_pixiv_user() {
         divide_line,
         start_from,
         with_Cookies,
+        one_or_two_step,
     });
 }
 

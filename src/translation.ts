@@ -13,12 +13,15 @@ import {
     getTranslationPrompt,
     type ResultType,
     chunkArray,
+    input_one_or_two_step_translation,
 } from "./utils";
 import { decompose_url } from "./novel_handler/decompose_url";
 import { handle_file } from "./handle_file";
 import { streamText, type LanguageModelV1 } from "ai";
 import { stringSimilarity } from "string-similarity-js";
 import { select } from "@inquirer/prompts";
+import type { ModelIdType } from "./model_list";
+import * as fs from "node:fs/promises";
 
 const multibar = new cliProgress.MultiBar(
     {
@@ -34,6 +37,9 @@ type DoTranslationProps = {
     divide_line: number;
     with_Cookies?: boolean;
     provider: string;
+    one_or_two_step: Awaited<
+        ReturnType<typeof input_one_or_two_step_translation>
+    >;
 };
 
 type TranslationParameter = {
@@ -44,7 +50,14 @@ type TranslationParameter = {
 } & DoTranslationProps & {};
 
 export async function translation(params: TranslationParameter) {
-    const { model, divide_line, url_string, start_from, provider } = params;
+    const {
+        model,
+        divide_line,
+        url_string,
+        start_from,
+        provider,
+        one_or_two_step,
+    } = params;
 
     let { auto_retry, with_Cookies } = params;
     const urls = await decompose_url(url_string);
@@ -59,6 +72,7 @@ export async function translation(params: TranslationParameter) {
                 divide_line,
                 with_Cookies,
                 provider,
+                one_or_two_step,
             });
             url_index++;
         } catch (err) {
@@ -91,9 +105,11 @@ export async function translation(params: TranslationParameter) {
 
                 return (async () => {
                     const { model, provider } = await input_select_model();
-                    const divide_line = await input_divide_line();
+                    const divide_line = await input_divide_line(model.modelId);
                     const auto_retry = await input_auto_retry();
                     const with_Cookies = await input_with_cookies_or_not();
+                    const one_or_two_step =
+                        await input_one_or_two_step_translation();
 
                     await translation({
                         model,
@@ -103,6 +119,7 @@ export async function translation(params: TranslationParameter) {
                         divide_line,
                         start_from: url_index + 1,
                         with_Cookies,
+                        one_or_two_step,
                     });
                 })();
             }
@@ -114,7 +131,8 @@ export async function translation(params: TranslationParameter) {
 }
 
 async function doTranslation(novel_url: string, props: DoTranslationProps) {
-    const { model, divide_line, with_Cookies, provider } = props;
+    const { model, divide_line, with_Cookies, provider, one_or_two_step } =
+        props;
     const {
         series_title_and_author,
         paragraphArr,
@@ -130,6 +148,7 @@ async function doTranslation(novel_url: string, props: DoTranslationProps) {
         divide_line,
         model,
         provider,
+        one_or_two_step,
     });
 
     if (!translationResult.success) {
@@ -166,15 +185,21 @@ type TranslateTextParams = {
     divide_line: number;
     model: LanguageModelV1;
     provider: string;
+    one_or_two_step: Awaited<
+        ReturnType<typeof input_one_or_two_step_translation>
+    >;
 };
+
+const checkEmptyRegex = /^[\t\n ]*$/;
 
 export async function translateText(
     params: TranslateTextParams
 ): Promise<ResultType<string[], any>> {
     const { paragraphArr, divide_line } = params;
-    let { model, provider } = params;
+    let { model, provider, one_or_two_step } = params;
+    const modelId = model.modelId as ModelIdType;
     let sleep_ms = getDefaultModelWaitTime({
-        modelId: model.modelId,
+        modelId,
         provider,
     });
 
@@ -204,35 +229,30 @@ export async function translateText(
         const similarity_map = new Map<number, number>();
         while (sectionIndex < filteredSections.length) {
             const section = filteredSections[sectionIndex];
-            const fulltext = section.filter((d) => d !== "").join("\n");
+            const originalText = section.filter((d) => d !== "").join("\n");
             const similarity_retry_count =
                 similarity_map.get(sectionIndex) ?? 0;
-            const translation_prompt = getTranslationPrompt({
-                similarity_retry_count,
-                modelId: model.modelId,
-                provider,
-            });
-            const stream = streamText({
-                model,
-                seed: Math.floor(10000 * Math.random()),
-                temperature: 0.0,
-                prompt: `
-        ${translation_prompt}
+            let translatedText = "";
 
-        ---
-        ${fulltext}
-        ---
-        `,
-            });
-
-            let streamedText = "";
-            for await (const delta of stream.textStream) {
-                streamedText += delta;
+            if (one_or_two_step === "two-step") {
+                translatedText = await twoStepTranslateText(
+                    similarity_retry_count,
+                    model,
+                    provider,
+                    originalText
+                );
+            } else if (one_or_two_step === "one-step") {
+                translatedText = await oneStepTranslateText(
+                    similarity_retry_count,
+                    model,
+                    provider,
+                    originalText
+                );
             }
 
             // handle empty translation result
-            const reg = /^[\t\n ]*$/;
-            if (reg.test(streamedText)) {
+
+            if (checkEmptyRegex.test(translatedText)) {
                 retry_count_map.set(
                     sectionIndex,
                     (retry_count_map.get(sectionIndex) || 0) + 1
@@ -309,7 +329,7 @@ export async function translateText(
                 continue;
             }
             // if the translated and original content is too similar, re-translate this section
-            if (stringSimilarity(streamedText, fulltext) > 0.95) {
+            if (stringSimilarity(translatedText, originalText) > 0.95) {
                 console.warn(
                     "The translation result is too similar to the original content, re-translating this section..."
                 );
@@ -324,7 +344,7 @@ export async function translateText(
             }
 
             // if the result is too unsimilar (probably complete different output)
-            if (stringSimilarity(streamedText, fulltext) < 0.01) {
+            if (stringSimilarity(translatedText, originalText) < 0.01) {
                 console.warn(
                     "The translation result is too dissimilar from the original content, re-translating this section..."
                 );
@@ -335,11 +355,11 @@ export async function translateText(
             }
 
             // Remove <think> tags and their content
-            streamedText = streamedText.replace(
+            translatedText = translatedText.replace(
                 /<think>[\s\S]*?<\/think>/g,
                 ""
             );
-            bufText.push(streamedText);
+            bufText.push(translatedText);
             sectionBar.update(sectionIndex + 1);
             if (sleep_ms) {
                 await sleep(sleep_ms);
@@ -353,6 +373,97 @@ export async function translateText(
         sectionBar.stop();
         return { success: false, error: err };
     }
+}
+
+async function oneStepTranslateText(
+    similarity_retry_count: number,
+    model: LanguageModelV1,
+    provider: string,
+    originalText: string
+) {
+    const translation_prompt = getTranslationPrompt({
+        similarity_retry_count,
+        modelId: model.modelId,
+        provider,
+    });
+    const stream = streamText({
+        model,
+        seed: Math.floor(10000 * Math.random()),
+        temperature: 0.0,
+        prompt: `
+        ${translation_prompt}
+
+        ---
+        ${originalText}
+        ---
+        `,
+    });
+
+    let streamedText = "";
+    for await (const delta of stream.textStream) {
+        streamedText += delta;
+    }
+    return streamedText;
+}
+
+async function twoStepTranslateText(
+    similarity_retry_count: number,
+    model: LanguageModelV1,
+    provider: string,
+    originalText: string
+) {
+    const firstPrompt =
+        "You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). The article will be provided later on and make sure the output only contain the translated content without additional descriptive words. Additionally, please only output the result without any extra explaination. \n\nThe article will be presented in the following section.\n\n" +
+        "```\n" +
+        originalText +
+        "\n```";
+    const stream = streamText({
+        model,
+        seed: Math.floor(10000 * Math.random()),
+        temperature: 0.0,
+        prompt: `
+        ${firstPrompt}
+        `,
+    });
+
+    let firstTranslation = "";
+    for await (const delta of stream.textStream) {
+        firstTranslation += delta;
+    }
+    if (checkEmptyRegex.test(firstTranslation)) {
+        return "";
+    }
+
+    // console.log(firstTranslation);
+
+    const secondPrompt =
+        "You are a professional translator who has proficient in translating Japanese article into traditional Chinese (Taiwan) one whlie keeping the proper nouns their original Japanese form. Please compare the original and translated articles and replace the proper nouns in the translated one with that in the original one. Additionally, please only output the result without any extra explaination. Therefore, the output should be a translated article in traditional Chinese (Taiwan) with proper nouns untranslated and in their original form. You need to understand the context in order to decide whether it is proper nouns or not. For example, you need to keep human name and special item their Japanese form.\n\nThe original and translated articles will be presented in the following section.\nOther then proper nouns, make sure to keep the article translated in traditional Chinese (Taiwan).\n\n### Original\n\n```\n" +
+        originalText +
+        "\n```\n\n### Translated\n\n```\n" +
+        firstTranslation +
+        "\n```";
+
+    // Save secondPrompt to a txt file in the root folder
+    fs.writeFile("./second_prompt.txt", secondPrompt);
+
+    // Optionally, you can still log it if needed
+    // console.log(secondPrompt);
+
+    let secondTranslation = "";
+    const secondStream = streamText({
+        model,
+        seed: Math.floor(10000 * Math.random()),
+        temperature: 0.1,
+        prompt: `
+        ${secondPrompt}
+        `,
+    });
+
+    for await (const delta of secondStream.textStream) {
+        secondTranslation += delta;
+    }
+    // console.log(secondTranslation);
+    return secondTranslation;
 }
 
 function sleep(ms: number) {

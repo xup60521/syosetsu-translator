@@ -13,3 +13,5 @@ dist/
 send_file_to_termux.bat
 
 index.js
+
+second_prompt.txt
