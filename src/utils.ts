@@ -329,7 +329,7 @@ export async function input_start_from() {
         );
 }
 
-export function getDefaultModelWaitTime(props: {
+export function getModelWaitTime(props: {
     modelId: string;
     provider: string;
 }) {
@@ -353,6 +353,9 @@ export function getDefaultModelWaitTime(props: {
     if (modelId.includes("qwen/qwq-32b:free")) {
         // 1 min
         return 60_000; // 60 seconds
+    }
+    if (modelId === "llama-3.3-70b-versatile" || modelId === "llama-3.3-70b" || modelId === "llama3-70b-8192") {
+        return 3_000; // 3 seconds
     }
     return undefined; // No wait time
 }
@@ -410,7 +413,7 @@ export function oddTranslationPrompt(similarity_retry_count: number) {
     return en_prompt;
 }
 
-const ch_prompt = `# 指令：
+export const ch_prompt = `# 指令：
             請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
 
             # 翻譯規則：
@@ -423,7 +426,7 @@ const ch_prompt = `# 指令：
             # 其他注意事項
             請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。`;
 
-const en_prompt = `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
+export const en_prompt = `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
 After the translation is done, re-check the result and keep:
 
 1. The article is indeed translated into traditional Chinese (Taiwan).
@@ -457,6 +460,14 @@ export function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
     const result: T[][] = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
         result.push(arr.slice(i, i + chunkSize));
+    }
+    // If the last chunk is shorter than the previous, merge the last two chunks
+    if (
+        result.length > 1 &&
+        result[result.length - 1].length < result[result.length - 2].length
+    ) {
+        const last = result.pop()!;
+        result[result.length - 1] = result[result.length - 1].concat(last);
     }
     return result;
 }

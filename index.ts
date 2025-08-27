@@ -4,7 +4,7 @@ import { translation } from "./src/translation";
 
 import "dotenv/config";
 import {
-    getDefaultModelWaitTime,
+    getModelWaitTime,
     input_auto_retry,
     input_divide_line,
     input_one_or_two_step_translation,

@@ -8,12 +8,14 @@ import {
     input_url_string,
     input_retry_or_stop,
     input_start_from,
-    getDefaultModelWaitTime,
+    getModelWaitTime,
     input_with_cookies_or_not,
     getTranslationPrompt,
     type ResultType,
     chunkArray,
     input_one_or_two_step_translation,
+    en_prompt,
+    ch_prompt,
 } from "./utils";
 import { decompose_url } from "./novel_handler/decompose_url";
 import { handle_file } from "./handle_file";
@@ -198,7 +200,7 @@ export async function translateText(
     const { paragraphArr, divide_line } = params;
     let { model, provider, one_or_two_step } = params;
     const modelId = model.modelId as ModelIdType;
-    let sleep_ms = getDefaultModelWaitTime({
+    let sleep_ms = getModelWaitTime({
         modelId,
         provider,
     });
@@ -294,6 +296,8 @@ export async function translateText(
                     });
                     if (retrySectionAnswer === "retry_same") {
                         retry_count_map.set(sectionIndex, 0);
+                        // update progress
+                        sectionBar.update(sectionIndex + 1);
                         continue;
                     } else if (retrySectionAnswer === "retry_different") {
                         // Retry with a different model
@@ -301,11 +305,12 @@ export async function translateText(
                         const newModelAndProvider = await input_select_model();
                         model = newModelAndProvider.model;
                         provider = newModelAndProvider.provider;
-                        sleep_ms = getDefaultModelWaitTime({
+                        sleep_ms = getModelWaitTime({
                             modelId: model.modelId,
                             provider,
                         });
-                        one_or_two_step = await input_one_or_two_step_translation();
+                        one_or_two_step =
+                            await input_one_or_two_step_translation();
                         bufText.push(
                             `\n\n[This section was retried with a different model: ${model.modelId}]\n\n`
                         );
@@ -331,7 +336,7 @@ export async function translateText(
             }
             // if the translated and original content is too similar, re-translate this section
             if (
-                stringSimilarity(translatedText, originalText) > 0.95 &&
+                stringSimilarity(translatedText, originalText) > 0.97 &&
                 translatedText.length > 30
             ) {
                 console.warn(
@@ -342,30 +347,50 @@ export async function translateText(
                     (similarity_map.get(sectionIndex) || 0) + 1
                 );
                 if (similarity_map.get(sectionIndex) ?? 0 > 3) {
-                    const retrySectionAnswer = await select({
+                    const retryOptions = [
+                        {
+                            name: "Show differences",
+                            value: "show_differences",
+                        },
+                        {
+                            name: "Retry this section with same model",
+                            value: "retry_same",
+                        },
+                        {
+                            name: "Retry this section with different model",
+                            value: "retry_different",
+                        },
+                        {
+                            name: "Skip this section",
+                            value: "skip",
+                        },
+                        {
+                            name: "Retry the entire translation",
+                            value: "retry_all",
+                        },
+                    ] as const;
+                    let retrySectionAnswer = await select({
                         message:
                             "The translation result is too similar to the original content after 3 retries. What would you like to do?",
-                        choices: [
-                            {
-                                name: "Retry this section with same model",
-                                value: "retry_same",
-                            },
-                            {
-                                name: "Retry this section with different model",
-                                value: "retry_different",
-                            },
-                            {
-                                name: "Skip this section",
-                                value: "skip",
-                            },
-                            {
-                                name: "Retry the entire translation",
-                                value: "retry_all",
-                            },
-                        ] as const,
+                        choices: retryOptions,
                     });
+                    if (retrySectionAnswer === "show_differences") {
+                        // Show differences
+                        const similarityLog = `Original Text:\n${originalText}\n\nTranslated Text:\n${translatedText}\n\nSimilarity: ${stringSimilarity(
+                            translatedText,
+                            originalText
+                        )}`;
+                        console.log(similarityLog);
+                        retrySectionAnswer = await select({
+                            message: "What would you like to do?",
+                            choices: retryOptions.filter(
+                                (d) => d.value !== "show_differences"
+                            ),
+                        });
+                    } 
                     if (retrySectionAnswer === "retry_same") {
                         similarity_map.set(sectionIndex, 0);
+                        sectionBar.update(sectionIndex + 1);
                         continue;
                     } else if (retrySectionAnswer === "retry_different") {
                         // Retry with a different model
@@ -373,14 +398,16 @@ export async function translateText(
                         const newModelAndProvider = await input_select_model();
                         model = newModelAndProvider.model;
                         provider = newModelAndProvider.provider;
-                        sleep_ms = getDefaultModelWaitTime({
+                        sleep_ms = getModelWaitTime({
                             modelId: model.modelId,
                             provider,
                         });
-                        one_or_two_step = await input_one_or_two_step_translation();
+                        one_or_two_step =
+                            await input_one_or_two_step_translation();
                         bufText.push(
                             `\n\n[This section was retried with a different model: ${model.modelId}]\n\n`
                         );
+                        sectionBar.update(sectionIndex + 1);
                         continue;
                     } else if (retrySectionAnswer === "skip") {
                         // Skip this section
@@ -424,6 +451,8 @@ export async function translateText(
             );
             bufText.push(translatedText);
             sectionBar.update(sectionIndex + 1);
+
+            // console.log(provider, modelId, sleep_ms)
             if (sleep_ms) {
                 await sleep(sleep_ms);
             }
@@ -475,8 +504,10 @@ async function twoStepTranslateText(
     provider: string,
     originalText: string
 ) {
+
     const firstPrompt =
-        "You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). The article will be provided later on and make sure the output only contain the translated content without additional descriptive words. Additionally, please only output the result without any extra explaination. \n\nThe article will be presented in the following section.\n\n" +
+        "Translate the following content into traditional Chinese (Taiwan). Output the translation result only." +
+        "\n\nThe article will be presented in the following section.\n\n" +
         "```\n" +
         originalText +
         "\n```";
@@ -497,10 +528,59 @@ async function twoStepTranslateText(
         return "";
     }
 
+    // const firstPrompt =
+    //     ch_prompt +
+    //     "\n\nThe article will be presented in the following section.\n\n" +
+    //     "```\n" +
+    //     originalText +
+    //     "\n```";
+    // const stream = streamText({
+    //     model,
+    //     seed: Math.floor(10000 * Math.random()),
+    //     temperature: 0.0,
+    //     prompt: `
+    //     ${firstPrompt}
+    //     `,
+    // });
+
+    // let firstTranslation = "";
+    // for await (const delta of stream.textStream) {
+    //     firstTranslation += delta;
+    // }
+    // if (checkEmptyRegex.test(firstTranslation)) {
+    //     return "";
+    // }
+
+    // if (stringSimilarity(firstTranslation, originalText) > 0.95) {
+    //     const first_modified_prompt =
+    //         en_prompt +
+    //         "\n\nThe article will be presented in the following section.\n\n" +
+    //         "```\n" +
+    //         originalText +
+    //         "\n```";
+
+    //     const stream = streamText({
+    //         model,
+    //         seed: Math.floor(10000 * Math.random()),
+    //         temperature: 0.0,
+    //         prompt: `
+    //     ${first_modified_prompt}
+    //     `,
+    //     });
+
+    //     firstTranslation = "";
+    //     for await (const delta of stream.textStream) {
+    //         firstTranslation += delta;
+    //     }
+    //     if (checkEmptyRegex.test(firstTranslation)) {
+    //         return "";
+    //     }
+    // }
+
     // console.log(firstTranslation);
 
     const secondPrompt =
-        "You are a professional translator who has proficient in translating Japanese article into traditional Chinese (Taiwan) one whlie keeping the proper nouns their original Japanese form. Please compare the original and translated articles and replace the proper nouns in the translated one with that in the original one. Additionally, please only output the result without any extra explaination. Therefore, the output should be a translated article in traditional Chinese (Taiwan) with proper nouns untranslated and in their original form. You need to understand the context in order to decide whether it is proper nouns or not. For example, you need to keep human name and special item their Japanese form.\n\nThe original and translated articles will be presented in the following section.\nOther then proper nouns, make sure to keep the article translated in traditional Chinese (Taiwan).\n\n### Original\n\n```\n" +
+        "You are a professional translator who has proficient in translating Japanese article into traditional Chinese (Taiwan) one whlie keeping the proper nouns their original Japanese form. Please compare the original and translated articles and replace the proper nouns in the translated one with that in the original one. Additionally, please only output the result without any extra explaination. Therefore, the output should be a translated article in traditional Chinese (Taiwan) with proper nouns untranslated and in their original form. You need to understand the context in order to decide whether it is proper nouns or not. For example, you need to keep human name and special item their Japanese form.\n\nThe original and translated articles will be presented in the following section.\nOther then proper nouns (which you need to carefully identify), make sure to keep the article translated in traditional Chinese (Taiwan).\n\n### Original\n\n```\n" +
         originalText +
         "\n```\n\n### Translated\n\n```\n" +
         firstTranslation +

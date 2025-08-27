@@ -3,7 +3,7 @@ import { input, confirm } from "@inquirer/prompts";
 import * as fs from "node:fs/promises";
 import {
     chunkArray,
-    getDefaultModelWaitTime,
+    getModelWaitTime,
     input_auto_retry,
     input_divide_line,
     input_one_or_two_step_translation,
