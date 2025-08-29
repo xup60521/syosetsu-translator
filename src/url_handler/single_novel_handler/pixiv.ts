@@ -1,7 +1,7 @@
 import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from ".";
-import { getCookiesFromRedis, updateCookiesToRedis } from "../redis";
-import { windowsFileEscapeRegex } from "../utils";
+import { getCookiesFromRedis, updateCookiesToRedis } from "../../redis";
+import { windowsFileEscapeRegex } from "../../utils";
 
 
 

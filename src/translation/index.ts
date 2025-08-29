@@ -8,7 +8,7 @@ import {
 } from "../utils";
 import { decompose_url } from "../url_handler/decompose_url";
 import { replace_words } from "../replace";
-import { novel_handler } from "../url_handler";
+import { novel_handler } from "../url_handler/single_novel_handler";
 import { handle_file } from "../handle_file";
 import { translateText } from "./translateText";
 import type { DoTranslationProps } from "./types";
