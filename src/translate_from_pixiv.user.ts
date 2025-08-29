@@ -10,8 +10,9 @@ import {
     input_select_model,
     input_start_from,
     input_with_cookies_or_not,
+    windowsFileEscapeRegex,
 } from "./utils";
-import { windowsFileEscapeRegex } from "./novel_handler/pixiv";
+
 import { translation } from "./translation";
 import { getCookiesFromRedis, updateCookiesToRedis } from "./redis";
 

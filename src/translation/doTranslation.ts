@@ -1,5 +1,5 @@
 import { replace_words } from "../replace";
-import { novel_handler } from "../novel_handler";
+import { novel_handler } from "../url_handler";
 import { handle_file } from "../handle_file";
 import { translateText } from "./translateText";
 import type { DoTranslationProps } from "./types";

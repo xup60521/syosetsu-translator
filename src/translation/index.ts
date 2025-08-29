@@ -6,7 +6,7 @@ import {
     input_with_cookies_or_not,
     input_one_or_two_step_translation,
 } from "../utils";
-import { decompose_url } from "../novel_handler/decompose_url";
+import { decompose_url } from "../url_handler/decompose_url";
 import { doTranslation } from "./doTranslation";
 import type { TranslationParameter } from "./types";
 import { multibar } from "./translation-utils";

@@ -13,7 +13,7 @@ import {
     input_url_string,
     input_with_cookies_or_not,
 } from "./src/utils";
-import { windowsFileEscapeRegex } from "./src/novel_handler/pixiv";
+
 import { translate_from_pixiv_user } from "./src/translate_from_pixiv.user";
 
 const options = [

@@ -1,8 +1,9 @@
 import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from ".";
 import { getCookiesFromRedis, updateCookiesToRedis } from "../redis";
+import { windowsFileEscapeRegex } from "../utils";
 
-export const windowsFileEscapeRegex = /[<>:"/\\|?*]/g;
+
 
 export async function pixiv_handler(
     urlobj: URL,
