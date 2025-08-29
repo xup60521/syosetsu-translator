@@ -25,9 +25,9 @@ const default_divide_line = 30;
 
 export const windowsFileEscapeRegex = /[<>:"/\\|?*]/g;
 
-export async function input_with_cookies_or_not(props?: { default: boolean }) {
+export async function input_with_cookies_or_not(props?: { default: boolean, custom_message?: string }) {
     return await confirm({
-        message: "Use cookies for translation?",
+        message: props?.custom_message || "Use cookies for translation?",
         default: props?.default,
     });
 }

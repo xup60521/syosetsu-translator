@@ -11,36 +11,37 @@ import {
     input_start_from,
     input_with_cookies_or_not,
     windowsFileEscapeRegex,
-} from "./utils";
+} from "../../utils";
 
-import { translation } from "./translation";
-import { getCookiesFromRedis, updateCookiesToRedis } from "./redis";
+import { translation } from "../../translation";
+import { getCookiesFromRedis, updateCookiesToRedis } from "../../redis";
 
-export async function translate_from_pixiv_user() {
-    const url = await input({
-        message: "Enter pixiv user url",
-        validate: (value) => {
-            try {
-                const url = new URL(value);
-                if (url.host !== "www.pixiv.net") {
-                    return "Not pixiv url";
-                }
-                const [, users, userId] = url.pathname.split("/");
-                if (users !== "users") {
-                    return "Not pixiv user url";
-                }
-                if (!userId || userId === "") {
-                    return "No userId";
-                }
-                return true;
-            } catch (_) {
-                return "Invalid URL";
-            }
-        },
-    });
+export async function translate_from_pixiv_user(url: string) {
+    // const url = await input({
+    //     message: "Enter pixiv user url",
+    //     validate: (value) => {
+    //         try {
+    //             const url = new URL(value);
+    //             if (url.host !== "www.pixiv.net") {
+    //                 return "Not pixiv url";
+    //             }
+    //             const [, users, userId] = url.pathname.split("/");
+    //             if (users !== "users") {
+    //                 return "Not pixiv user url";
+    //             }
+    //             if (!userId || userId === "") {
+    //                 return "No userId";
+    //             }
+    //             return true;
+    //         } catch (_) {
+    //             return "Invalid URL";
+    //         }
+    //     },
+    // });
     const urlObj = new URL(url);
     const fetch_user_data_with_Cookies = await input_with_cookies_or_not({
         default: true,
+        custom_message: "Use cookies for fetching user data?"
     });
     const fetchOptions: RequestInit = {};
     fetchOptions.headers = {};
@@ -101,23 +102,25 @@ export async function translate_from_pixiv_user() {
         return;
     }
 
-    const { model, provider } = await input_select_model();
-    const divide_line = await input_divide_line(model.modelId);
-    const auto_retry = await input_auto_retry();
-    const start_from = await input_start_from();
-    const with_Cookies = await input_with_cookies_or_not();
-    const one_or_two_step = await input_one_or_two_step_translation();
+    return urlArr
 
-    return await translation({
-        model,
-        provider,
-        url_string: urlArr.join(" "),
-        auto_retry,
-        divide_line,
-        start_from,
-        with_Cookies,
-        one_or_two_step,
-    });
+    // const { model, provider } = await input_select_model();
+    // const divide_line = await input_divide_line(model.modelId);
+    // const auto_retry = await input_auto_retry();
+    // const start_from = await input_start_from();
+    // const with_Cookies = await input_with_cookies_or_not();
+    // const one_or_two_step = await input_one_or_two_step_translation();
+
+    // return await translation({
+    //     model,
+    //     provider,
+    //     url_string: urlArr.join(" "),
+    //     auto_retry,
+    //     divide_line,
+    //     start_from,
+    //     with_Cookies,
+    //     one_or_two_step,
+    // });
 }
 
 async function getNotYetTranslatedSeriesOptions(

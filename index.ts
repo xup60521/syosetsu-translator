@@ -14,8 +14,6 @@ import {
     input_with_cookies_or_not,
 } from "./src/utils";
 
-import { translate_from_pixiv_user } from "./src/translate_from_pixiv_user";
-
 const options = [
     {
         name: "Translate from URLs",
@@ -29,10 +27,10 @@ const options = [
         name: "Replace Words",
         value: "replace",
     },
-    {
-        name: "Translate from pixiv user",
-        value: "translate from pixiv user",
-    },
+    // {
+    //     name: "Translate from pixiv user",
+    //     value: "translate from pixiv user",
+    // },
 ] as const;
 // Function to prompt the user
 async function main() {
@@ -52,9 +50,9 @@ async function main() {
             // case "translate from files":
             // await translate_from_files();
             // break;
-            case "translate from pixiv user":
-                await translate_from_pixiv_user();
-                break;
+            // case "translate from pixiv user":
+            //     await translate_from_pixiv_user();
+            //     break;
             default:
                 break;
         }

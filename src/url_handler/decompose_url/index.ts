@@ -1,4 +1,5 @@
 import { load } from "cheerio";
+import { translate_from_pixiv_user } from "./translate_from_pixiv_user";
 
 /**
  * Decomposes a given URL string into an array of individual episode URLs.
@@ -108,13 +109,27 @@ async function decompose_pixiv(url: URL): Promise<string[]> {
         const novel_ids = series_content_titles
             .map((d: { id: string; available: boolean }) =>
                 // remove the condition to always return the URL
-                d.available ? `https://www.pixiv.net/novel/show.php?id=${d.id}` : null
+                d.available
+                    ? `https://www.pixiv.net/novel/show.php?id=${d.id}`
+                    : null
             )
             .filter((d: string | null) => d) as string[];
         return novel_ids;
     }
     if (url.pathname.includes("/novel/show")) {
         return [url.toString()];
+    }
+    if (url.pathname.includes("/users/")) {
+        const [, users, userId] = url.pathname.split("/");
+        if (users !== "users") {
+            throw new Error(url.toString() + " is not a pixiv user url");
+        }
+        if (!userId || userId === "") {
+            throw new Error(url.toString() + " has no userId");
+        }
+        const urls = await translate_from_pixiv_user(url.toString()) ?? []
+        const decomposed_urls = decompose_url(urls.join(" "));
+        return decomposed_urls;
     }
     if (url.pathname.includes("/ajax/")) {
         throw new Error(
