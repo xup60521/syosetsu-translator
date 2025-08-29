@@ -14,7 +14,7 @@ import {
     input_with_cookies_or_not,
 } from "./src/utils";
 
-import { translate_from_pixiv_user } from "./src/translate_from_pixiv.user";
+import { translate_from_pixiv_user } from "./src/translate_from_pixiv_user";
 
 const options = [
     {
