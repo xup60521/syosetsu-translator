@@ -16,9 +16,9 @@ import {
     getTwoStepFirstTranslatePrompt,
     getTwoStepSecondTranslatePrompt,
 } from "./prompts";
+import cliProgress from "cli-progress";
 
-const checkEmptyRegex = /^[	
- ]*$/;
+const checkEmptyRegex = /^[\s]*$/;
 
 export async function translateText(
     params: TranslateTextParams
@@ -36,7 +36,8 @@ export async function translateText(
     const sectionBar = multibar.create(
         buf.filter((d) => d.length !== 0).length,
         0,
-        { filename: "Translating Sections" }
+        { filename: "Translating Sections" },
+        cliProgress.Presets.rect
     );
 
     const bufText: string[] = [];
@@ -49,7 +50,7 @@ export async function translateText(
         while (sectionIndex < filteredSections.length) {
             const section = filteredSections[sectionIndex];
             const originalText = section.filter((d) => d !== "").join("\n");
-            const similarity_retry_count = 
+            const similarity_retry_count =
                 similarity_map.get(sectionIndex) ?? 0;
             let translatedText = "";
 
@@ -91,25 +92,24 @@ export async function translateText(
                     const retrySectionAnswer = await select({
                         message:
                             "The translation result is empty after 3 retries. What would you like to do?",
-                        choices:
-                            [
-                                {
-                                    name: "Retry this section with same model",
-                                    value: "retry_same",
-                                },
-                                {
-                                    name: "Retry this section with different model",
-                                    value: "retry_different",
-                                },
-                                {
-                                    name: "Skip this section",
-                                    value: "skip",
-                                },
-                                {
-                                    name: "Retry the entire translation",
-                                    value: "retry_all",
-                                },
-                            ] as const,
+                        choices: [
+                            {
+                                name: "Retry this section with same model",
+                                value: "retry_same",
+                            },
+                            {
+                                name: "Retry this section with different model",
+                                value: "retry_different",
+                            },
+                            {
+                                name: "Skip this section",
+                                value: "skip",
+                            },
+                            {
+                                name: "Retry the entire translation",
+                                value: "retry_all",
+                            },
+                        ] as const,
                     });
                     if (retrySectionAnswer === "retry_same") {
                         retry_count_map.set(sectionIndex, 0);
@@ -127,20 +127,12 @@ export async function translateText(
                         one_or_two_step =
                             await input_one_or_two_step_translation();
                         bufText.push(
-                            `
-
-[This section was retried with a different model: ${model.modelId}]
-
-`
+                            `\n\n[This section was retried with a different model: ${model.modelId}]\n\n`
                         );
                         continue;
                     } else if (retrySectionAnswer === "skip") {
                         bufText.push(
-                            `
-
-[This section was skipped due to repeated empty translation results.]
-
-`
+                            `\n\n[This section was skipped due to repeated empty translation results.]\n\n`
                         );
                         sectionBar.update(sectionIndex + 1);
                         sectionIndex++;
@@ -197,13 +189,7 @@ export async function translateText(
                         choices: retryOptions,
                     });
                     if (retrySectionAnswer === "show_differences") {
-                        const similarityLog = `Original Text:
-${originalText}
-
-Translated Text:
-${translatedText}
-
-Similarity: ${stringSimilarity(
+                        const similarityLog = `Original Text:\n${originalText}\n\nTranslated Text:\n${translatedText}\n\nSimilarity: ${stringSimilarity(
                             translatedText,
                             originalText
                         )}`;
@@ -231,21 +217,13 @@ Similarity: ${stringSimilarity(
                         one_or_two_step =
                             await input_one_or_two_step_translation();
                         bufText.push(
-                            `
-
-[This section was retried with a different model: ${model.modelId}]
-
-`
+                            `\n\n[This section was retried with a different model: ${model.modelId}]\n\n`
                         );
                         sectionBar.update(sectionIndex + 1);
                         continue;
                     } else if (retrySectionAnswer === "skip") {
                         bufText.push(
-                            `
-
-[This section was skipped due to repeated empty translation results.]
-
-`
+                            `\n\n[This section was skipped due to repeated empty translation results.]\n\n`
                         );
                         sectionBar.update(sectionIndex + 1);
                         sectionIndex++;
@@ -263,9 +241,7 @@ Similarity: ${stringSimilarity(
             }
 
             translatedText = translatedText.replace(
-                /<think>[
-	
-]*?/<think>/g,
+                /<think>[\s\S]*?<\/think>/g,
                 ""
             );
             bufText.push(translatedText);
