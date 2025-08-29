@@ -1,0 +1,7 @@
+/node_modules/
+
+/output/
+
+/translate_from_files/
+
+.env
