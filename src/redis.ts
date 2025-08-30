@@ -3,7 +3,10 @@ import * as Cookies from "es-cookie";
 
 // Initialize Redis client. This uses environment variables (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN).
 // Make sure these are set in your environment where the script runs.
-const redis = Redis.fromEnv();
+const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 export type WebsiteType = "pixiv" | "syosetsu";
 
