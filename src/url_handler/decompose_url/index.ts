@@ -127,9 +127,12 @@ async function decompose_pixiv(url: URL): Promise<string[]> {
         if (!userId || userId === "") {
             throw new Error(url.toString() + " has no userId");
         }
-        const urls = await translate_from_pixiv_user(url.toString()) ?? []
-        const decomposed_urls = decompose_url(urls.join(" "));
-        return decomposed_urls;
+        const urls = await translate_from_pixiv_user(url.toString());
+        if (urls) {
+            const decomposed_urls = decompose_url(urls.join(" "));
+            return decomposed_urls;
+        }
+        return [];
     }
     if (url.pathname.includes("/ajax/")) {
         throw new Error(
