@@ -1,5 +1,6 @@
 import { load } from "cheerio";
 import { translate_from_pixiv_user } from "./translate_from_pixiv_user";
+import { getCookiesFromRedis, updateCookiesToRedis } from "../../redis";
 
 /**
  * Decomposes a given URL string into an array of individual episode URLs.
@@ -13,18 +14,21 @@ import { translate_from_pixiv_user } from "./translate_from_pixiv_user";
  * @param url_string - A string containing one or more URLs separated by spaces.
  * @returns A promise that resolves to an array of URLs, each representing an episode or the original URL.
  */
-export async function decompose_url(url_string: string) {
+export async function decompose_url(url_string: string, with_Cookies = false) {
     const urls = url_string.split(" ");
     const novel_urls: string[] = [];
     for await (const url of urls) {
         const urlobj = new URL(url);
         if (urlobj.host === "www.pixiv.net") {
-            const processed_urls = await decompose_pixiv(urlobj);
+            const processed_urls = await decompose_pixiv(urlobj, with_Cookies);
             if (processed_urls) {
                 novel_urls.push(...processed_urls);
             }
         } else if (urlobj.host === "ncode.syosetu.com") {
-            const processed_urls = await decompose_syosetsu(urlobj);
+            const processed_urls = await decompose_syosetsu(
+                urlobj,
+                with_Cookies
+            );
             if (processed_urls) {
                 novel_urls.push(...processed_urls);
             }
@@ -45,7 +49,10 @@ export async function decompose_url(url_string: string) {
  * @param url - The URL object representing either a syosetsu novel list page or a direct episode page.
  * @returns A promise that resolves to an array of strings, each representing a decomposed episode URL.
  */
-async function decompose_syosetsu(url: URL) {
+async function decompose_syosetsu(
+    url: URL,
+    with_Cookies = false
+): Promise<string[]> {
     const decomposed_urls = [] as string[];
 
     const pathParts = url.pathname.split("/").filter(Boolean);
@@ -55,7 +62,17 @@ async function decompose_syosetsu(url: URL) {
         let page = 1;
         while (true) {
             url.searchParams.set("p", page.toString());
-            const html = await fetch(url).then((res) => res.text());
+            const fetchOptions: RequestInit = {};
+            fetchOptions.headers = {};
+            if (with_Cookies) {
+                // use empty cookies for syosetsu, since it does not need cookies
+                fetchOptions.headers.Cookie = "";
+            }
+            const response = await fetch(url, fetchOptions);
+            const html = await response.text();
+
+            // update syosetsu cookies (not implemented yet since it does not need cookies)
+
             const $ = load(html);
             $("a.p-eplist__subtitle").each((_, element) => {
                 const href = $(element).attr("href");
@@ -92,7 +109,10 @@ async function decompose_syosetsu(url: URL) {
  * @param url - The URL object to process.
  * @returns A promise that resolves to an array of URLs for the novels in the series or the individual novel URL.
  */
-async function decompose_pixiv(url: URL): Promise<string[]> {
+async function decompose_pixiv(
+    url: URL,
+    with_Cookies = false
+): Promise<string[]> {
     const seriesMatch = url.pathname.match(/^\/novel\/series\/(\d+)\/?$/);
     if (seriesMatch) {
         const series_id = seriesMatch[1];
@@ -101,11 +121,28 @@ async function decompose_pixiv(url: URL): Promise<string[]> {
                 "Could not extract series ID from URL: " + url.toString()
             );
         }
-        const series_content_titles = (
-            await fetch(
-                `https://www.pixiv.net/ajax/novel/series/${series_id}/content_titles`
-            ).then((res) => res.json())
-        ).body;
+
+        const fetchOptions: RequestInit = {};
+        fetchOptions.headers = {};
+        if (with_Cookies) {
+            const currentCookie = await getCookiesFromRedis({
+                websiteType: "pixiv",
+            });
+            if (currentCookie) {
+                fetchOptions.headers.Cookie = currentCookie;
+            }
+        }
+
+        const response = await fetch(
+            `https://www.pixiv.net/ajax/novel/series/${series_id}/content_titles`,
+            fetchOptions
+        );
+        const series_content_titles = (await response.json()).body;
+        // update pixiv cookies
+        await updateCookiesToRedis({
+            websiteType: "pixiv",
+            setCookieArr: response.headers.getSetCookie(),
+        });
         const novel_ids = series_content_titles
             .map((d: { id: string; available: boolean }) =>
                 // remove the condition to always return the URL

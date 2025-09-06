@@ -150,7 +150,7 @@ export async function translateText(
             }
 
             if (
-                stringSimilarity(translatedText, originalText) > 0.97 &&
+                stringSimilarity(translatedText, originalText) > 0.95 &&
                 translatedText.length > 30
             ) {
                 console.warn(

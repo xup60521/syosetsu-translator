@@ -27,7 +27,7 @@ export async function translation(params: TranslationParameter) {
     } = params;
 
     let { auto_retry, with_Cookies } = params;
-    const urls = await decompose_url(url_string);
+    const urls = await decompose_url(url_string, with_Cookies);
     let b1 = multibar.create(urls.length, 0);
     let url_index = start_from - 1;
     while (url_index < urls.length) {
