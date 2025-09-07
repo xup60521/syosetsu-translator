@@ -93,12 +93,12 @@ export async function getCookiesFromRedis(props: {
 
 export async function updateCookiesToRedis(props: {
     websiteType: WebsiteType;
-    setCookieArr: string[];
+    setCookieArr: ReturnType<typeof Response.prototype.headers.getSetCookie>;
 }) {
     const { websiteType, setCookieArr } = props;
     // console.log(setCookieArr);
     if (!setCookieArr || setCookieArr.length === 0) return;
-    const originalCookiesStr = (await getCookiesFromRedis({ websiteType }))!;
+    const originalCookiesStr = (await getCookiesFromRedis({ websiteType })) ?? "";
     const originalCookiesJSON = Cookies.parse(originalCookiesStr);
 
     const newCookiesJSON = updateCookieFromSetCookie(
