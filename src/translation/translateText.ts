@@ -10,7 +10,7 @@ import {
     type ResultType,
 } from "../utils";
 import { multibar, sleep } from "./translation-utils";
-import type { TranslateTextParams } from "./types";
+
 import {
     getOneStepTranslatePrompt,
     getTwoStepFirstTranslatePrompt,
@@ -19,6 +19,17 @@ import {
 import cliProgress from "cli-progress";
 
 const checkEmptyRegex = /^[\s]*$/;
+
+type TranslateTextParams = {
+    paragraphArr: string[];
+    divide_line: number;
+    model: LanguageModelV1;
+    provider: string;
+    one_or_two_step: Awaited<
+        ReturnType<typeof input_one_or_two_step_translation>
+    >;
+};
+
 
 export async function translateText(
     params: TranslateTextParams

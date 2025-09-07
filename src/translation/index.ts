@@ -11,10 +11,16 @@ import { replace_words } from "../replace";
 import { novel_handler } from "../url_handler/single_novel_handler";
 import { handle_file } from "../handle_file";
 import { translateText } from "./translateText";
-import type { DoTranslationProps } from "./types";
-
-import type { TranslationParameter } from "./types";
 import { multibar } from "./translation-utils";
+import type { LanguageModelV1 } from "ai";
+
+type TranslationParameter = {
+    provider: string;
+    auto_retry: boolean;
+    url_string: string;
+    start_from: number;
+} & DoTranslationProps;
+
 
 export async function translation(params: TranslationParameter) {
     const {
@@ -96,6 +102,16 @@ export async function translation(params: TranslationParameter) {
     multibar.stop();
     return;
 }
+
+type DoTranslationProps = {
+    model: LanguageModelV1;
+    divide_line: number;
+    with_Cookies?: boolean;
+    provider: string;
+    one_or_two_step: Awaited<
+        ReturnType<typeof input_one_or_two_step_translation>
+    >;
+};
 
 async function doTranslation(novel_url: string, props: DoTranslationProps) {
     const { model, divide_line, with_Cookies, provider, one_or_two_step } =
