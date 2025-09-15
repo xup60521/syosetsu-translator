@@ -45,8 +45,8 @@ export function getTranslationPrompt(props: {
         modelId === "openai/gpt-oss-20b" ||
         modelId === "openai/gpt-oss-20b:free" ||
         mistralAIModelList.map((d) => d.value as string).includes(modelId) ||
-        modelId === "moonshotai/kimi-k2-instruct" ||
-        modelId === "moonshotai/kimi-k2:free" ||
+        // modelId === "moonshotai/kimi-k2-instruct" ||
+        // modelId === "moonshotai/kimi-k2:free" ||
         modelId === "gemini-2.5-flash" ||
         provider === "cerebras"
     ) {

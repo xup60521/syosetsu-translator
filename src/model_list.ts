@@ -184,6 +184,11 @@ export const openRouterModelList = [
         name: "moonshotai/kimi-k2:free",
         value: "moonshotai/kimi-k2:free",
     },
+    // deepseek/deepseek-chat-v3.1:free
+    {
+        name: "deepseek/deepseek-chat-v3.1:free",
+        value: "deepseek/deepseek-chat-v3.1:free",
+    },
     // deepseek/deepseek-chat-v3-0324:free
     {
         name: "deepseek/deepseek-chat-v3-0324:free",
