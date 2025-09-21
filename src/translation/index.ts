@@ -13,14 +13,13 @@ import { handle_file } from "../handle_file";
 import { translateText } from "./translateText";
 import { multibar } from "./translation-utils";
 import type { LanguageModelV1 } from "ai";
+import type { ProviderType } from "../model_list";
 
 type TranslationParameter = {
-    provider: string;
     auto_retry: boolean;
     url_string: string;
     start_from: number;
 } & DoTranslationProps;
-
 
 export async function translation(params: TranslationParameter) {
     const {
@@ -107,7 +106,7 @@ type DoTranslationProps = {
     model: LanguageModelV1;
     divide_line: number;
     with_Cookies?: boolean;
-    provider: string;
+    provider: ProviderType;
     one_or_two_step: Awaited<
         ReturnType<typeof input_one_or_two_step_translation>
     >;

@@ -1,7 +1,7 @@
 import { streamText, type LanguageModelV1 } from "ai";
 import { stringSimilarity } from "string-similarity-js";
 import { select } from "@inquirer/prompts";
-import type { ModelIdType } from "../model_list";
+import type { ModelIdType, ProviderType } from "../model_list";
 import {
     input_select_model,
     input_one_or_two_step_translation,
@@ -24,7 +24,7 @@ type TranslateTextParams = {
     paragraphArr: string[];
     divide_line: number;
     model: LanguageModelV1;
-    provider: string;
+    provider: ProviderType;
     one_or_two_step: Awaited<
         ReturnType<typeof input_one_or_two_step_translation>
     >;
@@ -275,7 +275,7 @@ export async function translateText(
 async function oneStepTranslateText(
     similarity_retry_count: number,
     model: LanguageModelV1,
-    provider: string,
+    provider: ProviderType,
     originalText: string
 ) {
     const prompt = getOneStepTranslatePrompt(
