@@ -1,11 +1,5 @@
-export type ModelIdType =
-    | (typeof googleModelList)[number]["value"]
-    | (typeof geminiCLIModelList)[number]["value"]
-    | (typeof openaiModelList)[number]["value"]
-    | (typeof groqModelList)[number]["value"]
-    | (typeof openRouterModelList)[number]["value"]
-    | (typeof mistralAIModelList)[number]["value"]
-    | (typeof cerebrasModelList)[number]["value"];
+
+
 
 export const providerOption = [
     {
@@ -42,7 +36,31 @@ export const providerOption = [
     },
 ] as const;
 
-export const googleModelList = [
+export async function getModelList(provider: (typeof providerOption)[number]["value"]) {
+    switch (provider) {
+        case "google":
+            return googleModelList;
+        case "gemini-cli":
+            return geminiCLIModelList;
+        case "openai":
+            return openaiModelList;
+        case "groq":
+            return groqModelList;
+        case "openrouter":
+            const response = await fetch("https://openrouter.ai/api/v1/models")
+            const modelList = (await response.json()).data.map((d: {id: string; name: string}) => ({ name: d.id, value: d.id })) as {name: string; value: string}[];
+            const freeModelList = modelList.filter((d) => d.value.includes(":free"));
+            return freeModelList;
+        case "mistral-ai":
+            return mistralAIModelList;
+        case "cerebras":
+            return cerebrasModelList;
+        default:
+            throw new Error("Unknown provider");
+    }
+}
+
+const googleModelList = [
     // // 1.5
     // {
     //     name: "gemini-1.5-flash-latest",
@@ -101,7 +119,7 @@ export const googleModelList = [
     },
 ] as const;
 
-export const geminiCLIModelList = [
+const geminiCLIModelList = [
     {
         name: "gemini-2.5-flash",
         value: "gemini-2.5-flash",
@@ -113,7 +131,7 @@ export const geminiCLIModelList = [
     },
 ] as const;
 
-export const openaiModelList = [
+const openaiModelList = [
     { name: "o3-mini-2025-01-31", value: "o3-mini-2025-01-31" },
     {
         name: "gpt-4o-mini-2024-07-18",
@@ -121,7 +139,7 @@ export const openaiModelList = [
     },
 ] as const;
 
-export const groqModelList = [
+const groqModelList = [
     // moonshotai/kimi-k2-instruct
     {
         name: "moonshotai/kimi-k2-instruct",
@@ -174,7 +192,7 @@ export const groqModelList = [
     },
 ] as const;
 
-export const openRouterModelList = [
+const openRouterModelList = [
     // openai/gpt-oss-20b:free
     {
         name: "openai/gpt-oss-20b:free",
@@ -221,7 +239,7 @@ export const openRouterModelList = [
     },
 ] as const;
 
-export const mistralAIModelList = [
+const mistralAIModelList = [
     {
         name: "Mistral Large 2.1",
         value: "mistral-large-2411",
@@ -268,7 +286,7 @@ export const mistralAIModelList = [
     },
 ] as const;
 
-export const cerebrasModelList = [
+const cerebrasModelList = [
     {
         name: "gpt-oss-120b",
         value: "gpt-oss-120b",
@@ -306,3 +324,15 @@ export const cerebrasModelList = [
         value: "qwen-3-coder-480b",
     },
 ] as const;
+
+
+export type ModelIdType =
+    | (typeof googleModelList)[number]["value"]
+    | (typeof geminiCLIModelList)[number]["value"]
+    | (typeof openaiModelList)[number]["value"]
+    | (typeof groqModelList)[number]["value"]
+    | (typeof openRouterModelList)[number]["value"]
+    | (typeof mistralAIModelList)[number]["value"]
+    | (typeof cerebrasModelList)[number]["value"];
+
+export type ProviderType = (typeof providerOption)[number]["value"];

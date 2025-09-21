@@ -9,23 +9,16 @@ import { createCerebras } from "@ai-sdk/cerebras";
 // import { createOllama } from "ollama-ai-provider";
 import { createGeminiProvider } from "ai-sdk-provider-gemini-cli";
 import { z } from "zod";
-import {
-    providerOption,
-    googleModelList,
-    openaiModelList,
-    groqModelList,
-    openRouterModelList,
-    geminiCLIModelList,
-    type ModelIdType,
-    mistralAIModelList,
-    cerebrasModelList,
-} from "./model_list";
+import { providerOption, getModelList, type ModelIdType, type ProviderType } from "./model_list";
 
 const default_divide_line = 30;
 
 export const windowsFileEscapeRegex = /[<>:"/\\|?*]/g;
 
-export async function input_with_cookies_or_not(props?: { default: boolean, custom_message?: string }) {
+export async function input_with_cookies_or_not(props?: {
+    default: boolean;
+    custom_message?: string;
+}) {
     return await confirm({
         message: props?.custom_message || "Use cookies for translation?",
         default: props?.default,
@@ -112,7 +105,7 @@ export async function input_divide_line(modelId?: string) {
         );
 }
 
-export async function input_select_model() {
+export async function input_select_model(): Promise<{model: LanguageModelV1; provider: ProviderType}> {
     const provider = await select({
         message: "Please select the provider",
         choices: providerOption,
@@ -148,7 +141,7 @@ export async function input_select_model() {
         });
         const model = await select({
             message: "Please select a model",
-            choices: googleModelList,
+            choices: await getModelList("google"),
         });
         return { model: google(model), provider: "google" };
     } else if (provider === "gemini-cli") {
@@ -157,7 +150,7 @@ export async function input_select_model() {
         });
         const model = await select({
             message: "Please select a model",
-            choices: geminiCLIModelList,
+            choices: await getModelList("gemini-cli"),
         });
         return {
             model: gemini(model) as LanguageModelV1,
@@ -170,7 +163,7 @@ export async function input_select_model() {
         });
         const model = await select({
             message: "Please select a model",
-            choices: openaiModelList,
+            choices: await getModelList("openai"),
         });
         return { model: openai(model) as LanguageModelV1, provider: "openai" };
     } else if (provider === "groq") {
@@ -179,7 +172,7 @@ export async function input_select_model() {
         });
         const model = await select({
             message: "Please select a model",
-            choices: groqModelList,
+            choices: await getModelList("groq"),
         });
         return { model: groq(model) as LanguageModelV1, provider: "groq" };
     } else if (provider === "openrouter") {
@@ -188,7 +181,7 @@ export async function input_select_model() {
         });
         const modelId = await select({
             message: "Please select a model",
-            choices: openRouterModelList,
+            choices: await getModelList("openrouter"),
         });
         return {
             model: openrouter.languageModel(modelId) as LanguageModelV1,
@@ -200,7 +193,7 @@ export async function input_select_model() {
         });
         const modelId = await select({
             message: "Please select a model",
-            choices: mistralAIModelList,
+            choices: await getModelList("mistral-ai"),
         });
         return {
             model: mistral.languageModel(modelId) as LanguageModelV1,
@@ -212,7 +205,7 @@ export async function input_select_model() {
         });
         const modelId = await select({
             message: "Please select a model",
-            choices: cerebrasModelList,
+            choices: await getModelList("cerebras"),
         });
         return {
             model: cerebras.languageModel(modelId) as LanguageModelV1,
@@ -282,10 +275,7 @@ export async function input_start_from() {
         );
 }
 
-export function getModelWaitTime(props: {
-    modelId: string;
-    provider: string;
-}) {
+export function getModelWaitTime(props: { modelId: string; provider: string }) {
     const provider = props.provider as (typeof providerOption)[number]["value"];
     const modelId = props.modelId as ModelIdType;
     if (provider === "groq" && modelId === "openai/gpt-oss-120b") {
@@ -307,7 +297,11 @@ export function getModelWaitTime(props: {
         // 1 min
         return 60_000; // 60 seconds
     }
-    if (modelId === "llama-3.3-70b-versatile" || modelId === "llama-3.3-70b" || modelId === "llama3-70b-8192") {
+    if (
+        modelId === "llama-3.3-70b-versatile" ||
+        modelId === "llama-3.3-70b" ||
+        modelId === "llama3-70b-8192"
+    ) {
         return 3_000; // 3 seconds
     }
     return undefined; // No wait time

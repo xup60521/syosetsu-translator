@@ -1,5 +1,4 @@
 import type { ModelIdType, providerOption } from "../model_list";
-import { mistralAIModelList } from "../model_list";
 
 export const ch_prompt = `# 指令：
             請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。
@@ -44,7 +43,7 @@ export function getTranslationPrompt(props: {
         modelId === "openai/gpt-oss-120b" ||
         modelId === "openai/gpt-oss-20b" ||
         modelId === "openai/gpt-oss-20b:free" ||
-        mistralAIModelList.map((d) => d.value as string).includes(modelId) ||
+        provider === "mistral-ai" ||
         // modelId === "moonshotai/kimi-k2-instruct" ||
         // modelId === "moonshotai/kimi-k2:free" ||
         modelId === "gemini-2.5-flash" ||
