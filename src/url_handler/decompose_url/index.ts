@@ -59,34 +59,15 @@ async function decompose_syosetsu(
     // pathParts: ["{novel_id}"] or ["{novel_id}", "{order}"]
     if (pathParts.length === 1) {
         // List page, need to decompose
-        let page = 1;
-        while (true) {
-            url.searchParams.set("p", page.toString());
-            const fetchOptions: RequestInit = {};
-            fetchOptions.headers = {};
-            if (with_Cookies) {
-                // use empty cookies for syosetsu, since it does not need cookies
-                fetchOptions.headers.Cookie = "";
-            }
-            const response = await fetch(url, fetchOptions);
-            const html = await response.text();
 
-            // update syosetsu cookies (not implemented yet since it does not need cookies)
+        // move from web crawling to using API
+        const response = await fetch(`https://api.syosetu.com/novelapi/api/?ncode=${pathParts[0]}&out=json`)
+        const novel_count = (await response.json())[1].general_all_no as number
+        const urls = (new Array(novel_count)).fill(null).map((_, i) => `https://ncode.syosetu.com/${pathParts[0]}/${i + 1}/`)
+        
+        decomposed_urls.push(...urls)
 
-            const $ = load(html);
-            $("a.p-eplist__subtitle").each((_, element) => {
-                const href = $(element).attr("href");
-                if (href) {
-                    decomposed_urls.push(new URL(href, url.origin).toString());
-                }
-            });
-            const nextPage = $("a.c-pager__item--next").attr("href");
-            if (nextPage) {
-                page++;
-            } else {
-                break;
-            }
-        }
+        
     } else if (pathParts.length === 2) {
         // Direct episode page, return the url itself
         decomposed_urls.push(url.toString());
