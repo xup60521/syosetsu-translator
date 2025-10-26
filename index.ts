@@ -13,6 +13,7 @@ import {
     input_url_string,
     input_with_cookies_or_not,
 } from "./src/utils";
+import { gatherAllSeriesData } from "./src/gather_all_series_data";
 
 const options = [
     {
@@ -31,6 +32,10 @@ const options = [
     //     name: "Translate from pixiv user",
     //     value: "translate from pixiv user",
     // },
+    {
+        name: "Gather all series data from pixiv",
+        value: "gather all series data",
+    }
 ] as const;
 // Function to prompt the user
 async function main() {
@@ -53,6 +58,9 @@ async function main() {
             // case "translate from pixiv user":
             //     await translate_from_pixiv_user();
             //     break;
+            case "gather all series data":
+                await gatherAllSeriesData();
+                break;
             default:
                 break;
         }

@@ -97,8 +97,16 @@ const googleModelList = [
         value: "gemini-2.5-flash",
     },
     {
+        name: "gemini-flash-latest",
+        value: "gemini-flash-latest",
+    },
+    {
         name: "gemini-2.5-flash-lite",
         value: "gemini-2.5-flash-lite",
+    },
+    {
+        name: "gemini-flash-lite-latest",
+        value: "gemini-flash-lite-latest",
     },
     {
         name: "gemini-2.5-pro",

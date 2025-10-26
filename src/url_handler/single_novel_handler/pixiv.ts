@@ -3,8 +3,6 @@ import type { NovelHandlerResultType } from ".";
 import { getCookiesFromRedis, updateCookiesToRedis } from "../../redis";
 import { windowsFileEscapeRegex } from "../../utils";
 
-
-
 export async function pixiv_handler(
     urlobj: URL,
     { with_Cookies }: { with_Cookies?: boolean }
@@ -39,11 +37,13 @@ async function single_handler(
     }
 
     // Cookies
-    const set_cookies = this_novel_response.headers.getSetCookie();
-    await updateCookiesToRedis({
-        websiteType: "pixiv",
-        setCookieArr: set_cookies,
-    });
+    if (with_Cookies) {
+        const set_cookies = this_novel_response.headers.getSetCookie();
+        await updateCookiesToRedis({
+            websiteType: "pixiv",
+            setCookieArr: set_cookies,
+        });
+    }
 
     const this_novel_data = await this_novel_response.json();
     const paragraphs = this_novel_data.body.content;

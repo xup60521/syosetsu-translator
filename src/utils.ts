@@ -84,7 +84,7 @@ export async function input_divide_line(modelId?: string) {
     }
     return z
         .number()
-        .min(1)
+        .min(0)
         .default(divide_line)
         .parse(
             await number({
@@ -96,8 +96,8 @@ export async function input_divide_line(modelId?: string) {
                 validate: (input) => {
                     // only greater than 0 is allowed
                     const value = Number(input);
-                    if (isNaN(value) || value < 1) {
-                        return "Please enter a valid number greater than 0";
+                    if (isNaN(value) || value < 0) {
+                        return "Please enter a valid number >= 0";
                     }
                     return true;
                 },
@@ -318,8 +318,11 @@ export type ResultType<T, E> =
       };
 
 export function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
-    if (chunkSize <= 0) {
+    if (chunkSize < 0) {
         throw new Error("Chunk size must be a positive number.");
+    }
+    if (chunkSize === 0) {
+        return [arr];
     }
 
     const result: T[][] = [];
