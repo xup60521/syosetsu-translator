@@ -2,6 +2,7 @@ import { load, type CheerioAPI } from "cheerio";
 import { syosetsu_handler } from "./syosetsu";
 import { z } from "zod";
 import { pixiv_handler } from "./pixiv";
+import { kakuyomu_handler } from "./kakuyomu";
 
 export type NovelHandlerResultType = {
     title: string;
@@ -33,6 +34,9 @@ export async function novel_handler(
             break;
         case "https://www.pixiv.net":
             result = await pixiv_handler(urlobj, { with_Cookies });
+            break;
+        case "https://kakuyomu.jp":
+            result = await kakuyomu_handler(urlobj, { with_Cookies });
             break;
     }
     if (!result) throw new Error("handler is not defined");

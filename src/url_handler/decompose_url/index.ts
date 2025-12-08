@@ -21,22 +21,34 @@ export async function decompose_url(url_string: string, with_Cookies = false) {
         const urlobj = new URL(url);
         if (urlobj.host === "www.pixiv.net") {
             const processed_urls = await decompose_pixiv(urlobj, with_Cookies);
-            if (processed_urls) {
-                novel_urls.push(...processed_urls);
-            }
+
+            novel_urls.push(...processed_urls);
         } else if (urlobj.host === "ncode.syosetu.com") {
             const processed_urls = await decompose_syosetsu(
                 urlobj,
                 with_Cookies
             );
-            if (processed_urls) {
-                novel_urls.push(...processed_urls);
-            }
+
+            novel_urls.push(...processed_urls);
+        } else if (urlobj.host === "kakuyomu.jp") {
+            const processed_urls = await decompose_kakuyomu(
+                urlobj,
+                with_Cookies
+            );
+
+            novel_urls.push(...processed_urls);
         } else {
             novel_urls.push(url);
         }
     }
     return novel_urls;
+}
+
+async function decompose_kakuyomu(
+    url: URL,
+    with_Cookies = false
+): Promise<string[]> {
+    return [url.toString()];
 }
 
 /**
@@ -61,13 +73,17 @@ async function decompose_syosetsu(
         // List page, need to decompose
 
         // move from web crawling to using API
-        const response = await fetch(`https://api.syosetu.com/novelapi/api/?ncode=${pathParts[0]}&out=json`)
-        const novel_count = (await response.json())[1].general_all_no as number
-        const urls = (new Array(novel_count)).fill(null).map((_, i) => `https://ncode.syosetu.com/${pathParts[0]}/${i + 1}/`)
-        
-        decomposed_urls.push(...urls)
+        const response = await fetch(
+            `https://api.syosetu.com/novelapi/api/?ncode=${pathParts[0]}&out=json`
+        );
+        const novel_count = (await response.json())[1].general_all_no as number;
+        const urls = new Array(novel_count)
+            .fill(null)
+            .map(
+                (_, i) => `https://ncode.syosetu.com/${pathParts[0]}/${i + 1}/`
+            );
 
-        
+        decomposed_urls.push(...urls);
     } else if (pathParts.length === 2) {
         // Direct episode page, return the url itself
         decomposed_urls.push(url.toString());

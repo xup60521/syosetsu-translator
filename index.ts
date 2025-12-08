@@ -1,6 +1,7 @@
 import { select } from "@inquirer/prompts";
 import { replaceTextInFiles } from "./src/replace";
 import { translation } from "./src/translation";
+import { contextSearch } from "./src/context_search";
 
 import "dotenv/config";
 import {
@@ -35,6 +36,10 @@ const options = [
     {
         name: "Gather all series data from pixiv",
         value: "gather all series data",
+    },
+    {
+        name: "Context Search",
+        value: "context search",
     }
 ] as const;
 // Function to prompt the user
@@ -60,6 +65,9 @@ async function main() {
             //     break;
             case "gather all series data":
                 await gatherAllSeriesData();
+                break;
+            case "context search":
+                await contextSearch();
                 break;
             default:
                 break;
