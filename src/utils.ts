@@ -304,6 +304,9 @@ export function getModelWaitTime(props: { modelId: string; provider: string }) {
     ) {
         return 3_000; // 3 seconds
     }
+    if (modelId === "gemini-flash-lite-latest") {
+        return 2_000; // 2 seconds
+    }
     return undefined; // No wait time
 }
 

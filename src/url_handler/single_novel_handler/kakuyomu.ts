@@ -26,10 +26,11 @@ export async function kakuyomu_handler(
     const sidebar_res = await fetch(sidebar_url).then((res) => res.text());
     const $sidebar = load(sidebar_res);
     const series_title = $sidebar("h3.heading-level4 > a").text();
+    const episode = $("header#contentMain-header > p:last-child").text();
     const title = $("header#contentMain-header > p").text();
     const author = $sidebar("h4.heading-level5 > a").text();
     const indexPrefix =
-        series_title + " " + title;
+        series_title + " " + episode;
     return {
         title: title,
         indexPrefix: indexPrefix.replaceAll(windowsFileEscapeRegex, " "),

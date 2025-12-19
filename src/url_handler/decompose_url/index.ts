@@ -120,7 +120,10 @@ async function decompose_pixiv(
         }
 
         const fetchOptions: RequestInit = {};
-        fetchOptions.headers = {};
+        fetchOptions.headers = {
+            "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0",
+        };
         if (with_Cookies) {
             const currentCookie = await getCookiesFromRedis({
                 websiteType: "pixiv",
@@ -144,6 +147,7 @@ async function decompose_pixiv(
             .map((d: { id: string; available: boolean }) =>
                 // remove the condition to always return the URL
                 d.available
+                // true
                     ? `https://www.pixiv.net/novel/show.php?id=${d.id}`
                     : null
             )

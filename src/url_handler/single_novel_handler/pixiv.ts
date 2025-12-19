@@ -16,7 +16,10 @@ async function single_handler(
 ): Promise<NovelHandlerResultType> {
     let this_novel_response;
     const fetchOptions: RequestInit = {};
-    fetchOptions.headers = {};
+    fetchOptions.headers = {
+        "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0",
+    };
     if (with_Cookies) {
         const currentCookie = await getCookiesFromRedis({
             websiteType: "pixiv",

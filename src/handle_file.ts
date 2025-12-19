@@ -4,11 +4,13 @@ export async function handle_file({
     title,
     indexPrefix,
     content,
+    istranslated = true,
 }: {
     series_title_and_author: string;
     title: string;
     indexPrefix: string;
     content: string;
+    istranslated?: boolean;
 }) {
     try {
         await ensureDir(`./output/${series_title_and_author}`);
@@ -18,7 +20,7 @@ export async function handle_file({
             error
         );
     }
-    const file_path_and_name = `./output/${series_title_and_author}/${indexPrefix}-${title}_translated.txt`;
+    const file_path_and_name = `./output/${series_title_and_author}/${indexPrefix}-${title}${istranslated ? "_translated" : ""}.txt`;
     fs.writeFile(
         file_path_and_name,
         content
