@@ -100,6 +100,8 @@ async function main() {
             case "context search":
                 await contextSearch();
                 break;
+            case "exit":
+                return;
             default:
                 break;
         }

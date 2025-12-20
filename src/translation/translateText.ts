@@ -290,12 +290,9 @@ async function oneStepTranslateText(
         temperature: 0.0,
         prompt,
     });
-
-    let streamedText = "";
-    for await (const delta of stream.textStream) {
-        streamedText += delta;
-    }
-    return streamedText;
+    await stream.consumeStream()
+    
+    return await stream.text;
 }
 
 async function twoStepTranslateText(
@@ -311,11 +308,10 @@ async function twoStepTranslateText(
         temperature: 0.0,
         prompt: firstPrompt,
     });
+    await stream.consumeStream()
 
-    let firstTranslation = "";
-    for await (const delta of stream.textStream) {
-        firstTranslation += delta;
-    }
+    const firstTranslation = await stream.text;
+    
     if (checkEmptyRegex.test(firstTranslation)) {
         return "";
     }
@@ -325,7 +321,6 @@ async function twoStepTranslateText(
         firstTranslation
     );
 
-    let secondTranslation = "";
     const secondStream = streamText({
         model,
         seed: Math.floor(10000 * Math.random()),
@@ -333,8 +328,7 @@ async function twoStepTranslateText(
         prompt: secondPrompt,
     });
 
-    for await (const delta of secondStream.textStream) {
-        secondTranslation += delta;
-    }
-    return secondTranslation;
+    await secondStream.consumeStream()
+    
+    return await secondStream.text;
 }

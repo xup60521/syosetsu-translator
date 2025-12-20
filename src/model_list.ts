@@ -112,6 +112,10 @@ const googleModelList = [
         name: "gemini-2.5-pro",
         value: "gemini-2.5-pro",
     },
+    {
+        name: "gemini-3-flash-preview",
+        value: "gemini-3-flash-preview"
+    },
     // Gemma 3 & 3n
     {
         name: "gemma-3n-e4b-it",
