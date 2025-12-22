@@ -138,7 +138,8 @@ async function fetchFromURL(url_string?: string) {
         url_string = await input_url_string();
     }
     const with_Cookies = await input_with_cookies_or_not();
-    const urls = await decompose_url(url_string, with_Cookies);
+    const start_from =  await input_start_from();
+    const urls = (await decompose_url(url_string, with_Cookies)).splice(start_from - 1);
 
     const progressBar = new SingleBar({
         ...Presets.shades_classic,
@@ -165,7 +166,7 @@ async function fetchFromURL(url_string?: string) {
         
         URL: ${url}
         Author: ${author}
-        Model: No model (fetched only)
+        Model: No model (fetch only)
         Devide Line: N/A
         Tags: ${tags?.join(", ") ?? ""}
 
