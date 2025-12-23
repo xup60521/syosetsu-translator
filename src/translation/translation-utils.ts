@@ -6,7 +6,7 @@ export function sleep(ms: number) {
 
 export const multibar = new cliProgress.MultiBar(
     {
-        clearOnComplete: false,
+        clearOnComplete: true,
         hideCursor: true,
         format: " {bar} | {filename} | {value}/{total}",
     },

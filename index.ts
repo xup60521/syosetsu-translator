@@ -57,7 +57,8 @@ const options = [
 ] as const;
 // Function to prompt the user
 async function main() {
-    while (true) {
+    let isRunning = true
+    while (isRunning) {
         const answers = await select({
             message: "Please select an option:",
             choices: options,
@@ -87,6 +88,7 @@ async function main() {
                 await contextSearch();
                 break;
             case "exit":
+                isRunning = false
                 return;
             default:
                 break;
@@ -96,19 +98,31 @@ async function main() {
 
 main();
 
-async function translate_from_URL(url_string?: string) {
+async function translate_from_URL() {
     const enableBatchTranslate = await confirm({
         message: "Enable Batch Translate?",
-        default: false
+        default: false,
     });
     if (enableBatchTranslate) {
-        return await batchTranslate();
+        const { model, provider } = await input_select_model();
+
+        const url_string = await input_url_string();
+        const start_from = await input_start_from();
+        const with_Cookies = await input_with_cookies_or_not();
+        return await batchTranslate({
+            model,
+            provider,
+            url_string,
+
+            start_from,
+            with_Cookies,
+        });
     }
     const { model, provider } = await input_select_model();
     const divide_line = await input_divide_line(model.modelId);
-    if (!url_string) {
-        url_string = await input_url_string();
-    }
+
+    const url_string = await input_url_string();
+
     const auto_retry = await input_auto_retry();
     const start_from = await input_start_from();
     const with_Cookies = await input_with_cookies_or_not();
