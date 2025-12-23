@@ -9,6 +9,7 @@ import { createCerebras } from "@ai-sdk/cerebras";
 // import { createOllama } from "ollama-ai-provider";
 import { createGeminiProvider } from "ai-sdk-provider-gemini-cli";
 import { z } from "zod";
+import fs from "fs/promises"
 import { providerOption, getModelList, type ModelIdType, type ProviderType } from "./model_list";
 
 const default_divide_line = 30;
@@ -233,9 +234,12 @@ export async function input_one_or_two_step_translation() {
 }
 
 export async function input_url_string() {
-    return await input({
-        message: "Please enter the URLs (separated by spaces)",
+    let url_string = await input({
+        message: "Please enter the URLs (separated by spaces) (leave blank to read from urls.txt)",
         validate: (input) => {
+            if (input === "") {
+                return true
+            }
             const urls = input.split(" ").filter((url) => url.trim() !== "");
             if (urls.length === 0) {
                 return "Please enter at least one URL";
@@ -250,6 +254,10 @@ export async function input_url_string() {
             return true;
         },
     });
+    if (url_string === "") {
+        url_string = await fs.readFile("./urls.txt", "utf-8");
+    }
+    return url_string
 }
 
 export async function input_start_from() {

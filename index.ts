@@ -1,4 +1,4 @@
-import { select } from "@inquirer/prompts";
+import { confirm, select } from "@inquirer/prompts";
 import { replace_words, replaceTextInFiles } from "./src/replace";
 import { translation } from "./src/translation";
 import fs from "fs/promises";
@@ -21,6 +21,7 @@ import { novel_handler } from "./src/url_handler/single_novel_handler";
 import { sleep } from "./src/translation/translation-utils";
 import { handle_file } from "./src/handle_file";
 import { SingleBar, Presets } from "cli-progress";
+import { batchTranslate } from "./src/translation/batchTranslate";
 
 const options = [
     {
@@ -28,16 +29,8 @@ const options = [
         value: "translate from URL",
     },
     {
-        name: "Translate from URLs (url.txt)",
-        value: "translate from URL (url.txt)",
-    },
-    {
         name: "Fetch from URLs (no translation)",
         value: "fetch from URL",
-    },
-    {
-        name: "Fetch from URLs (url.txt) (no translation)",
-        value: "fetch from URL (url.txt)",
     },
     // {
     //     name: "Translate from files",
@@ -74,16 +67,9 @@ async function main() {
             case "translate from URL":
                 await translate_from_URL();
                 break;
-            case "translate from URL (url.txt)":
-                const url_string = await fs.readFile("./urls.txt", "utf-8");
-                await translate_from_URL(url_string);
-                break;
+
             case "fetch from URL":
                 await fetchFromURL();
-                break;
-            case "fetch from URL (url.txt)":
-                const url_string_2 = await fs.readFile("./urls.txt", "utf-8");
-                await fetchFromURL(url_string_2);
                 break;
             case "replace":
                 await replaceTextInFiles();
@@ -111,6 +97,13 @@ async function main() {
 main();
 
 async function translate_from_URL(url_string?: string) {
+    const enableBatchTranslate = await confirm({
+        message: "Enable Batch Translate?",
+        default: false
+    });
+    if (enableBatchTranslate) {
+        return await batchTranslate();
+    }
     const { model, provider } = await input_select_model();
     const divide_line = await input_divide_line(model.modelId);
     if (!url_string) {
@@ -138,8 +131,10 @@ async function fetchFromURL(url_string?: string) {
         url_string = await input_url_string();
     }
     const with_Cookies = await input_with_cookies_or_not();
-    const start_from =  await input_start_from();
-    const urls = (await decompose_url(url_string, with_Cookies)).splice(start_from - 1);
+    const start_from = await input_start_from();
+    const urls = (await decompose_url(url_string, with_Cookies)).splice(
+        start_from - 1
+    );
 
     const progressBar = new SingleBar({
         ...Presets.shades_classic,
