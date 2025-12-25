@@ -1,0 +1,52 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main # 只有在 push 到 main 分支時觸發
+    paths:
+      - "src/**" # 選填：只有 src 資料夾有變動時才執行，節省資源
+      - "package.json"
+      - "bun.lockb"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    # 必須開啟寫入權限，Action 才能建立 Release 並上傳檔案
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build project
+        # 確保你的 build 指令會產出到 dist/index.js
+        # 也可以直接寫：run: bun build ./src/index.ts --outdir ./dist
+        run: bun run build
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # 固定 tag 名稱為 latest，這樣每次 push 都會更新同一個 Release
+          tag_name: latest
+          name: "Latest Build"
+          body: |
+            This release is automatically updated on every push to main.
+            Last updated: ${{ github.event.head_commit.timestamp }}
+            Commit: ${{ github.sha }}
+          draft: false
+          prerelease: true # 標記為預發布版本
+          files: |
+            dist/index.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

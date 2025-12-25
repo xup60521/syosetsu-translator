@@ -10,7 +10,7 @@
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "build": "bun build ./index.ts --outdir ./ --target=node --format=esm",
+    "build": "bun build ./index.ts --outdir ./dist --target=node --format=esm",
     "start": "bun run --bun ./index.ts"
   },
   "dependencies": {
