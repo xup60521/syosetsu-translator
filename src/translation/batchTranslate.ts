@@ -6,7 +6,7 @@ import { novel_handler } from "../url_handler/single_novel_handler";
 import { input_select_model, input_url_string } from "../utils";
 import { en_prompt } from "./prompts";
 import z from "zod";
-import fs from "fs/promises"
+import fs from "fs/promises";
 import type { ProviderType } from "../model_list";
 import cliProgress from "cli-progress";
 import { multibar } from "./translation-utils";
@@ -32,11 +32,7 @@ export async function batchTranslate(props: BatchTranslationParameter) {
     const novel_data = urls.map(async (url) =>
         novel_handler(url, { with_Cookies })
     );
-    const untranslated_data = (await Promise.all(novel_data)).map((d) => {
-        const content = d.paragraphArr.join("\n");
-        const { paragraphArr, ...item } = d;
-        return { ...item, content };
-    });
+    const untranslated_data = await Promise.all(novel_data);
 
     // store temp untranslated data to debug
     // await fs.writeFile("temp.txt", JSON.stringify(untranslated_data));
@@ -60,8 +56,8 @@ export async function batchTranslate(props: BatchTranslationParameter) {
             },
         ],
     });
-    let currentIndex = 1
-    
+    let currentIndex = 1;
+
     for await (const item of elementStream) {
         if (!item) {
             continue;
@@ -69,7 +65,7 @@ export async function batchTranslate(props: BatchTranslationParameter) {
         const metadata = untranslated_data.find(
             (d) => d.indexPrefix === item.indexPrefix
         )!;
-        progressbar.update(currentIndex, {filename: metadata.title})
+        progressbar.update(currentIndex, { filename: metadata.title });
         const sectionedText = item.translated_content!.replace(
             /(\r\n|\r|\n)/g,
             "\n\n"
@@ -107,6 +103,6 @@ export async function batchTranslate(props: BatchTranslationParameter) {
             indexPrefix,
             content,
         });
-        currentIndex++
+        currentIndex++;
     }
 }

@@ -34,7 +34,7 @@ export async function kakuyomu_handler(
     return {
         title: title,
         indexPrefix: indexPrefix.replaceAll(windowsFileEscapeRegex, " "),
-        paragraphArr,
+        content: paragraphArr.join("\n"),
         series_title_and_author: (series_title + " " + author).replaceAll(windowsFileEscapeRegex, " ").trim(),
         url: urlobj.href,
         tags: [series_title],

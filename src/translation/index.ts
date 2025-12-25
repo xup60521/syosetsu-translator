@@ -117,13 +117,15 @@ async function doTranslation(novel_url: string, props: DoTranslationProps) {
         props;
     const {
         series_title_and_author,
-        paragraphArr,
+        content,
         title,
         indexPrefix,
         url,
         tags,
         author,
     } = await novel_handler(novel_url, { with_Cookies });
+
+    const paragraphArr = content.split("\n");
 
     const translationResult = await translateText({
         paragraphArr,
@@ -141,7 +143,7 @@ async function doTranslation(novel_url: string, props: DoTranslationProps) {
         .join("\n")
         .replace(/(\r\n|\r|\n)/g, "\n\n");
 
-    const content =
+    const file_content =
         `# ${title} 
     
 ${indexPrefix}
@@ -159,5 +161,5 @@ Tags: ${tags?.join(", ") ?? ""}
             tags,
         }));
 
-    await handle_file({ series_title_and_author, title, indexPrefix, content });
+    await handle_file({ series_title_and_author, title, indexPrefix, content: file_content});
 }

@@ -7,7 +7,7 @@ import { kakuyomu_handler } from "./kakuyomu";
 export type NovelHandlerResultType = {
     title: string;
     indexPrefix: string;
-    paragraphArr: string[];
+    content: string;
     series_title_and_author: string;
     series_title: string;
     url: string;

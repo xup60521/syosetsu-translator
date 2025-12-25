@@ -162,7 +162,7 @@ async function fetchFromURL(url_string?: string) {
     for (const novel_url of urls) {
         const {
             series_title_and_author,
-            paragraphArr,
+            content: originalContent,
             title,
             indexPrefix,
             url,
@@ -183,7 +183,7 @@ async function fetchFromURL(url_string?: string) {
 
         ` +
             (await replace_words(
-                paragraphArr.join("\n").replace(/(\r\n|\r|\n)/g, "\n\n"),
+                originalContent.replace(/(\r\n|\r|\n)/g, "\n\n"),
                 {
                     series_title_and_author,
                     title,

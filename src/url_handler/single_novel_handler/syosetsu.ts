@@ -27,7 +27,7 @@ export async function syosetsu_handler(
     return {
         title: title,
         indexPrefix: urlobj.pathname.replaceAll("/", " ").trim(),
-        paragraphArr,
+        content: paragraphArr.join("\n"),
         series_title_and_author: series_title + " " + author,
         url: urlobj.href,
         tags: tags,

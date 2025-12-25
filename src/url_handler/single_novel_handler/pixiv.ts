@@ -50,7 +50,7 @@ async function single_handler(
 
     const this_novel_data = await this_novel_response.json();
     const paragraphs = this_novel_data.body.content;
-    const paragraphArr = paragraphs.replaceAll("\n\n", "\n").split("\n");
+    const content = paragraphs.replaceAll("\n\n", "\n")
     const tags = this_novel_data.body?.tags?.tags?.map(
         ({ tag }: { tag: string }) => tag
     ) as string[] | undefined;
@@ -66,7 +66,7 @@ async function single_handler(
     return {
         title: title.replaceAll(windowsFileEscapeRegex, " "),
         indexPrefix: indexPrefix.replaceAll(windowsFileEscapeRegex, " "),
-        paragraphArr,
+        content,
         series_title_and_author: (series_title + " " + author).replaceAll(
             windowsFileEscapeRegex,
             " "
