@@ -3,10 +3,15 @@ import * as Cookies from "es-cookie";
 
 // Initialize Redis client. This uses environment variables (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN).
 // Make sure these are set in your environment where the script runs.
-const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+let redis: Redis | undefined;
+try {
+    redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL!,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    });
+} catch (error) {
+    console.error("Failed to initialize Redis client:", error);
+}
 
 export type WebsiteType = "pixiv" | "syosetsu";
 
@@ -79,6 +84,10 @@ export function parseSetCookie(setCookieString: string): CookieAttributes {
 export async function getCookiesFromRedis(props: {
     websiteType: WebsiteType;
 }): Promise<string | undefined> {
+    if (!redis) {
+        console.error("Redis client is not initialized.");
+        return undefined;
+    }
     const { websiteType } = props;
     const key = websiteType; // Using websiteType directly as the Redis key
 
@@ -95,6 +104,10 @@ export async function updateCookiesToRedis(props: {
     websiteType: WebsiteType;
     setCookieArr: ReturnType<typeof Response.prototype.headers.getSetCookie>;
 }) {
+    if (!redis) {
+        console.error("Redis client is not initialized.");
+        return;
+    }
     const { websiteType, setCookieArr } = props;
     // console.log(setCookieArr);
     if (!setCookieArr || setCookieArr.length === 0) return;
