@@ -117,8 +117,11 @@ export async function input_select_model(): Promise<{model: LanguageModelV1; pro
             message: "Please select the API key",
             choices: [
                 {
-                    name: "Default",
+                    name: "Default 0",
                     value: 0,
+                },{
+                    name: "Default 1",
+                    value: 0.1,
                 },
                 {
                     name: "Secondary",
@@ -134,6 +137,8 @@ export async function input_select_model(): Promise<{model: LanguageModelV1; pro
             apiKey:
                 key === 0
                     ? process.env.GEMINI_KEY_0!
+                    : key === 0.1
+                    ? process.env.GEMINI_KEY_0_1!
                     : key === 1
                     ? process.env.GEMINI_KEY_1!
                     : key === 2

@@ -1,0 +1,1651 @@
+{
+  "name": "novel_translator",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "n8n form",
+        "formDescription": "Workflow is triggered whenever the form is submitted.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "url",
+              "placeholder": "please enter url",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "start_from",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "end_to",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Select Gemini Model",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "models/gemini-flash-latest"
+                  },
+                  {
+                    "option": "models/gemini-flash-lite-latest"
+                  },
+                  {
+                    "option": "models/gemini-2.5-flash"
+                  },
+                  {
+                    "option": "models/gemini-2.5-flash-lite"
+                  },
+                  {
+                    "option": "models/gemini-2.5-pro"
+                  },
+                  {
+                    "option": "models/gemini-2.0-flash"
+                  },
+                  {
+                    "option": "models/gemini-3-flash-preview"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Use Cookie",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "yes_or_no"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Select Gemini Key",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Key 0"
+                  },
+                  {
+                    "option": "Key 1"
+                  },
+                  {
+                    "option": "Key 2"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -1376,
+        864
+      ],
+      "id": "0ae18e4f-d736-48e4-a51e-7d87cd39ab8e",
+      "name": "On form submission",
+      "webhookId": "e78af7f5-84ff-4cc7-8006-c3a5c24e7c89"
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 5,
+        "output": "={{ (()=>{\n\nconst url = $json.url;\nconst urlSplit = url.split(\"/\")\n// single pixiv novel\nif (urlSplit[3] === \"novel\" && urlSplit[4].includes(\"show.php\")) {\nreturn 0\n}\n// pixiv novel series\nif (urlSplit[3] === \"novel\" && urlSplit[4] === \"series\") {\nreturn 1\n}\n\nconst [novelEpisode] = urlSplit[4].split(\"?\")\n\n// syosetsu.com single novel\nif (urlSplit[2] === 'ncode.syosetu.com' && urlSplit[4] !== \"\") {\n  return 2\n}\n// syosetsu.com novel series\n\nif (urlSplit[2] === 'ncode.syosetu.com' && novelEpisode === \"\") {\n  return 3\n}\nreturn 4;\n})() }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -944,
+        816
+      ],
+      "id": "13cf04fa-7621-406a-8fff-257b8ea9872d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "url": "={{ (()=>{\n  const url = $json.url\n  const [seriesId] = url.split(\"/\")[5].split(\"?\")\n  return \"https://www.pixiv.net/ajax/novel/series/\"+seriesId+\"/content_titles\"\n})() }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -624,
+        736
+      ],
+      "id": "34b22532-0625-4e66-9fc4-8cac2d80594b",
+      "name": "get series content titles"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        64,
+        864
+      ],
+      "id": "c3c29cab-5891-4479-9e22-6af104cbff9f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ (()=>{\n\nconst {title, indexPrefix, url, author, tags, translated_content } = $('Data anchor for Drive').item.json\n\nreturn `# ${title} \n    \n${indexPrefix}\n\nURL: ${url.replaceAll('https://www.pixiv.net/ajax/novel/','https://www.pixiv.net/novel/show.php?id=')}\nAuthor: ${author}\nModel: ${$('On form submission').item.json['Select Gemini Model']} & moonshotai/kimi-k2:free (backup)\nDevide Line: full_text\nTags: ${tags?.join(\", \") ?? \"\"}\n\n${translated_content.replaceAll(\"\\n\", \"\\n\\n\")}\n\n`\n\n})() }}",
+        "name": "={{ $('Data anchor for Drive').item.json.file_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ (()=>{\nreturn $json.id\n})() }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2368,
+        1808
+      ],
+      "id": "d12b547e-8450-4243-960b-84d056d77c3c",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "MSrYyDzlz2PRRwVy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Data anchor for Drive').item.json.series_title_and_author }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "https://drive.google.com/drive/folders/1QU5lAqc2B7P1uWCKns3s8I3P3yqS_igy",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2128,
+        1520
+      ],
+      "id": "8e275826-d1c8-4aee-9713-0a8ad8eb8c83",
+      "name": "no folder: create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "MSrYyDzlz2PRRwVy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $('Data anchor for Drive').item.json.file_name }}",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('search folder').item.json.id }}",
+            "mode": "id"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1232,
+        1744
+      ],
+      "id": "ab242a1d-ba7b-47ff-9616-5ccd67e8afbf",
+      "name": "have folder: check file",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "MSrYyDzlz2PRRwVy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.series_title_and_author }}",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "https://drive.google.com/drive/folders/1QU5lAqc2B7P1uWCKns3s8I3P3yqS_igy",
+            "mode": "url"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {
+          "fields": [
+            "name",
+            "id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        576,
+        1648
+      ],
+      "id": "10dab13e-33c4-4ca0-8707-bc60ba6a3d08",
+      "name": "search folder",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "MSrYyDzlz2PRRwVy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1680,
+        1808
+      ],
+      "id": "ddb2a54a-c7b5-4101-942a-b184767b4f72",
+      "name": "Delete a file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "MSrYyDzlz2PRRwVy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9c8cc01d-e795-404c-a5a0-43fcbdf74dac",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d95ca724-b3a0-471b-8eae-3e0fb7df6598",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "={{ $('Data anchor for Drive').item.json.series_title_and_author }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        1648
+      ],
+      "id": "2003541d-96d2-42e0-bd65-e3cfadc7a7e7",
+      "name": "If folder not exist"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1f0da590-4e7b-4594-9364-9e6cd8cbf33c",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        1744
+      ],
+      "id": "4441f4da-467e-47a7-8484-3eb9da9d2956",
+      "name": "If file not exist"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {id: $('search folder').first().json.id}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        1744
+      ],
+      "id": "27edc26e-ce07-4e16-9810-e9a57fb8715d",
+      "name": "output folder id"
+    },
+    {
+      "parameters": {
+        "model": "moonshotai/kimi-k2:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        992
+      ],
+      "id": "b3ae0139-136e-4b5a-8dfe-d8b54698b1dd",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "PwPpd9eupufrkeTl",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# File Handler",
+        "height": 784,
+        "width": 1968
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        1424
+      ],
+      "typeVersion": 1,
+      "id": "d02ee413-8335-4893-814d-24e2aee99c4a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Extract & Translate",
+        "height": 1344,
+        "width": 2704,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        448,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "65ad5772-7721-4bbe-8cf6-13fdea82b98d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Decompose URL",
+        "height": 816,
+        "width": 1008
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        496
+      ],
+      "typeVersion": 1,
+      "id": "c2490b8a-a9f4-4f97-bcb6-4a31086a323c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04796245-e56e-4f9a-9daa-a5e36e83ac5b",
+              "name": "url",
+              "value": "={{ (()=>{\nconst url = $input.first().json.url\nconst novelId = url.split(\"=\")[1];\nreturn \"https://www.pixiv.net/ajax/novel/\" + novelId\n})() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        560
+      ],
+      "id": "124c7990-857f-433a-ae8c-e4fc9cd9d768",
+      "name": "Single Novel URL Transform"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst data = $input.first().json.body.map(d => ({url: \"https://www.pixiv.net/ajax/novel/\"+d.id}))\nconst start_from = Number($('On form submission').first().json.start_from)\nconst end_to = Number($('On form submission').first().json.end_to)\nconst slice_from_index = (start_from === 0 ? 1 : start_from) - 1\nconst slice_end_index = (end_to === 0 ? data.length : end_to)\n\nreturn data.slice(slice_from_index, slice_end_index)"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        736
+      ],
+      "id": "06863128-c4b3-481e-aff3-ec408b34a27f",
+      "name": "decompose series into an array of ajax urls"
+    },
+    {
+      "parameters": {
+        "modelName": "={{ $('On form submission').item.json['Select Gemini Model'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        992
+      ],
+      "id": "b40ddead-d762-41e4-a219-17bc48a454a9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2DBHYB7xXQMeFZZh",
+          "name": "Gemini Key 0"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2928,
+        112
+      ],
+      "id": "abddfe1e-857d-454a-88f3-291d0fbc8608",
+      "name": "Merge Novel Data & Translated Content"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e1e35300-ed58-4696-990e-d7166cbcb308",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $json"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        1648
+      ],
+      "id": "093bd342-ee99-4cf0-b20a-480c61ed3411",
+      "name": "Data anchor for Drive"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fd6bbef7-dfbd-4e32-b744-b865b6ba5468",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2128,
+        1744
+      ],
+      "id": "ca8afea4-8c1b-4cde-bd8a-2fabbb490c6c",
+      "name": "Output Existed Folder ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {translated_content: $input.first().json.output}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        368
+      ],
+      "id": "3258e46e-9fc3-430f-9667-87834f2ca8c7",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const start_from = Number($('On form submission').first().json.start_from)\nconst slice_index = (start_from === 0 ? 1 : start_from) - 1\nconst novel_count = $input.first().json.data[1].general_all_no\nconst ncode = $input.first().json.data[1].ncode.toLowerCase()\nconst urls = (new Array(novel_count)).fill(null).map((_, i) => `https://ncode.syosetu.com/${ncode}/${i + 1}/`)\nreturn urls.map(d=> ({url: d})).slice(slice_index)"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        976
+      ],
+      "id": "77af059e-afc7-477f-888b-7c06990220ec",
+      "name": "decompose syosetu.com series url"
+    },
+    {
+      "parameters": {
+        "url": "={{ (()=>{\nconst url = $json.url\nconst seriesId = url.split(\"/\")[3]\nreturn `https://api.syosetu.com/novelapi/api/?ncode=${seriesId}&out=json`\n})() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -656,
+        976
+      ],
+      "id": "f3921a80-16a0-402c-9062-f5b6e8a1c88b",
+      "name": "fetch syosetu.com series data"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        976
+      ],
+      "id": "65bbe2c7-2f08-4471-b815-846e87b442cd",
+      "name": "transform syosetu.com novel url"
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 3,
+        "output": "={{(()=>{\nconst url = $json.url\nconst urlSplit = url.split(\"/\")\nif (urlSplit[2] === \"www.pixiv.net\") {\n  return 0\n}\nif (urlSplit[2] === 'ncode.syosetu.com') {\nreturn 1\n}\nreturn 2\n})()}}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        512,
+        224
+      ],
+      "id": "17eb7a45-c372-437e-9912-0d8782d3476c",
+      "name": "fetch Switch"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1184,
+        384
+      ],
+      "id": "f49293b6-8da3-4322-9e77-dfcfbe4856c8",
+      "name": "fetch syosetu.com novel"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": ".p-novel__title"
+            },
+            {
+              "key": "series_title",
+              "cssSelector": "div.c-announce:nth-child(2) > a:nth-child(1)"
+            },
+            {
+              "key": "author",
+              "cssSelector": "div.c-announce:nth-child(2) > a:nth-child(2)"
+            },
+            {
+              "key": "content",
+              "cssSelector": "div.p-novel__body"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        384
+      ],
+      "id": "bb31b7c0-2d45-493f-995d-c8ba89c85756",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const replace_keywords = {\n  本好きの下剋上: {\n    東屋: \"涼亭\",\n    ハンネローレ: \"漢娜蘿蕾\",\n    コルドゥラ: \"柯朵拉\",\n    エーレンフェスト: \"艾倫菲斯特\",\n    アウブ: \"奧伯\",\n    ユルゲンシュミット: \"尤根施密特\",\n    ツェント: \"君騰\",\n    ダンケルフェルガー: \"戴肯弗爾格\",\n    ラザンタルク: \"拉薩塔克\",\n    ローゼマイン: \"羅潔梅茵\",\n    ケントリプス: \"肯特普斯\",\n    クラッセンブルク: \"庫拉森博克\",\n    クラッセンブルグ: \"庫拉森博克\",\n    トラオクヴァール: \"特羅克瓦爾\",\n    ジギスヴァルト: \"席格斯瓦德\",\n    アレキサンドリア: \"亞歷山大\",\n    アーレンスバッハ: \"亞倫斯伯罕\",\n    アーレンバッハ: \"亞倫斯伯罕\",\n    オースヴァルト: \"烏蘇瓦德\",\n    ドレヴァンヒェル: \"多雷凡赫\",\n    ハウフレッツェ: \"哈夫倫崔\",\n    ガウスビュッテル: \"高斯博第\",\n    ギレッセンマイアー: \"格里森邁亞\",\n    ギレッセンマイヤー: \"格里森邁亞\",\n    ラオブルート: \"勞布隆托\",\n    フェルディナンド: \"斐迪南\",\n    エグランティーヌ: \"艾格蘭緹娜\",\n    レティーツィア: \"萊蒂希雅\",\n    ヒルデブラント: \"錫爾布蘭德\",\n    ビンデバルト: \"賓德瓦德\",\n    カンナヴィッツ: \"堪那維齊\",\n    ライデンシャフト: \"萊登薛夫特\",\n    ハイスヒッツェ: \"海斯赫崔\",\n    アドルフィーネ: \"阿道芬妮\",\n    リーベスクヒルフェ: \"黎蓓思可赫菲\",\n    ドレッファングーア: \"德蕾梵庫亞\",\n    ルーフェン: \"洛飛\",\n    レームブルック: \"朗姆布魯克\",\n    ノイエハウゼン: \"紐豪森\",\n    リンデンタール: \"藍登塔爾\",\n    ジークリンデ: \"齊格琳德\",\n    奇庫リンデ: \"齊格琳德\",\n    吉克琳達: \"齊格琳德\",\n    ベルシュマン: \"畢斯曼\",\n    ヴィルフリート: \"韋菲利特\",\n    アナスタージウス: \"亞納索塔瓊斯\",\n    シュミル: \"蘇彌魯\",\n    グリュン: \"窟倫\",\n    バッヘルム: \"赫姆\",\n    ボルフェ: \"玻爾非\",\n    ザンツェ: \"薩契\",\n    ズィルツ: \"孜爾契\",\n    ゴルツェ: \"戈爾契\",\n    シュネティルム: \"司涅圖姆\",\n    タルクロッシュ: \"妥庫羅什\",\n    アイフィント: \"亞焚特\",\n    リーズファルケ: \"拉茨凡庫\",\n    バートアッフェ: \"巴托安非\",\n    アイデロート: \"埃第朗拖\",\n    シュネーフェールト: \"司努非爾托\",\n    キーファデックス: \"奇伐岱克斯\",\n    ターニスベファレン: \"靼拿斯巴法隆\",\n    フィンストゥルム: \"芬思圖勒姆\",\n    フンデルトタイレン: \"渾德爾泰連\",\n    タウナーデル: \"陶納頓\",\n    レーギッシュ: \"雷根辛\",\n    メーアシュラン: \"米爾沙朗\",\n    シュプレッシュ: \"索普勒什\",\n    ヴォルヘニール: \"沃爾赫尼\",\n    トロンべ: \"陀龍布\",\n    リュエル: \"瑠耶露\",\n    ライレーネ: \"萊靈嫩\",\n    ナンセーブ: \"南娑扶\",\n    エイフォン: \"亞樊\",\n    アイゼ: \"艾查\",\n    クルアイゼ: \"葵爾艾查\",\n    ブレンリュース: \"柏靈琉斯\",\n    グミモーカ: \"古米摩伽\",\n    グルトリスハイト: \"古得里斯海德\",\n    シュタープ: \"思達普\",\n    ユレーヴェ: \"尤列汾\",\n    ディッター: \"迪達\",\n    ゲヴィンネン: \"加芬納棋\",\n    オルドナンツ: \"奧多南茲\",\n    シュバルツ: \"休華茲\",\n    ヴァイス: \"懷斯\",\n    白い塔: \"白塔\",\n    名を捧げる: \"獻名\",\n    録音の魔術具: \"錄音的魔術具\",\n    エーヴィリーベの印: \"埃維里貝的印記\",\n    ロート: \"路德\",\n    リューケン: \"咯空\",\n    メッサー: \"密撒\",\n    スティロ: \"司提洛\",\n    バイメーン: \"百姆恩\",\n    ゲッティルト: \"哥替特\",\n    シュヴェールト: \"索腓魯特\",\n    嵐恩翠ナーヴェ: \"蘭翠奈維\",\n    イルムヒルデ: \"伊繆荷黛\",\n    ダールドルフ: \"達道夫\",\n    グローリエ: \"葛洛麗亞\",\n    キルシュネライト: \"庫什內瑞特\",\n    嵐恩翠ナーべ: \"蘭翠奈維\",\n    ランツェナーヴェ: \"蘭翠奈維\",\n    ランツェナーべ: \"蘭翠奈維\",\n    ランツェ: \"嵐恩翠\",\n    リーズィッヒェル: \"里左荷爾\",\n    アクス: \"牙克斯托\",\n    シュトレイトコルベン: \"修得列坎布恩\",\n    水鉄砲: \"水槍\",\n    シェーレ: \"悉依落\",\n    フィンスウンハン: \"芬嘶汶罕\",\n    ベロイヒクローネ: \"布勒希克羅涅\",\n    エールデグラール: \"伊爾達格拉爾\",\n    ヴァッシェン: \"瓦須恩\",\n    エントヴィッケルン: \"因特維庫倫\",\n    エントヴァフヌング: \"因特凡弗汝古\",\n    エンダーン: \"伊恩達\",\n    フォルコヴェーゼン: \"伏爾科巴賈\",\n    エフネトーア: \"耶夫尼圖亞\",\n    本須麗乃: \"本須麗乃\",\n    マイン: \"梅茵\",\n    トゥーリ: \"多莉\",\n    エーファ: \"伊娃\",\n    ギュンター: \"昆特\",\n    カミル: \"加米爾\",\n    ルッツ: \"路茲\",\n    ザシャ: \"札薩\",\n    ジーク: \"奇庫\",\n\n    ラルフ: \"拉爾法\",\n    フェイ: \"弗伊\",\n    カルラ: \"卡蘿拉\",\n    オットー: \"歐托\",\n    ベンノ: \"班諾\",\n    コリンナ: \"珂琳娜\",\n    マルク: \"馬克\",\n    萊昂ツィオ: \"雷昂齊歐\",\n    レオンツィオ: \"雷昂齊歐\",\n    レオン: \"萊昂\",\n    グスタフ: \"谷斯塔夫\",\n    フリーダ: \"芙麗妲\",\n    ユッテ: \"伊蒂\",\n    イルゼ: \"尹勒絲\",\n    コージモ: \"康吉莫\",\n    ダミアン: \"達米安\",\n    エーミール: \"耶密爾\",\n    フーゴ: \"雨果\",\n    ミュリエラ: \"繆芮拉\",\n    エラ: \"艾拉\",\n    トッド: \"陶德\",\n    フラン: \"法藍\",\n    ギルベルタ: \"奇爾博塔\",\n    吉魯ベルタ: \"奇爾博塔\",\n    ギル: \"吉魯\",\n    ギルド: \"公會\",\n    吉魯ド: \"公會\",\n    フリッツ: \"弗利茲\",\n    デリア: \"戴莉雅\",\n    ヴィルマ: \"葳瑪\",\n    ロジーナ: \"羅吉娜\",\n    アルノー: \"阿爾諾\",\n    イェニー: \"葉妮\",\n    ニコラ: \"妮可拉\",\n    モニカ: \"莫妮卡\",\n    カルステッド: \"卡斯泰德\",\n    ジルヴェスター: \"齊爾維斯特\",\n    ジルベスター: \"齊爾維斯特\",\n    ベーゼヴァンス: \"拜瑟馮斯\",\n    ダームエル: \"達穆爾\",\n    シキコーザ: \"斯基科薩\",\n    フローレンツィア: \"芙蘿洛翠亞\",\n    シャルロッテ: \"夏綠蒂\",\n    メルヒオール: \"麥西歐爾\",\n    梅爾希奧爾: \"麥西歐爾\",\n    エルヴィーラ: \"艾薇拉\",\n    エックハルト: \"艾克哈特\",\n    ランプレヒト: \"蘭普雷特\",\n    コルネリウス: \"柯尼留斯\",\n    トルデリーデ: \"朵黛麗緹\",\n    ニコラウス: \"尼可拉斯\",\n    リヒャルダ: \"黎希達\",\n    ユストクス: \"尤修塔斯\",\n    ハルトムート: \"哈特姆特\",\n    クラリッサ: \"克拉麗莎\",\n    レオノーレ: \"萊歐諾蕾\",\n    ブリュンヒルデ: \"布倫希爾德\",\n    ディートリンデ: \"蒂緹琳朵\",\n    レスティラウト: \"藍斯特勞德\",\n    オルトヴィーン: \"奧爾特溫\",\n    エアヴェルミーン: \"艾爾維洛米\",\n    メスティオノーラ: \"梅斯緹歐若拉\",\n    フィリーネ: \"菲里妮\",\n    エグモント: \"艾格蒙\",\n    ヘンリック: \"漢力克\",\n    グラオザム: \"戈雷札姆\",\n    ヴェローニカ: \"薇羅妮卡\",\n    クリスティーネ: \"克莉絲汀妮\",\n    オティーリエ: \"奧黛麗\",\n    オテーリエ: \"奧黛麗\",\n    アンゲリカ: \"安潔莉卡\",\n    ブリギッテ: \"布麗姬娣\",\n    ノルベルト: \"諾伯特\",\n    ベルンデット: \"伯倫戴特\",\n    ラグレーテ: \"拉葛蕾塔\",\n    クリステル: \"克莉思黛\",\n    ヘルミーナ: \"荷米娜\",\n    ラザファム: \"拉塞法姆\",\n    モーリッツ: \"莫里茲\",\n    リンハルト: \"林哈特\",\n    カントーナ: \"坎托納\",\n    カンフェル: \"坎菲爾\",\n    フリターク: \"法瑞塔克\",\n    ナディーネ: \"娜迪妮\",\n    ヨゼフ: \"約瑟夫\",\n    ユリアーネ: \"茱莉安娜\",\n    コンスタンツェ: \"康絲丹翠\",\n    アレクシス: \"亞歷克斯\",\n    ディルク: \"戴爾克\",\n    \"ギーベ・イルクナー\": \"基貝・伊庫那\",\n    \"ギーベ・グレッシェル\": \"基貝・葛雷修\",\n    \"ギーベ・キルンベルガ\": \"基貝・克倫伯格\",\n    ボニファティウス: \"波尼法狄斯\",\n    アーデルベルト: \"亞德貝特\",\n    ローゼマリー: \"羅潔瑪麗\",\n    ハイデマリー: \"海德瑪莉\",\n    グンドルフ: \"賈鐸夫\",\n    ヒルシュール: \"赫思爾\",\n    フラウレルム: \"傅萊芮默\",\n    パウリーネ: \"鮑琳\",\n    レナートゥス: \"朗納杜斯\",\n    ソランジュ: \"索蘭芝\",\n    オスヴィン: \"歐斯溫\",\n    アルトゥール: \"阿度爾\",\n    ダンクマール: \"丹克瑪\",\n    レリギオン: \"雷利吉歐\",\n    イマヌエル: \"以馬內利\",\n    ゲオルギーネ: \"喬琪娜\",\n    ファティーエ: \"法緹亞\",\n    アウレーリア: \"奧蕾麗亞\",\n    アルステーデ: \"亞絲娣德\",\n    ブラージウス: \"布拉修斯\",\n    ベネディクタ: \"蓓妮蒂塔\",\n    ロスヴィータ: \"璐思薇塔\",\n    フェアゼーレ: \"菲亞吉黎\",\n    ベルケシュトック: \"孛克史德克\",\n    ベルケシュアトック: \"孛克史德克\",\n    クヴァントレープ: \"關特隆普\",\n    インメルディンク: \"英蒙丹克\",\n    ザウスガース: \"卓斯卡\",\n    トロストヴェーク: \"托魯斯維克\",\n    トロストヴォーグ: \"托魯斯維克\",\n    シャルファー: \"夏爾法\",\n    エーヴィリーベ: \"埃維里貝\",\n    エーヴェリーベ: \"埃維里貝\",\n    マグダレーナ: \"瑪格達莉娜\",\n    ジャンシアーヌ: \"珍希安娜\",\n    ギーベ: \"基貝\",\n    様: \"大人\",\n    フェアフューレメーア: \"緋亞弗蕾彌雅\",\n    わたくし: \"我\",\n    ナーエラッヒェ: \"娜葉拉耶\",\n    アーンヴァックス: \"安瓦庫斯\",\n    リーゼレータ: \"莉瑟蕾塔\",\n    フェシュピール: \"飛蘇平琴\",\n    ライムント: \"雷蒙特\",\n    ゲラッハ: \"格拉罕\",\n    ライゼガング: \"萊瑟岡古\",\n    フリュートレーネ: \"芙琉朵蕾妮\",\n    フュリュートレーネ: \"芙琉朵蕾妮\",\n    ゼルギウス: \"賽吉烏斯\",\n    トラウゴット: \"托勞戈特\",\n    グードルーン: \"古德倫\",\n    アンハルトゥング: \"安海爾藤古\",\n    フェアベルッケン: \"費亞勃肯\",\n    フレーベルターク: \"法雷培爾塔克\",\n    プリムヴェール: \"普琳蓓兒\",\n    フロレンツィア: \"芙蘿洛翠亞\",\n    ディード: \"狄多\",\n    グレーティア: \"谷麗媞亞\",\n    シュラートラウム: \"席朗托羅莫\",\n    ユーディット: \"優蒂特\",\n    ベルティルデ: \"貝兒朵黛\",\n    ローデリヒ: \"羅德里希\",\n    インゴ: \"英格\",\n    ロスレンゲル: \"拉斯蘭各\",\n    クヴァンドレープ: \"關特隆普\",\n    グーテンベルク: \"古騰堡\",\n    ダルア: \"都盧亞\",\n    ダプラ: \"都帕里\",\n    プランタン: \"普朗坦\",\n    レーベレヒト: \"雷柏赫特\",\n    ガブリエーレ: \"嘉柏耶麗\",\n    リュールラディ: \"蕊兒拉娣\",\n    ヨースブレンナー: \"約瑟巴蘭納\",\n    ブルーアンファ: \"布璐安法\",\n    フェアツィーレ: \"費雅琴麗\",\n    ゲドゥルリーヒ: \"蓋朵莉希\",\n    エントリンドゥーゲ: \"恩多林圖葛\",\n    ロヤリテート: \"洛亞里提\",\n    シュツェーリア: \"舒翠莉婭\",\n    アダルジーザ: \"阿妲姬莎\",\n    オルタンシア: \"歐丹西雅\",\n    アングリーフ: \"安格利夫\",\n    ルーツィンデ: \"露辛達\",\n    グレッシェル: \"葛雷修\",\n    イルクナー: \"伊庫那\",\n    ハルデンツェル: \"哈爾登查爾\",\n    マリアンネ: \"瑪麗安妮\",\n    マティアス: \"馬提亞斯\",\n    トショイイン: \"圖書委員\",\n    ラウレンツ: \"勞倫斯\",\n    トルステン: \"妥斯登\",\n    ルネッサンス: \"文藝復興\",\n    コンラート: \"康拉德\",\n    ヨハン: \"約翰\",\n    ロータル: \"羅塔爾\",\n    イミル: \"伊米爾\",\n    ザーム: \"薩姆\",\n    ジェルヴァージオ: \"傑瓦吉歐\",\n    キルンベルガ: \"克倫伯格\",\n    トルーク: \"圖魯克\",\n    シュタイフェリーゼ: \"休泰菲黎茲\",\n    リンシャン: \"絲髮精\",\n  },\n\n  \"サイレント・ウィッチ\": {\n    \"モニカ・エヴァレット\": \"莫妮卡·艾瓦雷特\",\n    モニカ: \"莫妮卡\",\n    エヴァレット: \"艾瓦雷特\",\n    沈黙の魔女: \"沉默魔女\",\n    \"モニカ・ノートン\": \"莫妮卡·諾頓\",\n    ノートン: \"諾頓\",\n    ネロ: \"尼洛\",\n    七賢人: \"七賢人\",\n    魔法伯: \"魔法伯\",\n    \"ルイス・ミラー\": \"路易斯·米萊\",\n    ルイス: \"路易斯\",\n    ミラー: \"米萊\",\n    結界の魔術師: \"結界魔術師\",\n    \"メアリー・ハーヴェイ\": \"梅爾麗·哈維\",\n    メアリー: \"梅爾麗\",\n    ハーヴェイ: \"哈維\",\n    星詠みの魔女: \"詠星魔女\",\n    \"ラウル・ローズバーグ\": \"勞爾·羅斯堡\",\n    ラウル: \"勞爾\",\n    ローズバーグ: \"羅斯堡\",\n    茨の魔女: \"荊棘魔女\",\n    \"レイ・オルブライト\": \"雷·歐布萊特\",\n    レイ: \"雷\",\n    オルブライト: \"歐布萊特\",\n    深淵の呪術師: \"深淵咒術師\",\n    \"ブラッドフォード・ファイアストン\": \"布拉福·泛世通\",\n    ブラッドフォード: \"布拉福\",\n    ファイアストン: \"泛世通\",\n    砲弾の魔術師: \"炮彈魔術師\",\n    \"エマニュエル・ダーウィン\": \"伊曼紐·達爾文\",\n    エマニュエル: \"伊曼紐\",\n    ダーウィン: \"達爾文\",\n    宝玉の魔術師: \"寶玉魔術師\",\n    \"フェリクス・アーク・リディル\": \"菲利克斯·亞克·利迪爾\",\n    フェリクス: \"菲利克斯\",\n    アーク: \"亞克\",\n    リディル: \"利迪爾\",\n    \"イザベル・ノートン\": \"伊莎貝爾·諾頓\",\n    イザベル: \"伊莎貝爾\",\n    \"ラナ・コレット\": \"拉娜·可雷特\",\n    ラナ: \"拉娜\",\n    コレット: \"可雷特\",\n    \"シリル・アシュリー\": \"希利爾·艾仕利\",\n    シリル: \"希利爾\",\n    アシュリー: \"艾仕利\",\n    \"エリオット・ハワード\": \"艾利歐特·霍華德\",\n    エリオット: \"艾利歐特\",\n    ハワード: \"霍華德\",\n    \"ニール・クレイ・メイウッド\": \"尼爾·庫雷·梅伍德\",\n    ニール: \"尼爾\",\n    クレイ: \"庫雷\",\n    メイウッド: \"梅伍德\",\n    \"ブリジット・グレイアム\": \"布莉吉特·葛萊安\",\n    ブリジット: \"布莉吉特\",\n    グレイアム: \"葛萊安\",\n    \"クローディア・アシュリー\": \"克勞蒂亞·艾仕利\",\n    クローディア: \"克勞蒂亞\",\n    \"ロザリー・ミラー\": \"蘿莎莉·米萊\",\n    ロザリー: \"蘿莎莉\",\n    リィンズベルフィード: \"琳姿貝兒菲\",\n  },\n\n  痛いのは嫌なので防御力に極振りしたいと思います: {\n    痛いのは嫌なので防御力に極振りしたいと思います:\n      \"怕痛的我，把防禦力點滿就對了\",\n    \"本条 楓\": \"本條楓\",\n    メイプル: \"梅普露\",\n    サリー: \"莎莉\",\n    \"白峯 理沙\": \"白峯理沙\",\n    シロップ: \"糖漿\",\n    おぼろ: \"朧\",\n    クロム: \"克羅姆\",\n    ネクロ: \"涅庫羅\",\n    イズ: \"伊茲\",\n    フェイ: \"菲\",\n    カスミ: \"霞\",\n    ハク: \"小白\",\n    カナデ: \"奏\",\n    ソウ: \"湊\",\n    マイ: \"麻衣\",\n    ユイ: \"結衣\",\n    ツキミ: \"月見\",\n    ユキミ: \"雪見\",\n    ペイン: \"培因\",\n    レイ: \"雷依\",\n    ドレッド: \"絕德\",\n    シャドウ: \"疾影\",\n    ドラグ: \"多拉古\",\n    アース: \"厄斯\",\n    フレデリカ: \"芙蕾德麗卡\",\n    ノーツ: \"音符\",\n    ミィ: \"蜜伊\",\n    イグニス: \"伊葛妮絲\",\n    シン: \"辛恩\",\n    ウェン: \"韋恩\",\n    マルクス: \"馬克斯\",\n    クリア: \"可利亞\",\n    ミザリー: \"米瑟莉\",\n    ベル: \"鈴鈴\",\n    ベルベット: \"薇爾貝\",\n    ヒナタ: \"雛田\",\n    リリィ: \"莉莉\",\n    ウィルバート: \"威爾巴特\",\n    管理者: \"管理員\",\n    ドラぞう: \"哆拉貢\",\n    クリスマスローズ: \"克利斯馬斯羅斯\",\n    三連星長男: \"三連星長男\",\n    三連星次男: \"三連星次男\",\n    三連星三男: \"三連星三男\",\n    槍使い: \"長槍手\",\n    剣使い: \"劍士\",\n    \"NewWorld Online\": \"NewWorld Online\",\n    大楓樹: \"大楓樹\",\n    聖劍集結: \"聖劍集結\",\n    炎帝之國: \"炎帝之國\",\n    \"thunder storm\": \"thunder storm\",\n    \"Rapid Fire\": \"Rapid Fire\",\n  },\n};\n\nreplace_keywords[\"#本好き\"] = replace_keywords[\"本好きの下剋上\"];\nreplace_keywords[\"本好き\"] = replace_keywords[\"本好きの下剋上\"];\nreplace_keywords[\"本ゲコ\"] = replace_keywords[\"本好きの下剋上\"];\nreplace_keywords[\"本好き【二次】\"] = replace_keywords[\"本好きの下剋上\"];\nreplace_keywords[\"フェルマイ\"] = replace_keywords[\"本好きの下剋上\"];\n\nfunction replace_words(str, identify_properties) {\n  const { series_title_and_author, title, tags } = identify_properties || {};\n  const novelSeriesList = Object.keys(replace_keywords);\n  novelSeriesList.forEach((series_name) => {\n    if (tags?.includes(series_name)) {\n      // check if series_name is in tags\n      for (const [key, value] of Object.entries(\n        replace_keywords[series_name],\n      ).sort((a, b) => b[0].length - a[0].length)) {\n        str = str.replaceAll(key, value);\n      }\n    } else if (series_title_and_author?.includes(series_name)) {\n      // if series_title_and_author includes series_name, replace all keywords\n      for (const [key, value] of Object.entries(\n        replace_keywords[series_name],\n      ).sort((a, b) => b[0].length - a[0].length)) {\n        str = str.replaceAll(key, value);\n      }\n    } else if (title?.includes(series_name)) {\n      // if title includes series_name, replace all keywords\n      for (const [key, value] of Object.entries(\n        replace_keywords[series_name],\n      ).sort((a, b) => b[0].length - a[0].length)) {\n        str = str.replaceAll(key, value);\n      }\n    } else if (str.includes(series_name)) {\n      // if str includes series_name, replace all keywords\n      for (const [key, value] of Object.entries(\n        replace_keywords[series_name],\n      ).sort((a, b) => b[0].length - a[0].length)) {\n        str = str.replaceAll(key, value);\n      }\n    }\n  });\n  return str;\n}\n\n// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst data = $input.first().json;\nconst { series_title_and_author, title, tags, translated_content } = data;\ndata.translated_content = replace_words(\n  translated_content,\n  {\n    series_title_and_author,\n    title,\n    tags,\n  },\n);\ndelete data.content_chunk\n\nreturn data;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3376,
+        704
+      ],
+      "id": "c8048445-3a3a-4a37-9f04-7ce55683ea6b",
+      "name": "replace keywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        240
+      ],
+      "id": "67908693-c924-48cb-b672-104982244d4e",
+      "name": "Attributes Anchor for Translation"
+    },
+    {
+      "parameters": {
+        "jsCode": "function getNovelTags(ncode) {\n  // 本好きの下剋上 小書痴的下剋上系列\n  const likeBookSeries = [\"n4830bu\", \"n4750dy\", \"n7835cj\"];\n  const likeBookSeriesRegex = new RegExp(likeBookSeries.join(\"|\"));\n\n  if (likeBookSeriesRegex.test(ncode)) {\n    return [\"本好きの下剋上\"];\n  }\n\n  // サイレント・ウィッチ 沉默魔女的秘密系列\n  const silentWitchSeries = [\"n8356ga\", \"n5194gp\", \"n8978fv\", \"n7961jr\"];\n  const silentWitchSeriesRegex = new RegExp(silentWitchSeries.join(\"|\"));\n  if (silentWitchSeriesRegex.test(ncode)) {\n    return [\"サイレント・ウィッチ\"];\n  }\n  // 痛いのは嫌なので防御力に極振りしたいと思います 怕痛的我，把防禦力點滿就對了\n  const scaredToHurtSeries = [\"n0358dh\"];\n  const scaredToHurtSeriesRegex = new RegExp(scaredToHurtSeries.join(\"|\"));\n  if (scaredToHurtSeriesRegex.test(ncode)) {\n    return [\"痛いのは嫌なので防御力に極振りしたいと思います\"];\n  }\n  return undefined;\n}\n\nconst windowsFileEscapeRegex = /[<>:\"/\\\\|?*]/g;\n\nconst { title, series_title, author, content } = $input.first().json;\nconst [, , , ncode, episode] = $(\"Loop Over Items\").first().json.url.split(\"/\");\nconst series_title_and_author = (series_title + \" \" + author).replaceAll(\n  windowsFileEscapeRegex,\n  \" \",\n);\nconst indexPrefix = ncode + \" \" + episode;\nconst file_name = `${indexPrefix}-${title}_translated.txt`;\nconst folder_name = series_title_and_author;\nconst tags = getNovelTags(ncode);\nconst url = $(\"Loop Over Items\").first().json.url;\n\nreturn {\n  title,\n  indexPrefix,\n  content,\n  series_title_and_author,\n  folder_name,\n  series_title,\n  file_name,\n  url,\n  tags: tags,\n  author,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        384
+      ],
+      "id": "2018bc60-5323-4e82-8c7f-d57c0aca0a39",
+      "name": "Extract syosetu.com Novel Attributes"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $json.Cookie }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        -48
+      ],
+      "id": "27f0ebb8-2227-4ede-82fc-da1d043ce29d",
+      "name": "fetch pixiv novel1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "Cookie",
+        "key": "pixiv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -128
+      ],
+      "id": "ad314303-c947-479a-8f5b-7e8e4867ee5b",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "CDO9ZbiSKFnwcs7R",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1184,
+        -48
+      ],
+      "id": "37cb1ca9-4303-4380-839a-35121b26add9",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const set_cookie_arr = $input.first().json.headers[\"set-cookie\"];\nconst cookie_str = $(\"Merge\").first().json.Cookie;\nif (set_cookie_arr) {\n  const cookie_obj = {};\n  cookie_str.split(\";\").forEach((item) => {\n    item = item.trim();\n    const [key, value] = item.split(\"=\");\n    cookie_obj[key] = value;\n  });\n  set_cookie_arr.forEach((item) => {\n    item = item.split(\";\")[0];\n    const [key, value] = item.split(\"=\");\n    cookie_obj[key] = value;\n  });\n  return {\n    new_cookie_str: Object.entries(cookie_obj)\n      .map(\n        ([key, value]) =>\n          `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,\n      )\n      .join(\"; \"),\n  };\n}\nreturn {new_cookie_str: cookie_str}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        -96
+      ],
+      "id": "f49d2828-01b7-406e-a4ac-55696b5734f0",
+      "name": "Parse Set-Cookie"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "pixiv",
+        "value": "={{ $json.new_cookie_str }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        -96
+      ],
+      "id": "07f827f2-32cd-49bd-bd9f-f378abfca6e6",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "CDO9ZbiSKFnwcs7R",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const windowsFileEscapeRegex = /[<>:\"/\\\\|?*]/g;\n\nconst this_novel_data = $input.first().json.body\nconst paragraphs = this_novel_data.body.content\n\nconst content = paragraphs.replaceAll(\"\\n\\n\", \"\\n\")\n\nconst tags = this_novel_data.body?.tags?.tags?.map(({ tag }) => tag);\nconst title = this_novel_data.body.title;\nconst series_title = this_novel_data.body?.seriesNavData?.title ?? title;\nconst author = this_novel_data.body?.userName\n  .replaceAll(windowsFileEscapeRegex, \" \")\n  .trimEnd();\nconst indexPrefix =\n  series_title + \" \" + (this_novel_data.body?.seriesNavData?.order ?? \"\");\nconst series_title_and_author = (series_title + \" \" + author).replaceAll(\n    windowsFileEscapeRegex,\n    \" \",\n  )\nconst folder_name = series_title_and_author\nconst file_name = `${indexPrefix}-${title}_translated.txt`\nconst url = $('Loop Over Items').item.json.url\nreturn {\n  title: title.replaceAll(windowsFileEscapeRegex, \" \"),\n  indexPrefix: indexPrefix.replaceAll(windowsFileEscapeRegex, \" \"),\n  content,\n  series_title_and_author,\n  folder_name,\n  series_title,\n  file_name,\n  url: url.replaceAll('https://www.pixiv.net/ajax/novel/','https://www.pixiv.net/novel/show.php?id='),\n  author,\n  tags: tags,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        144
+      ],
+      "id": "23e4dfde-327e-490b-90cf-7f1241447668",
+      "name": "Extract Pixiv Novel Attributes"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9b605112-b489-455d-b4bf-32a721dea463",
+              "leftValue": "={{ $('On form submission').item.json['Use Cookie'][0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        48
+      ],
+      "id": "98aa6b9a-0a02-46bd-967d-fa6814a8b74b",
+      "name": "If cookie"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        192
+      ],
+      "id": "f9ffce26-3f4f-4e30-8509-4757eab91c78",
+      "name": "fetch pixiv novel"
+    },
+    {
+      "parameters": {
+        "model": "moonshotai/kimi-k2:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        480
+      ],
+      "id": "9282790e-5558-4e22-8272-3c8e22629dec",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "PwPpd9eupufrkeTl",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "={{ $('On form submission').item.json['Select Gemini Model'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        480
+      ],
+      "id": "eca81956-e68d-4a86-a479-92650579979f",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "z0T2psaWz1ZJI1pe",
+          "name": "Gemini Key 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "moonshotai/kimi-k2:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        80
+      ],
+      "id": "18ad622a-115d-450a-b3bd-072b4040ab69",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "PwPpd9eupufrkeTl",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "={{ $('On form submission').item.json['Select Gemini Model'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        80
+      ],
+      "id": "16a63066-f6e7-4418-92f3-524d8e013d4a",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "G9IIqHeyx06fOznC",
+          "name": "Gemini Key 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# 指令：\n            你是一位專業的日文譯者，請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。\n\n            # 翻譯規則：\n            1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。\n            2.  其餘內容需翻譯成通順自然的台灣繁體中文。\n\n            # 輸出要求：\n            直接輸出翻譯後的完整文章，保持原本的排版與換行，不要包含任何說明、標題或原文。\n\n            # 其他注意事項\n            請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。\n\n```\n{{ JSON.stringify($json.content) }}\n```",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        768
+      ],
+      "id": "944cbd1a-eee2-4947-b94c-bda032fd66e5",
+      "name": "key 0",
+      "retryOnFail": true,
+      "waitBetweenTries": 2500
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# 指令：\n            你是一位專業的日文譯者，請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。\n\n            # 翻譯規則：\n            1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。\n            2.  其餘內容需翻譯成通順自然的台灣繁體中文。\n\n            # 輸出要求：\n            直接輸出翻譯後的完整文章，保持原本的排版與換行，不要包含任何說明、標題或原文。\n\n            # 其他注意事項\n            請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。\n\n```\n{{ JSON.stringify($json.content) }}\n```",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        256
+      ],
+      "id": "73af43ca-123a-4c4f-9a94-cecc6dd1be3e",
+      "name": "key 1",
+      "retryOnFail": true,
+      "waitBetweenTries": 2500
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# 指令：\n            你是一位專業的日文譯者，請將以下日文文章翻譯成台灣常用的繁體中文。我會在接下來的訊息提供文章。\n\n            # 翻譯規則：\n            1.  文章內的所有日文**人名**與**專有名詞**（例如地名、組織名、品牌名等）必須**保留日文原文**，請勿翻譯。\n            2.  其餘內容需翻譯成通順自然的台灣繁體中文。\n\n            # 輸出要求：\n            直接輸出翻譯後的完整文章，保持原本的排版與換行，不要包含任何說明、標題或原文。\n\n            # 其他注意事項\n            請再三確認翻譯的內容符合上述規則，並且沒有遺漏任何重要信息，否則我會很傷心，請多加注意。\n\n```\n{{ JSON.stringify($json.content) }}\n```",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        -144
+      ],
+      "id": "3b9d2a39-68e4-4186-9049-6a129c222dcf",
+      "name": "key 2",
+      "retryOnFail": true,
+      "waitBetweenTries": 2500
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 3,
+        "output": "={{ (()=>{\nconst key = $('On form submission').item.json['Select Gemini Key']\nif (key === \"Key 0\") {return 0}\nif (key === \"Key 1\") {return 1}\nif (key === \"Key 2\") {return 2}\n})() }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        2080,
+        240
+      ],
+      "id": "f0ede233-3b0b-40fe-b784-2751466b8ee1",
+      "name": "Key Switch"
+    }
+  ],
+  "pinData": {
+    "Code in JavaScript": [
+      {
+        "json": {
+          "url": "https://www.pixiv.net/ajax/novel/23495299"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Single Novel URL Transform",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get series content titles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fetch syosetu.com series data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get series content titles": {
+      "main": [
+        [
+          {
+            "node": "decompose series into an array of ajax urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "fetch Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "no folder: create folder": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "have folder: check file": {
+      "main": [
+        [
+          {
+            "node": "If file not exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search folder": {
+      "main": [
+        [
+          {
+            "node": "If folder not exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If folder not exist": {
+      "main": [
+        [
+          {
+            "node": "no folder: create folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "have folder: check file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If file not exist": {
+      "main": [
+        [
+          {
+            "node": "output folder id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a file": {
+      "main": [
+        [
+          {
+            "node": "output folder id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "output folder id": {
+      "main": [
+        [
+          {
+            "node": "Output Existed Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file from text": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "key 0",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Single Novel URL Transform": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "decompose series into an array of ajax urls": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "key 0",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Novel Data & Translated Content": {
+      "main": [
+        [
+          {
+            "node": "replace keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data anchor for Drive": {
+      "main": [
+        [
+          {
+            "node": "search folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Existed Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge Novel Data & Translated Content",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "fetch syosetu.com series data": {
+      "main": [
+        [
+          {
+            "node": "transform syosetu.com novel url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "transform syosetu.com novel url": {
+      "main": [
+        [
+          {
+            "node": "decompose syosetu.com series url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "decompose syosetu.com series url": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch Switch": {
+      "main": [
+        [
+          {
+            "node": "If cookie",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fetch syosetu.com novel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch syosetu.com novel": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "replace keywords": {
+      "main": [
+        [
+          {
+            "node": "Data anchor for Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attributes Anchor for Translation": {
+      "main": [
+        [
+          {
+            "node": "Merge Novel Data & Translated Content",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Key Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Extract syosetu.com Novel Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract syosetu.com Novel Attributes": {
+      "main": [
+        [
+          {
+            "node": "Attributes Anchor for Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "fetch pixiv novel1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch pixiv novel1": {
+      "main": [
+        [
+          {
+            "node": "Parse Set-Cookie",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Pixiv Novel Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Set-Cookie": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Pixiv Novel Attributes": {
+      "main": [
+        [
+          {
+            "node": "Attributes Anchor for Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If cookie": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "fetch pixiv novel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch pixiv novel": {
+      "main": [
+        [
+          {
+            "node": "Extract Pixiv Novel Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "key 1",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "key 1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "key 2",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "key 2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "key 0": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Key Switch": {
+      "main": [
+        [
+          {
+            "node": "key 0",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "key 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "key 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "key 1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "key 2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "30722f13-029f-4631-99a2-fdf89e49d43a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9ee68adf8729ed2934410112ee3b820de782fd901e47354a0a6d0167f64a02f8"
+  },
+  "id": "D3EwfDjfwmOlqyTs",
+  "tags": []
+}
