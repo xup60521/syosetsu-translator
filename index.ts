@@ -6,7 +6,6 @@ import { contextSearch } from "./src/context_search";
 
 import "dotenv/config";
 import {
-    getModelWaitTime,
     input_auto_retry,
     input_divide_line,
     input_one_or_two_step_translation,
@@ -22,7 +21,7 @@ import { sleep } from "./src/translation/translation-utils";
 import { handle_file } from "./src/handle_file";
 import { SingleBar, Presets } from "cli-progress";
 import { batchTranslate } from "./src/translation/batchTranslate";
-import dotenv from "dotenv";
+
 
 const options = [
     {
@@ -58,7 +57,7 @@ const options = [
 ] as const;
 // Function to prompt the user
 async function main() {
-    dotenv.config();
+    
     let isRunning = true;
     while (isRunning) {
         const answers = await select({

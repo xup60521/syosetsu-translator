@@ -1,8 +1,10 @@
 import { Redis } from "@upstash/redis";
 import * as Cookies from "es-cookie";
+import dotenv from "dotenv";
 
 // Initialize Redis client. This uses environment variables (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN).
 // Make sure these are set in your environment where the script runs.
+dotenv.config();
 let redis: Redis | undefined;
 try {
     redis = new Redis({
