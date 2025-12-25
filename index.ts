@@ -22,6 +22,7 @@ import { sleep } from "./src/translation/translation-utils";
 import { handle_file } from "./src/handle_file";
 import { SingleBar, Presets } from "cli-progress";
 import { batchTranslate } from "./src/translation/batchTranslate";
+import dotenv from "dotenv";
 
 const options = [
     {
@@ -57,7 +58,8 @@ const options = [
 ] as const;
 // Function to prompt the user
 async function main() {
-    let isRunning = true
+    dotenv.config();
+    let isRunning = true;
     while (isRunning) {
         const answers = await select({
             message: "Please select an option:",
@@ -88,7 +90,7 @@ async function main() {
                 await contextSearch();
                 break;
             case "exit":
-                isRunning = false
+                isRunning = false;
                 return;
             default:
                 break;
