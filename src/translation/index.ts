@@ -159,7 +159,7 @@ Tags: ${tags?.join(", ") ?? ""}
             series_title_and_author,
             title,
             tags,
-        }));
+        })).replaceAll("\\n", "\n");
 
     await handle_file({ series_title_and_author, title, indexPrefix, content: file_content});
 }

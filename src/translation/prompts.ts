@@ -27,7 +27,7 @@ Now you understand the translation rule, here's the instruction of how you will 
 4. Revise the translation result. If you accidentally translate the proper nouns, this is the chance you can fix it. If the proper noun is in Japanese, you should keep it in its original Japanese form.
 5. If somehow the article is entirely untranslated, please go back to step 1 and make sure to actually translate the article this time.
 
- The article will be presented in the following section. Don't remove any new line symbol so that it is easier to read.`;
+ The article will be presented in the following section. Make sure the new line symbols are properly set up so it is easier to read.`;
 
 export function getTranslationPrompt(props: {
     similarity_retry_count: number;

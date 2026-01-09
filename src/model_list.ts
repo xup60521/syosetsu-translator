@@ -75,10 +75,10 @@ const googleModelList = [
         name: "gemini-2.0-flash-thinking-exp-01-21",
         value: "gemini-2.0-flash-thinking-exp-01-21",
     },
-    {
-        name: "gemini-2.0-flash-preview-image-generation",
-        value: "gemini-2.0-flash-preview-image-generation",
-    },
+    // {
+    //     name: "gemini-2.0-flash-preview-image-generation",
+    //     value: "gemini-2.0-flash-preview-image-generation",
+    // },
     {
         name: "gemini-2.0-flash",
         value: "gemini-2.0-flash",

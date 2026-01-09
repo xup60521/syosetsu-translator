@@ -16,6 +16,14 @@ const default_divide_line = 30;
 
 export const windowsFileEscapeRegex = /[<>:"/\\|?*]/g;
 
+export async function input_batch_size() {
+    return number({
+        message: "Enter batch size (default: 5)",
+        default: 5,
+        min: 1
+    })
+}
+
 export async function input_with_cookies_or_not(props?: {
     default: boolean;
     custom_message?: string;
@@ -124,6 +132,10 @@ export async function input_select_model(): Promise<{model: LanguageModelV1; pro
                     value: 0.1,
                 },
                 {
+                    name: "Default 2",
+                    value: 0.2,
+                },
+                {
                     name: "Secondary",
                     value: 1,
                 },
@@ -139,6 +151,8 @@ export async function input_select_model(): Promise<{model: LanguageModelV1; pro
                     ? process.env.GEMINI_KEY_0!
                     : key === 0.1
                     ? process.env.GEMINI_KEY_0_1!
+                    : key === 0.2
+                    ? process.env.GEMINI_KEY_0_2!
                     : key === 1
                     ? process.env.GEMINI_KEY_1!
                     : key === 2

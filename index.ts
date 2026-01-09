@@ -7,6 +7,7 @@ import { contextSearch } from "./src/context_search";
 import "dotenv/config";
 import {
     input_auto_retry,
+    input_batch_size,
     input_divide_line,
     input_one_or_two_step_translation,
     input_select_model,
@@ -110,11 +111,12 @@ async function translate_from_URL() {
         const url_string = await input_url_string();
         const start_from = await input_start_from();
         const with_Cookies = await input_with_cookies_or_not();
+        const batch_size = (await input_batch_size())!
         return await batchTranslate({
             model,
             provider,
             url_string,
-
+            batch_size,
             start_from,
             with_Cookies,
         });
