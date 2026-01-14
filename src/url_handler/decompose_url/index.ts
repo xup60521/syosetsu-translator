@@ -1,6 +1,7 @@
 import { load } from "cheerio";
 import { translate_from_pixiv_user } from "./translate_from_pixiv_user";
 import { getCookiesFromRedis, updateCookiesToRedis } from "../../redis";
+import "urlpattern-polyfill";
 
 /**
  * Decomposes a given URL string into an array of individual episode URLs.
@@ -48,7 +49,25 @@ async function decompose_kakuyomu(
     url: URL,
     with_Cookies = false
 ): Promise<string[]> {
-    return [url.toString()];
+    "https://kakuyomu.jp/works/1177354054894027232/episodes/822139842012912834";
+    const single_episode_pattern = new URLPattern({
+        baseURL: "https://kakuyomu.jp/",
+        pathname: "/works/:series_id/episodes/:work_id",
+    });
+    if (single_episode_pattern.test(url)) {
+        return [url.toString()];
+    }
+    const episode_sidebar_pattern = new URLPattern({
+        baseURL: "https://kakuyomu.jp/",
+        pathname:"/works/:series_id/episodes/:work_id/episode_sidebar",
+    });
+    if (episode_sidebar_pattern.test(url)) {
+        const pageHtml = await fetch(url).then((res) => res.text());
+        const $ = load(pageHtml);
+        const urlArr = $("li a").toArray().map((elm) => ("https://kakuyomu.jp"+$(elm).attr("href"))).filter(d => !!d) as string[]
+        return urlArr
+    }
+    return [];
 }
 
 /**

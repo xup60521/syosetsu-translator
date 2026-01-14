@@ -26,26 +26,34 @@ type BatchTranslationParameter = {
 };
 
 export async function batchTranslate(props: BatchTranslationParameter) {
-    const { url_string, start_from, model, with_Cookies, provider, batch_size } = props;
+    const {
+        url_string,
+        start_from,
+        model,
+        with_Cookies,
+        provider,
+        batch_size,
+    } = props;
 
     const urls = (await decompose_url(url_string)).splice(start_from - 1);
-    const progressbar = multibar.create(urls.length, 0, {filename: "Batch Translation"});
+    const progressbar = multibar.create(urls.length, 0, {
+        filename: "Batch Translation",
+    });
 
-    const batches = chunkArray(urls, batch_size)
+    const batches = chunkArray(urls, batch_size);
     for (const batch of batches) {
-        
         const novel_data = batch.map(async (url) =>
             novel_handler(url, { with_Cookies })
         );
         const untranslated_data = await Promise.all(novel_data);
-    
+
         // store temp untranslated data to debug
         // await fs.writeFile("temp.txt", JSON.stringify(untranslated_data));
-    
+
         // const untranslated_data = JSON.parse(
         //     await fs.readFile("temp.txt", "utf8")
         // ) as NovelHandlerResultType[];
-    
+
         while (untranslated_data.length > 0) {
             // console.log("Remaining sections:", untranslated_data.length);
             const { elementStream } = streamObject({
@@ -63,8 +71,7 @@ export async function batchTranslate(props: BatchTranslationParameter) {
                     },
                 ],
             });
-            
-    
+
             for await (const item of elementStream) {
                 if (!item) {
                     continue;
@@ -73,8 +80,11 @@ export async function batchTranslate(props: BatchTranslationParameter) {
                     (d) => d.indexPrefix === item.indexPrefix
                 )!;
                 // remove that item from untranslated_data to save memory
-                untranslated_data.splice(untranslated_data.indexOf(metadata), 1);
-                
+                untranslated_data.splice(
+                    untranslated_data.indexOf(metadata),
+                    1
+                );
+
                 const sectionedText = item.translated_content!.replace(
                     /(\r\n|\r|\n)/g,
                     "\n\n"
@@ -89,16 +99,16 @@ export async function batchTranslate(props: BatchTranslationParameter) {
                 } = metadata;
                 const content =
                     `# ${title}
-    
-            ${indexPrefix}
-    
-            URL: ${url}
-            Author: ${author}
-            Model: ${model.modelId}
-            Devide Line: full_text
-            Tags: ${tags?.join(", ") ?? ""}
-    
-            ` +
+
+${indexPrefix}
+
+URL: ${url}
+Author: ${author}
+Model: ${model.modelId}
+Devide Line: full_text
+Tags: ${tags?.join(", ") ?? ""}
+
+` +
                     (
                         await replace_words(sectionedText, {
                             series_title_and_author,
@@ -106,7 +116,7 @@ export async function batchTranslate(props: BatchTranslationParameter) {
                             tags,
                         })
                     ).replaceAll("\\n", "\n");
-    
+
                 // console.log(content);
                 await handle_file({
                     series_title_and_author,
@@ -115,10 +125,7 @@ export async function batchTranslate(props: BatchTranslationParameter) {
                     content,
                 });
                 progressbar.increment(1);
-                
             }
         }
-        
     }
-
 }

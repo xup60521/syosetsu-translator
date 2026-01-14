@@ -34,6 +34,7 @@
     "inquirer-select-pro": "^1.0.0-alpha.9",
     "ollama": "^0.6.3",
     "string-similarity-js": "^2.1.4",
+    "urlpattern-polyfill": "^10.1.0",
     "zod": "^3.25.76"
   }
 }

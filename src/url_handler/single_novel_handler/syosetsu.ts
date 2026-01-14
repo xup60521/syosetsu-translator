@@ -55,5 +55,10 @@ function getNovelTags(urlobj: URL): [string] | undefined {
     if (scaredToHurtSeriesRegex.test(urlobj.pathname)) {
         return ["痛いのは嫌なので防御力に極振りしたいと思います"];
     }
+    const soldiergirlSeries = ["n6110gb"]
+    const soldiergirlSeriesRegex = new RegExp(soldiergirlSeries.join("|"));
+    if (soldiergirlSeriesRegex.test(urlobj.pathname)) {
+        return ["軍人少女、皇立魔法学園に潜入することになりました。"];
+    }
     return undefined;
 }
