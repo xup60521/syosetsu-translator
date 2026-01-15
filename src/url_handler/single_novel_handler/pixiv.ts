@@ -2,6 +2,7 @@ import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from ".";
 import { getCookiesFromRedis, updateCookiesToRedis } from "../../redis";
 import { windowsFileEscapeRegex } from "../../utils";
+import { randomUUID } from "node:crypto";
 
 export async function pixiv_handler(
     urlobj: URL,
@@ -64,6 +65,7 @@ async function single_handler(
         series_title + " " + (this_novel_data.body?.seriesNavData?.order ?? "");
 
     return {
+        id: randomUUID(),
         title: title.replaceAll(windowsFileEscapeRegex, " "),
         indexPrefix: indexPrefix.replaceAll(windowsFileEscapeRegex, " "),
         content,

@@ -12,7 +12,7 @@ import cliProgress from "cli-progress";
 import { multibar } from "./translation-utils";
 
 const ai_translated_result_schema = z.object({
-    indexPrefix: z.string(),
+    id: z.string(),
     translated_content: z.string(),
 });
 
@@ -77,7 +77,7 @@ export async function batchTranslate(props: BatchTranslationParameter) {
                     continue;
                 }
                 const metadata = untranslated_data.find(
-                    (d) => d.indexPrefix === item.indexPrefix
+                    (d) => d.id === item.id
                 )!;
                 // remove that item from untranslated_data to save memory
                 untranslated_data.splice(

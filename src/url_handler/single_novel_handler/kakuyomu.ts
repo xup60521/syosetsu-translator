@@ -1,6 +1,7 @@
 import { load } from "cheerio";
 import type { NovelHandlerResultType } from ".";
 import { windowsFileEscapeRegex } from "../../utils";
+import { randomUUID } from "node:crypto";
 
 export async function kakuyomu_handler(
     urlobj: URL,
@@ -32,6 +33,7 @@ export async function kakuyomu_handler(
     const indexPrefix =
         series_title + " " + episode;
     return {
+        id: randomUUID(),
         title: title,
         indexPrefix: indexPrefix.replaceAll(windowsFileEscapeRegex, " "),
         content: paragraphArr.join("\n"),

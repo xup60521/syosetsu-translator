@@ -1,5 +1,6 @@
 import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from ".";
+import { randomUUID } from "node:crypto";
 
 export async function syosetsu_handler(
     urlobj: URL,
@@ -25,6 +26,7 @@ export async function syosetsu_handler(
     const tags = getNovelTags(urlobj);
 
     return {
+        id: randomUUID(),
         title: title,
         indexPrefix: urlobj.pathname.replaceAll("/", " ").trim(),
         content: paragraphArr.join("\n"),

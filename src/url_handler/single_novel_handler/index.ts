@@ -5,6 +5,7 @@ import { pixiv_handler } from "./pixiv";
 import { kakuyomu_handler } from "./kakuyomu";
 
 export type NovelHandlerResultType = {
+    id: string;
     title: string;
     indexPrefix: string;
     content: string;
