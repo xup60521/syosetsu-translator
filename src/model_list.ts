@@ -252,51 +252,271 @@ const openRouterModelList = [
 ] as const;
 
 const mistralAIModelList = [
-    {
-        name: "Mistral Large 2.1",
-        value: "mistral-large-2411",
-    },
-    {
-        name: "Mistral Medium 3",
-        value: "mistral-medium-2505",
-    },
-    {
-        name: "Mistral Medium 3.1",
-        value: "mistral-medium-2508",
-    },
-    {
-        name: "Magistral Medium 1.1",
-        value: "magistral-medium-2507",
-    },
-    {
-        name: "Magistral Medium 1",
-        value: "magistral-medium-2506",
-    },
-    {
-        name: "Mistral Small 2",
-        value: "mistral-small-2407",
-    },
-    {
-        name: "Ministral 8B",
-        value: "ministral-8b-2410",
-    },
-    {
-        name: "Magistral Small 1",
-        value: "magistral-small-2506",
-    },
-    {
-        name: "Mistral Small 3.1",
-        value: "mistral-small-2503",
-    },
-    {
-        name: "Mistral Small 3",
-        value: "mistral-small-2501",
-    },
-    {
-        name: "Mistral Nemo 12B",
-        value: "open-mistral-nemo",
-    },
-] as const;
+        {
+            name: "mistral-medium-2505",
+            value: "mistral-medium-2505",
+        },
+        {
+            name: "mistral-medium-2508",
+            value: "mistral-medium-2508",
+        },
+        {
+            name: "mistral-medium-latest",
+            value: "mistral-medium-latest",
+        },
+        {
+            name: "mistral-medium",
+            value: "mistral-medium",
+        },
+        {
+            name: "open-mistral-nemo",
+            value: "open-mistral-nemo",
+        },
+        {
+            name: "open-mistral-nemo-2407",
+            value: "open-mistral-nemo-2407",
+        },
+        {
+            name: "mistral-tiny-2407",
+            value: "mistral-tiny-2407",
+        },
+        {
+            name: "mistral-tiny-latest",
+            value: "mistral-tiny-latest",
+        },
+        {
+            name: "mistral-large-2411",
+            value: "mistral-large-2411",
+        },
+        {
+            name: "pixtral-large-2411",
+            value: "pixtral-large-2411",
+        },
+        {
+            name: "pixtral-large-latest",
+            value: "pixtral-large-latest",
+        },
+        {
+            name: "mistral-large-pixtral-2411",
+            value: "mistral-large-pixtral-2411",
+        },
+        {
+            name: "codestral-2508",
+            value: "codestral-2508",
+        },
+        {
+            name: "codestral-latest",
+            value: "codestral-latest",
+        },
+        {
+            name: "devstral-small-2507",
+            value: "devstral-small-2507",
+        },
+        {
+            name: "devstral-medium-2507",
+            value: "devstral-medium-2507",
+        },
+        {
+            name: "devstral-2512",
+            value: "devstral-2512",
+        },
+        {
+            name: "mistral-vibe-cli-latest",
+            value: "mistral-vibe-cli-latest",
+        },
+        {
+            name: "devstral-medium-latest",
+            value: "devstral-medium-latest",
+        },
+        {
+            name: "devstral-latest",
+            value: "devstral-latest",
+        },
+        {
+            name: "labs-devstral-small-2512",
+            value: "labs-devstral-small-2512",
+        },
+        {
+            name: "devstral-small-latest",
+            value: "devstral-small-latest",
+        },
+        {
+            name: "mistral-small-2506",
+            value: "mistral-small-2506",
+        },
+        {
+            name: "mistral-small-latest",
+            value: "mistral-small-latest",
+        },
+        {
+            name: "labs-mistral-small-creative",
+            value: "labs-mistral-small-creative",
+        },
+        {
+            name: "magistral-medium-2509",
+            value: "magistral-medium-2509",
+        },
+        {
+            name: "magistral-medium-latest",
+            value: "magistral-medium-latest",
+        },
+        {
+            name: "magistral-small-2509",
+            value: "magistral-small-2509",
+        },
+        {
+            name: "magistral-small-latest",
+            value: "magistral-small-latest",
+        },
+        {
+            name: "voxtral-mini-2507",
+            value: "voxtral-mini-2507",
+        },
+        {
+            name: "voxtral-mini-latest",
+            value: "voxtral-mini-latest",
+        },
+        {
+            name: "voxtral-small-2507",
+            value: "voxtral-small-2507",
+        },
+        {
+            name: "voxtral-small-latest",
+            value: "voxtral-small-latest",
+        },
+        {
+            name: "mistral-large-2512",
+            value: "mistral-large-2512",
+        },
+        {
+            name: "mistral-large-latest",
+            value: "mistral-large-latest",
+        },
+        {
+            name: "ministral-3b-2512",
+            value: "ministral-3b-2512",
+        },
+        {
+            name: "ministral-3b-latest",
+            value: "ministral-3b-latest",
+        },
+        {
+            name: "ministral-8b-2512",
+            value: "ministral-8b-2512",
+        },
+        {
+            name: "ministral-8b-latest",
+            value: "ministral-8b-latest",
+        },
+        {
+            name: "ministral-14b-2512",
+            value: "ministral-14b-2512",
+        },
+        {
+            name: "ministral-14b-latest",
+            value: "ministral-14b-latest",
+        },
+        {
+            name: "open-mistral-7b",
+            value: "open-mistral-7b",
+        },
+        {
+            name: "mistral-tiny",
+            value: "mistral-tiny",
+        },
+        {
+            name: "mistral-tiny-2312",
+            value: "mistral-tiny-2312",
+        },
+        {
+            name: "pixtral-12b-2409",
+            value: "pixtral-12b-2409",
+        },
+        {
+            name: "pixtral-12b",
+            value: "pixtral-12b",
+        },
+        {
+            name: "pixtral-12b-latest",
+            value: "pixtral-12b-latest",
+        },
+        {
+            name: "ministral-3b-2410",
+            value: "ministral-3b-2410",
+        },
+        {
+            name: "ministral-8b-2410",
+            value: "ministral-8b-2410",
+        },
+        {
+            name: "codestral-2501",
+            value: "codestral-2501",
+        },
+        {
+            name: "codestral-2412",
+            value: "codestral-2412",
+        },
+        {
+            name: "codestral-2411-rc5",
+            value: "codestral-2411-rc5",
+        },
+        {
+            name: "mistral-small-2501",
+            value: "mistral-small-2501",
+        },
+        {
+            name: "mistral-embed-2312",
+            value: "mistral-embed-2312",
+        },
+        {
+            name: "mistral-embed",
+            value: "mistral-embed",
+        },
+        {
+            name: "codestral-embed",
+            value: "codestral-embed",
+        },
+        {
+            name: "codestral-embed-2505",
+            value: "codestral-embed-2505",
+        },
+        {
+            name: "mistral-moderation-2411",
+            value: "mistral-moderation-2411",
+        },
+        {
+            name: "mistral-moderation-latest",
+            value: "mistral-moderation-latest",
+        },
+        {
+            name: "mistral-ocr-2512",
+            value: "mistral-ocr-2512",
+        },
+        {
+            name: "mistral-ocr-latest",
+            value: "mistral-ocr-latest",
+        },
+        {
+            name: "mistral-ocr-2505",
+            value: "mistral-ocr-2505",
+        },
+        {
+            name: "mistral-ocr-2503",
+            value: "mistral-ocr-2503",
+        },
+        {
+            name: "voxtral-mini-transcribe-2507",
+            value: "voxtral-mini-transcribe-2507",
+        },
+        {
+            name: "voxtral-mini-2507",
+            value: "voxtral-mini-2507",
+        },
+        {
+            name: "voxtral-mini-latest",
+            value: "voxtral-mini-latest",
+        },
+    ] as const;
 
 const cerebrasModelList = [
     {
