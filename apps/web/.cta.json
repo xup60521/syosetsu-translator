@@ -1,0 +1,27 @@
+{
+  "projectName": "web",
+  "mode": "file-router",
+  "typescript": true,
+  "packageManager": "bun",
+  "tailwind": true,
+  "addOnOptions": {
+    "drizzle": {
+      "database": "postgresql"
+    }
+  },
+  "git": true,
+  "version": 1,
+  "framework": "react-cra",
+  "chosenAddOns": [
+    "nitro",
+    "start",
+    "neon",
+    "compiler",
+    "drizzle",
+    "shadcn",
+    "t3env",
+    "tRPC",
+    "better-auth",
+    "tanstack-query"
+  ]
+}

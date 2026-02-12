@@ -1,0 +1,21 @@
+{
+    "name": "syosetsu-translator",
+    "private": true,
+    "version": "0.0.0",
+    "packageManager": "bun@1.3.7",
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "turbo dev",
+        "build": "turbo build",
+        "lint": "turbo lint",
+        "typecheck": "turbo typecheck",
+        "test": "turbo test"
+    },
+    "devDependencies": {
+        "turbo": "^2.0.0",
+        "typescript": "^5.5.0"
+    }
+}
