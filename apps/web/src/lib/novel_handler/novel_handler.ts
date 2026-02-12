@@ -3,8 +3,6 @@ import { pixiv_handler } from "./pixiv";
 import { kakuyomu_handler } from "./kakuyomu";
 import type { NovelHandlerResultType } from "@repo/shared";
 
-
-
 /**
  * This function takes an URL as input and extracts the novel detail of that url. This function can only accept single episode url at once and might throw error.
  *
@@ -12,8 +10,6 @@ import type { NovelHandlerResultType } from "@repo/shared";
  * @returns A promise that resolves to the extracted novel details as a ResultType.
  * @throws Will throw an error if no handler is defined for the given URL origin.
  */
-
-
 
 export async function novel_handler(
     url: string,
