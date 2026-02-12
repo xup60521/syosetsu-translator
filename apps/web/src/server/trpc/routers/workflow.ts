@@ -59,7 +59,7 @@ export const workflowProcedure = createTRPCRouter({
             const payload = {
                 ...input,
                 user_id: userId,
-                encrypted_refresh_token: encrypt(google_refresh_token)
+                encrypted_refresh_token: encrypt(google_refresh_token, env.ENCRYPTION_KEY)
             } as WorkflowPayloadType;
             const { workflowRunId } = await qstashClient.trigger({
                 // Your workflow route handler

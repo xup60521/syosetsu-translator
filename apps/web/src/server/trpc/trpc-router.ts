@@ -7,6 +7,7 @@ import { modelList } from "@/lib/model_list";
 import { TRPCError } from "@trpc/server";
 import { workflowProcedure } from "./routers/workflow";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/server/trpc/init";
+import { env } from "@/env";
 
 export const trpcRouter = createTRPCRouter({
     hello: publicProcedure.query(() => "hello world"),
@@ -17,7 +18,7 @@ export const trpcRouter = createTRPCRouter({
     novel: novelProcedure,
     encrypt: publicProcedure
         .input(z.object({ apiKey: z.string() }))
-        .mutation(({ input }) => encrypt(input.apiKey)),
+        .mutation(({ input }) => encrypt(input.apiKey, env.ENCRYPTION_KEY)),
     history: historyProcedure,
     model_list: publicProcedure
         .input(z.object({ provider: z.string() }))

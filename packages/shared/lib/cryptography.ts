@@ -2,8 +2,7 @@ import crypto from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
 
-export function encrypt(key: string) {
-    const encryption_key = process.env.ENCRYPTION_KEY;
+export function encrypt(key: string, encryption_key: string) {
     if (!encryption_key) {
         throw new Error("Encryption key is not set in environment variables.");
     }
@@ -29,7 +28,10 @@ export function encrypt(key: string) {
  * @throws Error if the blob is malformed or authentication fails
  */
 type EncryptedBlob = string;
-export function decrypt(encryptedBlob: EncryptedBlob): string {
+export function decrypt(
+    encryptedBlob: EncryptedBlob,
+    encryption_key: string,
+): string {
     const parts: string[] = encryptedBlob.split(":");
 
     if (parts.length !== 3) {
@@ -42,16 +44,13 @@ export function decrypt(encryptedBlob: EncryptedBlob): string {
     const iv: Buffer = Buffer.from(ivHex!, "hex");
     const authTag: Buffer = Buffer.from(authTagHex!, "hex");
     const encryptedText: Buffer = Buffer.from(encryptedTextHex!, "hex");
-    const MASTER_KEY: Buffer = Buffer.from(
-        process.env.ENCRYPTION_KEY || "",
-        "utf8"
-    );
+    const MASTER_KEY: Buffer = Buffer.from(encryption_key, "utf8");
     // Create decipher
     // Note: GCM requires setAuthTag to be called before final()
     const decipher = crypto.createDecipheriv(
         ALGORITHM,
         MASTER_KEY,
-        iv
+        iv,
     ) as crypto.DecipherGCM;
 
     decipher.setAuthTag(authTag);
@@ -60,14 +59,14 @@ export function decrypt(encryptedBlob: EncryptedBlob): string {
         let decrypted: string = decipher.update(
             encryptedTextHex!,
             "hex",
-            "utf8"
+            "utf8",
         );
         decrypted += decipher.final("utf8");
         return decrypted;
     } catch (error) {
         // This will trigger if the authTag doesn't match (tampered data)
         throw new Error(
-            "Decryption failed: Key is invalid or data has been tampered with."
+            "Decryption failed: Key is invalid or data has been tampered with.",
         );
     }
 }

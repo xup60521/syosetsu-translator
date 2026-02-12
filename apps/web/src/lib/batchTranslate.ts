@@ -12,6 +12,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { stringSimilarity } from "string-similarity-js";
+import { env } from "@/env.ts";
 
 const ai_translated_result_schema = z.object({
     id: z.string(),
@@ -42,7 +43,7 @@ export async function batchTranslate(props: BatchTranslationParameter) {
     const providerInstance = getProvider(provider, encrypted_api_key);
     const model = providerInstance(model_id);
 
-    const google_refresh_token = decrypt(encrypted_refresh_token)
+    const google_refresh_token = decrypt(encrypted_refresh_token, env.ENCRYPTION_KEY)
     const novel_data = urls.map(async (url) =>
         novel_handler(url, { with_Cookies }),
     );
@@ -140,7 +141,7 @@ function getProvider(
     provider: BatchTranslationParameter["provider"],
     encrypted_api_key: string,
 ) {
-    const decrypted_api_key = decrypt(encrypted_api_key);
+    const decrypted_api_key = decrypt(encrypted_api_key, env.ENCRYPTION_KEY);
     if (provider === "google-ai-studio") {
         return createGoogleGenerativeAI({ apiKey: decrypted_api_key });
     }
