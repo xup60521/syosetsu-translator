@@ -30,7 +30,7 @@ type BatchTranslationParameter = {
 };
 
 async function novel_handler(url: string, options?: { with_Cookies?: boolean }) {
-    const res = await fetch(process.env.NOVEL_HANDLER_URL, {method: "POST", body: JSON.stringify({url, with_Cookies: options?.with_Cookies})})
+    const res = await fetch(env.NOVEL_HANDLER_URL, {method: "POST", body: JSON.stringify({url, with_Cookies: options?.with_Cookies})})
     const data = await res.json() as NovelHandlerResultType
     return data
 }

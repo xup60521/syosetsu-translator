@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 
 type HandleFileInput = {
   series_title_and_author: string;
@@ -24,8 +25,8 @@ function escapeDriveQueryString(value: string) {
 
 async function refreshAccessToken(refreshToken: string) {
   const body = new URLSearchParams({
-    client_id: process.env.VITE_GOOGLE_CLIENT_ID,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    client_id: env.VITE_GOOGLE_CLIENT_ID,
+    client_secret: env.GOOGLE_CLIENT_SECRET,
     refresh_token: refreshToken,
     grant_type: "refresh_token",
   });
