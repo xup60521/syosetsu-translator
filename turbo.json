@@ -5,6 +5,23 @@
     "globalEnv": ["NODE_ENV"],
     "tasks": {
         "build": {
+            "env": [
+                "GOOGLE_CLIENT_SECRET",
+                "BETTER_AUTH_BASE_URL",
+                "VERCEL_URL",
+                "WORKFLOW_URL",
+                "BETTER_AUTH_SECRET",
+                "ENCRYPTION_KEY",
+                "DATABASE_URL",
+                "QSTASH_URL",
+                "QSTASH_TOKEN",
+                "QSTASH_CURRENT_SIGNING_KEY",
+                "QSTASH_NEXT_SIGNING_KEY",
+                "UPSTASH_REDIS_REST_URL",
+                "UPSTASH_REDIS_REST_TOKEN",
+                "VITE_GOOGLE_CLIENT_ID",
+                "VITE_GOOGLE_APP_ID"
+            ],
             "dependsOn": ["^build"],
             "outputs": [
                 "dist/**",
