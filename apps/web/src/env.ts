@@ -34,7 +34,7 @@ export const env = createEnv({
      */
     runtimeEnv: {
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-        BETTER_AUTH_BASE_URL: process.env.VERCEL_URL ? process.env.VERCEL_URL : process.env.BETTER_AUTH_BASE_URL,
+        BETTER_AUTH_BASE_URL: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.BETTER_AUTH_BASE_URL,
         WORKFLOW_URL: process.env.WORKFLOW_URL!,
         BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
         ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
@@ -45,8 +45,8 @@ export const env = createEnv({
         QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
         UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
         UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
-        VITE_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        VITE_GOOGLE_APP_ID: import.meta.env.VITE_GOOGLE_APP_ID,
+        VITE_GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID,
+        VITE_GOOGLE_APP_ID: process.env.VITE_GOOGLE_APP_ID,
     },
 
     /**
