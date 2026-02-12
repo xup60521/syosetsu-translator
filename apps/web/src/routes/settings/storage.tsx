@@ -14,9 +14,18 @@ import {
     DrivePickerDocsView,
 } from "@googleworkspace/drive-picker-react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useFolderIdQuery, useSetFolderIdMutation } from "@/client-data/folderIdQuery";
+import {
+    useFolderIdQuery,
+    useSetFolderIdMutation,
+} from "@/client-data/folderIdQuery";
 
 export const Route = createFileRoute("/settings/storage")({
+    loader: () => ({
+        publicEnv: {
+            VITE_GOOGLE_CLIENT_ID: process.env.VITE_GOOGLE_CLIENT_ID,
+            VITE_GOOGLE_APP_ID: process.env.VITE_GOOGLE_APP_ID,
+        },
+    }),
     component: StoragePanel,
 });
 
@@ -239,14 +248,17 @@ function GoogleDrivePicker({ user_id }: { user_id: string }) {
                 .then(() => setOpenPicker(false));
         }
     };
+    const {
+        publicEnv: { VITE_GOOGLE_APP_ID, VITE_GOOGLE_CLIENT_ID },
+    } = Route.useLoaderData();
 
     const handleCanceled = () => {
         setOpenPicker(false);
     };
     return (
         <DrivePicker
-            client-id={env.VITE_GOOGLE_CLIENT_ID!}
-            app-id={env.VITE_GOOGLE_APP_ID!}
+            client-id={VITE_GOOGLE_CLIENT_ID!}
+            app-id={VITE_GOOGLE_APP_ID!}
             scope="https://www.googleapis.com/auth/drive.file"
             onPicked={handlePicked}
             onCanceled={handleCanceled}
