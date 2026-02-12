@@ -12,7 +12,7 @@ export const redis = new Redis({
 
 export default serve(
 	async (context) => {
-		const payload = context.requestPayload as WorkflowPayloadType;
+		const payload = (await context.run('get-payload', () => context.requestPayload)) as WorkflowPayloadType;
 		const { urls, batch_size, model_id, provider, encrypted_api_key, user_id, concurrency, folder_id, encrypted_refresh_token } = payload;
 		const batches = [] as string[][];
 		const total = urls.length;
