@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import type { NovelHandlerResultType } from "./novel_handler";
+import type { NovelHandlerResultType } from "@repo/shared";
 import { windowsFileEscapeRegex } from "../utils";
 import { randomUUID } from "crypto";
 

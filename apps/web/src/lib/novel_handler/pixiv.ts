@@ -1,5 +1,5 @@
 import { load, type CheerioAPI } from "cheerio";
-import type { NovelHandlerResultType } from "./novel_handler";
+import type { NovelHandlerResultType } from "@repo/shared";
 // import { getCookiesFromRedis, updateCookiesToRedis } from "../../redis";
 import { windowsFileEscapeRegex } from "../utils";
 import { randomUUID } from "crypto";

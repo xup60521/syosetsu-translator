@@ -1,18 +1,9 @@
 import { syosetsu_handler } from "./syosetsu";
 import { pixiv_handler } from "./pixiv";
 import { kakuyomu_handler } from "./kakuyomu";
+import type { NovelHandlerResultType } from "@repo/shared";
 
-export type NovelHandlerResultType = {
-    id: string;
-    title: string;
-    indexPrefix: string;
-    content: string;
-    series_title_and_author: string;
-    series_title: string;
-    url: string;
-    author: string;
-    tags?: string[];
-};
+
 
 /**
  * This function takes an URL as input and extracts the novel detail of that url. This function can only accept single episode url at once and might throw error.

@@ -1,5 +1,5 @@
 import { load, type CheerioAPI } from "cheerio";
-import type { NovelHandlerResultType } from "./novel_handler";
+import type { NovelHandlerResultType } from "@repo/shared";
 import { randomUUID } from "crypto";
 
 export async function syosetsu_handler(

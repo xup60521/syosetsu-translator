@@ -15,17 +15,6 @@ export const supportedProvider = [
     { value: "groq", label: "Groq" },
 ] as const;
 
-export type WorkflowPayloadType = {
-    urls: string[];
-    provider: (typeof supportedProvider)[number]["value"];
-    encrypted_api_key: string;
-    user_id: string;
-    model_id: string;
-    concurrency: number;
-    batch_size: number;
-    folder_id: string;
-    api_key_name?: string;
-}
 
 export const en_prompt = `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
 After the translation is done, re-check the result and keep:

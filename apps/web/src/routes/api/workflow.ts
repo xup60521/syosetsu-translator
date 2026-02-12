@@ -1,8 +1,9 @@
 import { batchTranslate } from "@/lib/batchTranslate";
 import { redis } from "@/server/redis";
-import { chunkArray, type WorkflowPayloadType } from "@/lib/utils";
+import { chunkArray } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { serve } from "@upstash/workflow/tanstack";
+import type { WorkflowPayloadType } from "@repo/shared";
 
 export const Route = createFileRoute("/api/workflow")({
     server: {
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/api/workflow")({
                     user_id,
                     concurrency,
                     folder_id,
+                    encrypted_refresh_token,
                 } = payload;
                 const batches = [] as string[][];
                 const total = urls.length;
@@ -30,36 +32,49 @@ export const Route = createFileRoute("/api/workflow")({
                 let totalProcessed = 0;
 
                 const concurrent_batches = chunkArray(batches, concurrency);
-                for (let batches_index = 0; batches_index < concurrent_batches.length; batches_index++) {
+                for (
+                    let batches_index = 0;
+                    batches_index < concurrent_batches.length;
+                    batches_index++
+                ) {
                     const batches = concurrent_batches[batches_index];
-                    await Promise.all(batches.map(async (batch, batch_index) => {
-                        const currentBatch = batch;
-                        // console.log(`Processing batch ${i}`);
-                        await context.run(`process-batch-${batches_index}-${batch_index}`, async () => {
-                            await batchTranslate({
-                                urls: currentBatch,
-                                model_id,
-                                with_Cookies: false,
-                                provider,
-                                encrypted_api_key,
-                                user_id,
-                                folder_id,
-                            });
-                        });
-                        totalProcessed += currentBatch.length;
-                        // console.log(totalProcessed, total)
-                    }))
+                    await Promise.all(
+                        batches.map(async (batch, batch_index) => {
+                            const currentBatch = batch;
+                            // console.log(`Processing batch ${i}`);
+                            await context.run(
+                                `process-batch-${batches_index}-${batch_index}`,
+                                async () => {
+                                    await batchTranslate({
+                                        encrypted_refresh_token,
+                                        urls: currentBatch,
+                                        model_id,
+                                        with_Cookies: false,
+                                        provider,
+                                        encrypted_api_key,
+                                        user_id,
+                                        folder_id,
+                                    });
+                                },
+                            );
+                            totalProcessed += currentBatch.length;
+                            // console.log(totalProcessed, total)
+                        }),
+                    );
                     const progress = Math.round((totalProcessed / total) * 100);
-                    await context.run(`update-redis-progress-${batches_index}`, async () => {
-                        await redis.hset(`task:${workflowId}`, {
-                            status:
-                                totalProcessed >= total
-                                    ? "completed"
-                                    : "processing",
-                            progress: progress,
-                            current: totalProcessed,
-                        });
-                    });
+                    await context.run(
+                        `update-redis-progress-${batches_index}`,
+                        async () => {
+                            await redis.hset(`task:${workflowId}`, {
+                                status:
+                                    totalProcessed >= total
+                                        ? "completed"
+                                        : "processing",
+                                progress: progress,
+                                current: totalProcessed,
+                            });
+                        },
+                    );
                 }
 
                 // // ❌ 移除 try/catch，讓 workflow 自然失敗
@@ -115,7 +130,7 @@ export const Route = createFileRoute("/api/workflow")({
                         typeof failResponse === "string"
                             ? failResponse
                             : JSON.stringify(failResponse) ||
-                            "Translation failed";
+                              "Translation failed";
 
                     // 關鍵：確保 redis 指令被 await 且錯誤被捕捉
                     try {

@@ -4,10 +4,11 @@ import { TRPCError } from "@trpc/server";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/server/db";
 import { account } from "@/server/db/auth-schema";
-import { WorkflowPayloadType } from "@/lib/utils";
+import type { WorkflowPayloadType } from "@repo/shared";
 import { qstashClient } from "@/server/qstash-client";
 import { env } from "@/env";
 import { redis } from "@/server/redis";
+import { encrypt } from "@repo/shared";
 
 const dataSchema = z.object({
     urls: z.array(z.url({ message: "Invalid URL format" })),
@@ -58,6 +59,7 @@ export const workflowProcedure = createTRPCRouter({
             const payload = {
                 ...input,
                 user_id: userId,
+                encrypted_refresh_token: encrypt(google_refresh_token)
             } as WorkflowPayloadType;
             const { workflowRunId } = await qstashClient.trigger({
                 // Your workflow route handler

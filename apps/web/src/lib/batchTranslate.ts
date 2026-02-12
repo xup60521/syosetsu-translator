@@ -5,15 +5,12 @@ import { replace_words } from "./replace";
 import { novel_handler } from "./novel_handler/novel_handler";
 import { en_prompt, supportedProvider } from "./utils";
 import z from "zod";
-import { decrypt } from "./cryptography";
+import { decrypt } from "@repo/shared";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createCerebras } from "@ai-sdk/cerebras";
 import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { db } from "@/server/db/index.ts";
-import { account } from "@/server/db/auth-schema.ts";
-import { and, eq } from "drizzle-orm";
 import { stringSimilarity } from "string-similarity-js";
 
 const ai_translated_result_schema = z.object({
@@ -29,6 +26,7 @@ type BatchTranslationParameter = {
     with_Cookies?: boolean;
     user_id: string;
     folder_id: string;
+    encrypted_refresh_token: string;
 };
 
 export async function batchTranslate(props: BatchTranslationParameter) {
@@ -38,19 +36,13 @@ export async function batchTranslate(props: BatchTranslationParameter) {
         with_Cookies,
         provider,
         encrypted_api_key,
-        user_id,
         folder_id,
+        encrypted_refresh_token
     } = props;
     const providerInstance = getProvider(provider, encrypted_api_key);
     const model = providerInstance(model_id);
-    const userAccount = await db.query.account.findFirst({
-        where: and(
-            eq(account.userId, user_id),
-            eq(account.providerId, "google"),
-        ),
-    });
 
-    const google_refresh_token = userAccount?.refreshToken;
+    const google_refresh_token = decrypt(encrypted_refresh_token)
     const novel_data = urls.map(async (url) =>
         novel_handler(url, { with_Cookies }),
     );

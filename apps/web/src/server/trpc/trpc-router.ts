@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { driveProcedure } from "./routers/drive";
 import { novelProcedure } from "./routers/novel";
-import { encrypt } from "@/lib/cryptography";
+import { encrypt } from "@repo/shared";
 import { historyProcedure } from "./routers/history";
 import { modelList } from "@/lib/model_list";
 import { TRPCError } from "@trpc/server";

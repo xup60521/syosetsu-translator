@@ -39,9 +39,9 @@ export function decrypt(encryptedBlob: EncryptedBlob): string {
     const [ivHex, authTagHex, encryptedTextHex] = parts;
 
     // Convert hex strings to Buffers
-    const iv: Buffer = Buffer.from(ivHex, "hex");
-    const authTag: Buffer = Buffer.from(authTagHex, "hex");
-    const encryptedText: Buffer = Buffer.from(encryptedTextHex, "hex");
+    const iv: Buffer = Buffer.from(ivHex!, "hex");
+    const authTag: Buffer = Buffer.from(authTagHex!, "hex");
+    const encryptedText: Buffer = Buffer.from(encryptedTextHex!, "hex");
     const MASTER_KEY: Buffer = Buffer.from(
         process.env.ENCRYPTION_KEY || "",
         "utf8"
@@ -58,7 +58,7 @@ export function decrypt(encryptedBlob: EncryptedBlob): string {
 
     try {
         let decrypted: string = decipher.update(
-            encryptedTextHex,
+            encryptedTextHex!,
             "hex",
             "utf8"
         );
