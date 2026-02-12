@@ -107,6 +107,22 @@
     "apps/workflow": {
       "name": "workflow",
       "version": "0.0.0",
+      "dependencies": {
+        "@ai-sdk/cerebras": "^2.0.27",
+        "@ai-sdk/google": "^3.0.18",
+        "@ai-sdk/groq": "^3.0.19",
+        "@ai-sdk/mistral": "^3.0.16",
+        "@openrouter/ai-sdk-provider": "^2.1.1",
+        "@repo/shared": "workspace:*",
+        "@upstash/redis": "^1.36.1",
+        "@upstash/workflow": "^1.1.0",
+        "ai": "^6.0.64",
+        "cheerio": "^1.2.0",
+        "string-similarity-js": "^2.1.4",
+        "superjson": "^2.2.2",
+        "urlpattern-polyfill": "^10.1.0",
+        "zod": "^4.3.6",
+      },
       "devDependencies": {
         "@cloudflare/vitest-pool-workers": "^0.12.4",
         "@types/node": "^25.2.3",

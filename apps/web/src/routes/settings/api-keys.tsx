@@ -37,7 +37,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { supportedProvider } from "@/lib/utils";
+import { supportedProvider } from "@repo/shared";
 import { createFileRoute } from "@tanstack/react-router";
 import { useApikeyQuery } from "@/client-data/apikeyQuery";
 import { useTRPC } from "@/server/trpc/react";

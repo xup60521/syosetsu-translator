@@ -22,6 +22,7 @@ import { Route as SettingsConnectedAccountsRouteImport } from './routes/settings
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsApiKeysRouteImport } from './routes/settings/api-keys'
 import { Route as ApiWorkflowRouteImport } from './routes/api/workflow'
+import { Route as ApiNovel_handlerRouteImport } from './routes/api/novel_handler'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
@@ -91,6 +92,11 @@ const ApiWorkflowRoute = ApiWorkflowRouteImport.update({
   path: '/api/workflow',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNovel_handlerRoute = ApiNovel_handlerRouteImport.update({
+  id: '/api/novel_handler',
+  path: '/api/novel_handler',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -105,6 +111,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/api/novel_handler': typeof ApiNovel_handlerRoute
   '/api/workflow': typeof ApiWorkflowRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/novel_handler': typeof ApiNovel_handlerRoute
   '/api/workflow': typeof ApiWorkflowRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/api/novel_handler': typeof ApiNovel_handlerRoute
   '/api/workflow': typeof ApiWorkflowRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/api/novel_handler'
     | '/api/workflow'
     | '/settings/api-keys'
     | '/settings/appearance'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api/novel_handler'
     | '/api/workflow'
     | '/settings/api-keys'
     | '/settings/appearance'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
+    | '/api/novel_handler'
     | '/api/workflow'
     | '/settings/api-keys'
     | '/settings/appearance'
@@ -209,6 +221,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
+  ApiNovel_handlerRoute: typeof ApiNovel_handlerRoute
   ApiWorkflowRoute: typeof ApiWorkflowRoute
   ViewSubFolderIdRoute: typeof ViewSubFolderIdRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWorkflowRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/novel_handler': {
+      id: '/api/novel_handler'
+      path: '/api/novel_handler'
+      fullPath: '/api/novel_handler'
+      preLoaderRoute: typeof ApiNovel_handlerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -353,6 +373,7 @@ const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
+  ApiNovel_handlerRoute: ApiNovel_handlerRoute,
   ApiWorkflowRoute: ApiWorkflowRoute,
   ViewSubFolderIdRoute: ViewSubFolderIdRoute,
   HistoryIndexRoute: HistoryIndexRoute,

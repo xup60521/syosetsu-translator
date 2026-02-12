@@ -7,7 +7,7 @@ import {
 import ReactSelect from "react-select";
 import { Field, FieldError } from "./ui/field";
 import { Label } from "./ui/label";
-import { cn, supportedProvider } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
     Select,
     SelectContent,
@@ -31,6 +31,7 @@ import { useApikeyQuery } from "@/client-data/apikeyQuery";
 import { useFolderIdQuery } from "@/client-data/folderIdQuery";
 import type { DecomposedURL } from "@/lib/decompose_url";
 import { useTRPC } from "@/server/trpc/react";
+import { supportedProvider } from "@repo/shared";
 
 const translateFormSchema = z.object({
     provider: z.string().min(1, "Please select a provider"),
