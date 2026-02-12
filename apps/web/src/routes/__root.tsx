@@ -57,7 +57,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
                 content: "width=device-width, initial-scale=1",
             },
             {
-                title: "TanStack Start Starter",
+                title: "Syosetsu Translator",
+                description:
+                    "A modern web application for translating Syosetsu novels.",
             },
         ],
         links: [
