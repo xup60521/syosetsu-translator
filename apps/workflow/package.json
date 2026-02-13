@@ -17,8 +17,8 @@
 		"wrangler": "^4.64.0"
 	},
 	"dependencies": {
-        "@upstash/redis": "^1.36.1",
-        "@upstash/workflow": "^1.1.0",
-        "@repo/shared": "workspace:*"
+		"@repo/shared": "workspace:*",
+		"@upstash/redis": "^1.36.1",
+		"@upstash/workflow": "^1.1.0"
 	}
 }

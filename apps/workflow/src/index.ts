@@ -1,4 +1,4 @@
-import { serve } from '@upstash/workflow/cloudflare';
+import { serve, createWorkflow, serveMany } from '@upstash/workflow/cloudflare';
 import { NovelHandlerResultType, supportedProvider, type WorkflowPayloadType } from '@repo/shared';
 import { batchTranslate, decrypt, getProvider } from '@repo/shared/server';
 import { chunkArray } from './utils';
@@ -17,115 +17,126 @@ async function novel_handler(url: string, options?: { with_Cookies?: boolean }) 
 	return data;
 }
 
-export default serve(
-	async (context) => {
-		const payload = (await context.run('get-payload', () => context.requestPayload)) as WorkflowPayloadType;
-		const { urls, batch_size, model_id, provider, encrypted_api_key, user_id, concurrency, folder_id, encrypted_refresh_token } = payload;
-		const batches = [] as string[][];
-		const total = urls.length;
-		const workflowId = context.workflowRunId;
+// 1️⃣ 建立子 workflow（處理單一 batch）
+const processBatchWorkflow = createWorkflow(async (context) => {
+	const payload = context.requestPayload as {
+		batch: string[];
+		batch_index: number;
+		model_id: string;
+		provider: string;
+		encrypted_api_key: string;
+		user_id: string;
+		folder_id: string;
+		encrypted_refresh_token: string;
+		workflowId: string;
+	};
 
-		for (let i = 0; i < urls.length; i += batch_size) {
-			batches.push(urls.slice(i, i + batch_size));
-		}
+	// 延遲
+	await context.sleep('delay', payload.batch_index * 5);
 
-		let totalProcessed = 0;
+	// 處理這個 batch
+	await context.run('process', async () => {
+		const decrypted_api_key = decrypt(payload.encrypted_api_key, process.env.ENCRYPTION_KEY);
+		const providerInstance = getProvider(payload.provider, decrypted_api_key);
+		const model = providerInstance(payload.model_id);
 
-		const concurrent_batches = chunkArray(batches, concurrency);
-		for (let batches_index = 0; batches_index < concurrent_batches.length; batches_index++) {
-			const batches = concurrent_batches[batches_index];
-			await Promise.all(
-				batches.map(async (batch, batch_index) => {
-					const currentBatch = batch;
-					// console.log(`Processing batch ${i}`);
-					await context.run(`process-batch-${batches_index}-${batch_index}`, async () => {
-						const decrypted_api_key = decrypt(encrypted_api_key, process.env.ENCRYPTION_KEY);
-						const providerInstance = getProvider(provider, decrypted_api_key);
-						const model = providerInstance(model_id);
-						await batchTranslate(
-							{
-								encrypted_refresh_token,
-								urls: currentBatch,
-								model_id,
-								with_Cookies: false,
-								provider,
-								model,
-								user_id,
-								folder_id,
-							},
-							novel_handler,
-							save_file_to_gdrive,
-						);
-					});
-					totalProcessed += currentBatch.length;
-					// console.log(totalProcessed, total)
-				}),
-			);
-			const progress = Math.round((totalProcessed / total) * 100);
-			await context.run(`update-redis-progress-${batches_index}`, async () => {
-				await redis.hset(`task:${workflowId}`, {
-					status: totalProcessed >= total ? 'completed' : 'processing',
-					progress: progress,
-					current: totalProcessed,
-				});
+		await batchTranslate(
+			{
+				encrypted_refresh_token: payload.encrypted_refresh_token,
+				urls: payload.batch,
+				model_id: payload.model_id,
+				with_Cookies: false,
+				provider: payload.provider,
+				model,
+				user_id: payload.user_id,
+				folder_id: payload.folder_id,
+			},
+			novel_handler,
+			save_file_to_gdrive,
+		);
+	});
+
+	return { processed: payload.batch.length };
+});
+
+// 2️⃣ 主 workflow（協調所有 batches）
+const mainWorkflow = createWorkflow(async (context) => {
+	const payload = context.requestPayload as WorkflowPayloadType;
+	const { 
+		urls, 
+		batch_size, 
+		model_id, 
+		provider, 
+		encrypted_api_key, 
+		user_id, 
+		concurrency, 
+		folder_id, 
+		encrypted_refresh_token 
+	} = payload;
+
+	const batches = [] as string[][];
+	const total = urls.length;
+	const workflowId = context.workflowRunId;
+
+	// 初始化 Redis
+	await context.run('init-redis', async () => {
+		await redis.hset(`task:${workflowId}`, {
+			status: 'processing',
+			progress: 0,
+			current: 0,
+			total: total,
+		});
+	});
+
+	// 分批
+	for (let i = 0; i < urls.length; i += batch_size) {
+		batches.push(urls.slice(i, i + batch_size));
+	}
+
+	let totalProcessed = 0;
+	const concurrent_batches = chunkArray(batches, concurrency);
+
+	// 處理每組併發 batches
+	for (let batches_index = 0; batches_index < concurrent_batches.length; batches_index++) {
+		const currentBatches = concurrent_batches[batches_index];
+		
+		// ✅ 每個 batch 都會觸發新的 HTTP request / Workers invocation
+		const results = await Promise.all(
+			currentBatches.map((batch, batch_index) =>
+				context.invoke(`batch-${batches_index}-${batch_index}`, {
+					workflow: processBatchWorkflow,
+					body: {
+						batch,
+						batch_index,
+						model_id,
+						provider,
+						encrypted_api_key,
+						user_id,
+						folder_id,
+						encrypted_refresh_token,
+						workflowId,
+					},
+				})
+			)
+		);
+
+		// 累計已處理數量
+		totalProcessed += results.reduce((sum, r) => sum + r.body.processed, 0);
+
+		// 更新進度
+		const progress = Math.round((totalProcessed / total) * 100);
+		await context.run(`update-progress-${batches_index}`, async () => {
+			await redis.hset(`task:${workflowId}`, {
+				status: totalProcessed >= total ? 'completed' : 'processing',
+				progress: progress,
+				current: totalProcessed,
 			});
-		}
+		});
+	}
+});
 
-		// // ❌ 移除 try/catch，讓 workflow 自然失敗
-		// for (let i = 0; i < batches.length; i++) {
-		//     const currentBatch = batches[i];
-
-		//     await context.run(`process-batch-${i}`, async () => {
-		//         await batchTranslate({
-		//             urls: currentBatch,
-		//             model_id,
-		//             with_Cookies: false,
-		//             provider,
-		//             encrypted_api_key,
-		//             user_id,
-		//             folder_id,
-		//         });
-		//         return { processed: currentBatch.length };
-		//     });
-
-		//     totalProcessed += currentBatch.length;
-		//     const progress = Math.round((totalProcessed / total) * 100);
-
-		//     await context.run(
-		//         `update-redis-progress-${i}`,
-		//         async () => {
-		//             await redis.hset(`task:${workflowId}`, {
-		//                 status:
-		//                     totalProcessed >= total
-		//                         ? "completed"
-		//                         : "processing",
-		//                 progress: progress,
-		//                 current: totalProcessed,
-		//             });
-		//         },
-		//     );
-		// }
-	},
-	{
-		// ✅ 使用 failureFunction 處理錯誤
-		failureFunction: async ({ context, failResponse, failStatus }) => {
-			// 確保正確取得 workflowRunId
-			const workflowId = context.workflowRunId;
-
-			console.log(`[Workflow Failure] ID: ${workflowId}, Status: ${failStatus}`);
-
-			const errorMessage = typeof failResponse === 'string' ? failResponse : JSON.stringify(failResponse) || 'Translation failed';
-
-			// 關鍵：確保 redis 指令被 await 且錯誤被捕捉
-			try {
-				await redis.hset(`task:${workflowId}`, {
-					status: 'failed',
-					error_message: errorMessage,
-				});
-				console.log(`Successfully updated Redis for ${workflowId}`);
-			} catch (redisError) {
-				console.error('Failed to update Redis in failureFunction:', redisError);
-			}
-		},
-	},
-);
+// 3️⃣ 匯出兩個 workflows
+export default serveMany({
+	main: mainWorkflow,
+	processBatch: processBatchWorkflow,
+});

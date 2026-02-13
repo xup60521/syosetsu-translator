@@ -16,7 +16,7 @@ const ai_translated_result_schema = z.object({
 
 type BatchTranslationParameter = {
     urls: string[];
-    provider: (typeof supportedProvider)[number]["value"];
+    provider: string | (typeof supportedProvider)[number]["value"];
     model_id: string;
     model: LanguageModel;
     with_Cookies?: boolean;

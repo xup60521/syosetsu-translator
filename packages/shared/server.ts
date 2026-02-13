@@ -8,7 +8,7 @@ import type { supportedProvider } from "."
 export * from "./lib/model_list"
 
 export function getProvider(
-    provider: (typeof supportedProvider)[number]["value"],
+    provider: string | (typeof supportedProvider)[number]["value"],
     decrypted_api_key: string,
 ) {
     
