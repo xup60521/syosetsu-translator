@@ -1,18 +1,19 @@
 import { Output, streamText } from "ai";
-import { handle_file } from "./handle_file.ts";
 import { replace_words } from "./replace";
-
-import { novel_handler } from "./novel_handler/novel_handler";
 import { en_prompt } from "./utils";
 import z from "zod";
-import { decrypt, supportedProvider } from "@repo/shared";
+import {
+    supportedProvider,
+    type HandleFileInput,
+    type NovelHandlerResultType,
+} from "@repo/shared";
+import { decrypt } from "@repo/shared/server";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createCerebras } from "@ai-sdk/cerebras";
 import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { stringSimilarity } from "string-similarity-js";
-import { env } from "@/env.ts";
 
 const ai_translated_result_schema = z.object({
     id: z.string(),
@@ -27,10 +28,21 @@ type BatchTranslationParameter = {
     with_Cookies?: boolean;
     user_id: string;
     folder_id: string;
-    encrypted_refresh_token: string;
+    encrypted_refresh_token?: string;
 };
 
-export async function batchTranslate(props: BatchTranslationParameter) {
+
+// don't use the shared novel_handler directly
+// since the workflow calls the novel_handler endpoint elsewhere,
+// use dependency injection instead.
+export async function batchTranslate(
+    props: BatchTranslationParameter,
+    novel_handler: (
+        url: string,
+        options: { with_Cookies?: boolean },
+    ) => Promise<NovelHandlerResultType>,
+    handle_file: (params: HandleFileInput) => Promise<void>,
+) {
     const {
         urls,
         model_id,
@@ -38,12 +50,11 @@ export async function batchTranslate(props: BatchTranslationParameter) {
         provider,
         encrypted_api_key,
         folder_id,
-        encrypted_refresh_token
+        encrypted_refresh_token,
     } = props;
     const providerInstance = getProvider(provider, encrypted_api_key);
     const model = providerInstance(model_id);
 
-    const google_refresh_token = decrypt(encrypted_refresh_token, env.ENCRYPTION_KEY)
     const novel_data = urls.map(async (url) =>
         novel_handler(url, { with_Cookies }),
     );
@@ -130,7 +141,7 @@ Tags: ${tags?.join(", ") ?? ""}
                 indexPrefix,
                 content,
                 folder_id,
-                refresh_token: google_refresh_token!,
+                encrypted_refresh_token,
             });
         }
     }
@@ -141,7 +152,10 @@ function getProvider(
     provider: BatchTranslationParameter["provider"],
     encrypted_api_key: string,
 ) {
-    const decrypted_api_key = decrypt(encrypted_api_key, env.ENCRYPTION_KEY);
+    const decrypted_api_key = decrypt(
+        encrypted_api_key,
+        process.env.ENCRYPTION_KEY!,
+    );
     if (provider === "google-ai-studio") {
         return createGoogleGenerativeAI({ apiKey: decrypted_api_key });
     }

@@ -1,4 +1,5 @@
-import { novel_handler } from "@/lib/novel_handler/novel_handler";
+
+import { novel_handler } from "@repo/shared/server";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/novel_handler")({

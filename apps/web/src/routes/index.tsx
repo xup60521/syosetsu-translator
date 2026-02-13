@@ -30,7 +30,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { useTheme } from "next-themes";
 import { ThemeMenu } from "@/components/theme-menu";
 
 export const Route = createFileRoute("/")({

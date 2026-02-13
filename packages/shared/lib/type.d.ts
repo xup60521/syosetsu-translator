@@ -22,3 +22,15 @@ export type NovelHandlerResultType = {
     author: string;
     tags?: string[];
 };
+
+export type HandleFileInput = {
+  series_title_and_author: string;
+  title: string;
+  indexPrefix: string;
+  content: string;
+  istranslated?: boolean;
+  folder_id: string;
+  encrypted_refresh_token?: string;
+};
+
+export type DecomposedURL = { title?: string | undefined; url: string };

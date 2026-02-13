@@ -29,7 +29,7 @@ import { authClient } from "@/server/better-auth/auth-client";
 import { Link } from "@tanstack/react-router";
 import { useApikeyQuery } from "@/client-data/apikeyQuery";
 import { useFolderIdQuery } from "@/client-data/folderIdQuery";
-import type { DecomposedURL } from "@/lib/decompose_url";
+import type { DecomposedURL } from "@repo/shared";
 import { useTRPC } from "@/server/trpc/react";
 import { supportedProvider } from "@repo/shared";
 

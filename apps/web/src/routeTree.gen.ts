@@ -21,7 +21,6 @@ import { Route as SettingsLanguageRouteImport } from './routes/settings/language
 import { Route as SettingsConnectedAccountsRouteImport } from './routes/settings/connected-accounts'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsApiKeysRouteImport } from './routes/settings/api-keys'
-import { Route as ApiWorkflowRouteImport } from './routes/api/workflow'
 import { Route as ApiNovel_handlerRouteImport } from './routes/api/novel_handler'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
@@ -87,11 +86,6 @@ const SettingsApiKeysRoute = SettingsApiKeysRouteImport.update({
   path: '/api-keys',
   getParentRoute: () => SettingsRouteRoute,
 } as any)
-const ApiWorkflowRoute = ApiWorkflowRouteImport.update({
-  id: '/api/workflow',
-  path: '/api/workflow',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiNovel_handlerRoute = ApiNovel_handlerRouteImport.update({
   id: '/api/novel_handler',
   path: '/api/novel_handler',
@@ -112,7 +106,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
   '/api/novel_handler': typeof ApiNovel_handlerRoute
-  '/api/workflow': typeof ApiWorkflowRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
@@ -129,7 +122,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/novel_handler': typeof ApiNovel_handlerRoute
-  '/api/workflow': typeof ApiWorkflowRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
@@ -148,7 +140,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
   '/api/novel_handler': typeof ApiNovel_handlerRoute
-  '/api/workflow': typeof ApiWorkflowRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
@@ -168,7 +159,6 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/api/novel_handler'
-    | '/api/workflow'
     | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
@@ -185,7 +175,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/api/novel_handler'
-    | '/api/workflow'
     | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
@@ -203,7 +192,6 @@ export interface FileRouteTypes {
     | '/'
     | '/settings'
     | '/api/novel_handler'
-    | '/api/workflow'
     | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
@@ -222,7 +210,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
   ApiNovel_handlerRoute: typeof ApiNovel_handlerRoute
-  ApiWorkflowRoute: typeof ApiWorkflowRoute
   ViewSubFolderIdRoute: typeof ViewSubFolderIdRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   TestIndexRoute: typeof TestIndexRoute
@@ -317,13 +304,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsApiKeysRouteImport
       parentRoute: typeof SettingsRouteRoute
     }
-    '/api/workflow': {
-      id: '/api/workflow'
-      path: '/api/workflow'
-      fullPath: '/api/workflow'
-      preLoaderRoute: typeof ApiWorkflowRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/novel_handler': {
       id: '/api/novel_handler'
       path: '/api/novel_handler'
@@ -374,7 +354,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
   ApiNovel_handlerRoute: ApiNovel_handlerRoute,
-  ApiWorkflowRoute: ApiWorkflowRoute,
   ViewSubFolderIdRoute: ViewSubFolderIdRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   TestIndexRoute: TestIndexRoute,

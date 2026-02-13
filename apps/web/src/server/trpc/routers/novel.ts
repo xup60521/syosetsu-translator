@@ -1,9 +1,10 @@
 import z from "zod";
 import { createTRPCRouter, publicProcedure } from "@/server/trpc/init";
-import { novel_handler } from "@/lib/novel_handler/novel_handler";
+
 import { URLPattern } from "urlpattern-polyfill";
 import { load } from "cheerio";
-import { decomposeURL } from "@/lib/decompose_url";
+import { decomposeURL, novel_handler } from "@repo/shared/server";
+
 
 const urlSchema = z.string().transform((val, ctx) => {
     // Split by one or more whitespace characters

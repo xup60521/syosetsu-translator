@@ -8,7 +8,7 @@ import type { WorkflowPayloadType } from "@repo/shared";
 import { qstashClient } from "@/server/qstash-client";
 import { env } from "@/env";
 import { redis } from "@/server/redis";
-import { encrypt } from "@repo/shared";
+import { encrypt } from "@repo/shared/server";
 
 const dataSchema = z.object({
     urls: z.array(z.url({ message: "Invalid URL format" })),

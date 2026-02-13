@@ -4,12 +4,18 @@
     "type": "module",
     "private": true,
     "exports": {
-        ".": "./index.ts"
+        ".": "./index.ts",
+        "./server": "./server.ts",
+        "./client": "./client.ts"
     },
     "devDependencies": {
         "@types/bun": "latest"
     },
     "peerDependencies": {
         "typescript": "^5"
+    },
+    "dependencies": {
+        "cheerio": "^1.2.0",
+        "urlpattern-polyfill": "^10.1.0"
     }
 }

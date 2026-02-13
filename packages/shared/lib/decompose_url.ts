@@ -1,6 +1,7 @@
-export type DecomposedURL = { title?: string | undefined; url: string };
+
 import { URLPattern } from "urlpattern-polyfill";
 import { load } from "cheerio";
+import type { DecomposedURL } from "./type";
 
 export async function decomposeURL({
     url_string,

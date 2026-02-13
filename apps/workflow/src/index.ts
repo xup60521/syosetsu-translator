@@ -1,14 +1,21 @@
 import { serve } from '@upstash/workflow/cloudflare';
-import type { WorkflowPayloadType } from '@repo/shared';
+import { NovelHandlerResultType, type WorkflowPayloadType } from '@repo/shared';
+import {batchTranslate} from "@repo/shared/server"
 import { chunkArray } from './utils';
 import { Redis } from '@upstash/redis';
-import { batchTranslate } from './batchTranslate';
 import { env } from 'cloudflare:workers';
+import { save_file_to_gdrive } from './save_file_to_gdrive';
 
 export const redis = new Redis({
 	url: env.UPSTASH_REDIS_REST_URL,
 	token: env.UPSTASH_REDIS_REST_TOKEN,
 });
+
+async function novel_handler(url: string, options?: { with_Cookies?: boolean }) {
+	const res = await fetch(env.NOVEL_HANDLER_URL, { method: 'POST', body: JSON.stringify({ url, with_Cookies: options?.with_Cookies }) });
+	const data = (await res.json()) as NovelHandlerResultType;
+	return data;
+}
 
 export default serve(
 	async (context) => {
@@ -32,16 +39,20 @@ export default serve(
 					const currentBatch = batch;
 					// console.log(`Processing batch ${i}`);
 					await context.run(`process-batch-${batches_index}-${batch_index}`, async () => {
-						await batchTranslate({
-							encrypted_refresh_token,
-							urls: currentBatch,
-							model_id,
-							with_Cookies: false,
-							provider,
-							encrypted_api_key,
-							user_id,
-							folder_id,
-						});
+						await batchTranslate(
+							{
+								encrypted_refresh_token,
+								urls: currentBatch,
+								model_id,
+								with_Cookies: false,
+								provider,
+								encrypted_api_key,
+								user_id,
+								folder_id,
+							},
+							novel_handler,
+							save_file_to_gdrive,
+						);
 					});
 					totalProcessed += currentBatch.length;
 					// console.log(totalProcessed, total)
