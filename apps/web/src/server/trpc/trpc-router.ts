@@ -3,7 +3,7 @@ import { driveProcedure } from "./routers/drive";
 import { novelProcedure } from "./routers/novel";
 import { encrypt } from "@repo/shared/server";
 import { historyProcedure } from "./routers/history";
-import { modelList } from "@/lib/model_list";
+import { modelList } from "@repo/shared/server";
 import { TRPCError } from "@trpc/server";
 import { workflowProcedure } from "./routers/workflow";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/server/trpc/init";
