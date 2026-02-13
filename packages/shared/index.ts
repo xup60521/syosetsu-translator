@@ -1,6 +1,7 @@
 
 export type * from "./lib/type"
 
+// value should match modelList key
 export const supportedProvider = [
     { value: "google-ai-studio", label: "Google AI Studio" },
     { value: "openrouter", label: "OpenRouter" },

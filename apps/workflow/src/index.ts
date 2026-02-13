@@ -1,6 +1,6 @@
 import { serve } from '@upstash/workflow/cloudflare';
-import { NovelHandlerResultType, type WorkflowPayloadType } from '@repo/shared';
-import {batchTranslate} from "@repo/shared/server"
+import { NovelHandlerResultType, supportedProvider, type WorkflowPayloadType } from '@repo/shared';
+import { batchTranslate, decrypt, getProvider } from '@repo/shared/server';
 import { chunkArray } from './utils';
 import { Redis } from '@upstash/redis';
 import { env } from 'cloudflare:workers';
@@ -39,6 +39,9 @@ export default serve(
 					const currentBatch = batch;
 					// console.log(`Processing batch ${i}`);
 					await context.run(`process-batch-${batches_index}-${batch_index}`, async () => {
+						const decrypted_api_key = decrypt(encrypted_api_key, process.env.ENCRYPTION_KEY);
+						const providerInstance = getProvider(provider, decrypted_api_key);
+						const model = providerInstance(model_id);
 						await batchTranslate(
 							{
 								encrypted_refresh_token,
@@ -46,7 +49,7 @@ export default serve(
 								model_id,
 								with_Cookies: false,
 								provider,
-								encrypted_api_key,
+								model,
 								user_id,
 								folder_id,
 							},

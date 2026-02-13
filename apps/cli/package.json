@@ -1,0 +1,22 @@
+{
+  "name": "cli",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun --bun ./index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/cli-progress": "^3.11.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5",
+    "@repo/shared": "workspace:*"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.2.0",
+    "cli-progress": "^3.12.0",
+    "p-retry": "^7.1.1"
+  }
+}

@@ -1,4 +1,4 @@
-import { Output, streamText } from "ai";
+import { Output, streamText, type LanguageModel } from "ai";
 import { replace_words } from "./replace";
 import { en_prompt } from "./utils";
 import z from "zod";
@@ -7,12 +7,6 @@ import {
     type HandleFileInput,
     type NovelHandlerResultType,
 } from "@repo/shared";
-import { decrypt } from "@repo/shared/server";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createCerebras } from "@ai-sdk/cerebras";
-import { createGroq } from "@ai-sdk/groq";
-import { createMistral } from "@ai-sdk/mistral";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { stringSimilarity } from "string-similarity-js";
 
 const ai_translated_result_schema = z.object({
@@ -24,9 +18,9 @@ type BatchTranslationParameter = {
     urls: string[];
     provider: (typeof supportedProvider)[number]["value"];
     model_id: string;
-    encrypted_api_key: string;
+    model: LanguageModel;
     with_Cookies?: boolean;
-    user_id: string;
+    user_id?: string;
     folder_id: string;
     encrypted_refresh_token?: string;
 };
@@ -48,12 +42,11 @@ export async function batchTranslate(
         model_id,
         with_Cookies,
         provider,
-        encrypted_api_key,
+        model,
         folder_id,
         encrypted_refresh_token,
     } = props;
-    const providerInstance = getProvider(provider, encrypted_api_key);
-    const model = providerInstance(model_id);
+    
 
     const novel_data = urls.map(async (url) =>
         novel_handler(url, { with_Cookies }),
@@ -122,7 +115,8 @@ ${indexPrefix}
 
 URL: ${url}
 Author: ${author}
-Model: ${model.modelId}
+Provider: ${provider}
+Model: ${model_id}
 Tags: ${tags?.join(", ") ?? ""}
 
 ` +
@@ -146,30 +140,4 @@ Tags: ${tags?.join(", ") ?? ""}
         }
     }
     // console.log("finishing translation")
-}
-
-function getProvider(
-    provider: BatchTranslationParameter["provider"],
-    encrypted_api_key: string,
-) {
-    const decrypted_api_key = decrypt(
-        encrypted_api_key,
-        process.env.ENCRYPTION_KEY!,
-    );
-    if (provider === "google-ai-studio") {
-        return createGoogleGenerativeAI({ apiKey: decrypted_api_key });
-    }
-    if (provider === "cerebras") {
-        return createCerebras({ apiKey: decrypted_api_key });
-    }
-    if (provider === "groq") {
-        return createGroq({ apiKey: decrypted_api_key });
-    }
-    if (provider === "mistral") {
-        return createMistral({ apiKey: decrypted_api_key });
-    }
-    if (provider === "openrouter") {
-        return createOpenRouter({ apiKey: decrypted_api_key });
-    }
-    throw new Error(`Provider '${provider}' is not implemented.`);
 }
