@@ -342,10 +342,6 @@ export const modelList = {
     ],
     cerebras: async () => [
         {
-            name: "qwen-3-235b-a22b-instruct-2507",
-            value: "qwen-3-235b-a22b-instruct-2507",
-        },
-        {
             name: "qwen-3-32b",
             value: "qwen-3-32b",
         },
@@ -354,8 +350,8 @@ export const modelList = {
             value: "llama3.1-8b",
         },
         {
-            name: "zai-glm-4.6",
-            value: "zai-glm-4.6",
+            name: "zai-glm-4.7",
+            value: "zai-glm-4.7",
         },
         {
             name: "gpt-oss-120b",
