@@ -1,7 +1,6 @@
 import { select } from "@inquirer/prompts";
 import { input_url_string, translate_from_URL } from "./src/translate_from_url";
 
-
 const options = [
     {
         name: "Translate from URLs",
@@ -10,6 +9,10 @@ const options = [
     {
         name: "Replace Words",
         value: "replace",
+    },
+    {
+        name: "Exit",
+        value: "exit",
     },
 ] as const;
 // Function to prompt the user
@@ -24,16 +27,16 @@ async function main() {
         switch (answers) {
             case "translate from URL":
                 const url_string = await input_url_string();
-                await translate_from_URL({url_string});
+                await translate_from_URL({ url_string });
                 break;
             case "replace":
                 // await replaceTextInFiles();
                 break;
+
             default:
-                break;
+                process.exit();
         }
     }
 }
 
 main();
-
