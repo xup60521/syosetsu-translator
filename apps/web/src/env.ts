@@ -5,7 +5,7 @@ export const env = createEnv({
     server: {
         GOOGLE_CLIENT_SECRET: z.string(),
         BETTER_AUTH_BASE_URL: z.url(),
-        WORKFLOW_URL: z.url(),
+        WORKFLOW_NOVEL_HANDLER_URL: z.url(),
         BETTER_AUTH_SECRET: z.string(),
         ENCRYPTION_KEY: z.string(),
         DATABASE_URL: z.string(),
@@ -36,7 +36,7 @@ export const env = createEnv({
     runtimeEnv: {
         GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
         BETTER_AUTH_BASE_URL: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.BETTER_AUTH_BASE_URL,
-        WORKFLOW_URL: process.env.WORKFLOW_URL!,
+        WORKFLOW_NOVEL_HANDLER_URL: process.env.WORKFLOW_NOVEL_HANDLER_URL!,
         BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
         ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
         DATABASE_URL: process.env.DATABASE_URL,

@@ -21,7 +21,6 @@ import { Route as SettingsLanguageRouteImport } from './routes/settings/language
 import { Route as SettingsConnectedAccountsRouteImport } from './routes/settings/connected-accounts'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsApiKeysRouteImport } from './routes/settings/api-keys'
-import { Route as ApiNovel_handlerRouteImport } from './routes/api/novel_handler'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
@@ -86,11 +85,6 @@ const SettingsApiKeysRoute = SettingsApiKeysRouteImport.update({
   path: '/api-keys',
   getParentRoute: () => SettingsRouteRoute,
 } as any)
-const ApiNovel_handlerRoute = ApiNovel_handlerRouteImport.update({
-  id: '/api/novel_handler',
-  path: '/api/novel_handler',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -105,7 +99,6 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
-  '/api/novel_handler': typeof ApiNovel_handlerRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
@@ -121,7 +114,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api/novel_handler': typeof ApiNovel_handlerRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
@@ -139,7 +131,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
-  '/api/novel_handler': typeof ApiNovel_handlerRoute
   '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
@@ -158,7 +149,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
-    | '/api/novel_handler'
     | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
@@ -174,7 +164,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/api/novel_handler'
     | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
@@ -191,7 +180,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
-    | '/api/novel_handler'
     | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
@@ -209,7 +197,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
-  ApiNovel_handlerRoute: typeof ApiNovel_handlerRoute
   ViewSubFolderIdRoute: typeof ViewSubFolderIdRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   TestIndexRoute: typeof TestIndexRoute
@@ -304,13 +291,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsApiKeysRouteImport
       parentRoute: typeof SettingsRouteRoute
     }
-    '/api/novel_handler': {
-      id: '/api/novel_handler'
-      path: '/api/novel_handler'
-      fullPath: '/api/novel_handler'
-      preLoaderRoute: typeof ApiNovel_handlerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -353,7 +333,6 @@ const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
-  ApiNovel_handlerRoute: ApiNovel_handlerRoute,
   ViewSubFolderIdRoute: ViewSubFolderIdRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   TestIndexRoute: TestIndexRoute,

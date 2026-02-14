@@ -4,7 +4,8 @@ import { createTRPCRouter, publicProcedure } from "@/server/trpc/init";
 import { URLPattern } from "urlpattern-polyfill";
 import { load } from "cheerio";
 import { decomposeURL, novel_handler } from "@repo/shared/server";
-
+import { env } from "@/env";
+import { DecomposedURL, NovelHandlerResultType } from "@repo/shared";
 
 const urlSchema = z.string().transform((val, ctx) => {
     // Split by one or more whitespace characters
@@ -33,9 +34,11 @@ export const novelProcedure = createTRPCRouter({
         )
         .query(async ({ input }) => {
             const { url, with_Cookies } = input;
-            return await novel_handler(url, {
-                with_Cookies: with_Cookies,
-            });
+            const data = await fetch(
+                env.WORKFLOW_NOVEL_HANDLER_URL + "/novel_handler",
+                { method: "POST", body: JSON.stringify({ url, with_Cookies })},
+            ).then(res => res.json()) as NovelHandlerResultType;
+            return data;
         }),
     decompose_url: publicProcedure
         .input(
@@ -45,6 +48,11 @@ export const novelProcedure = createTRPCRouter({
             }),
         )
         .query(async ({ input }) => {
-            return await decomposeURL(input)
+            const { url_string, with_Cookies } = input;
+            const data = await fetch(
+                env.WORKFLOW_NOVEL_HANDLER_URL + "/decompose_url",
+                { method: "POST", body: JSON.stringify({ url_string, with_Cookies })},
+            ).then(res => res.json()) as DecomposedURL[];
+            return data;
         }),
 });

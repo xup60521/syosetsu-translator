@@ -8,12 +8,15 @@
     "build": "bun build ./index.ts --outdir ./dist"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@repo/shared": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@upstash/redis": "^1.36.2",
+    "@upstash/workflow": "^1.1.0",
     "hono": "^4.11.9"
   }
 }

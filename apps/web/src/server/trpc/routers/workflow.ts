@@ -59,11 +59,22 @@ export const workflowProcedure = createTRPCRouter({
             const payload = {
                 ...input,
                 user_id: userId,
-                encrypted_refresh_token: encrypt(google_refresh_token, env.ENCRYPTION_KEY)
+                encrypted_refresh_token: encrypt(
+                    google_refresh_token,
+                    env.ENCRYPTION_KEY,
+                ),
             } as WorkflowPayloadType;
+            const workflow_base_url = env.WORKFLOW_NOVEL_HANDLER_URL.includes(
+                "localhost",
+            )
+                ? env.WORKFLOW_NOVEL_HANDLER_URL.replace(
+                      "localhost",
+                      "host.docker.internal",
+                  )
+                : env.WORKFLOW_NOVEL_HANDLER_URL;
             const { workflowRunId } = await qstashClient.trigger({
                 // Your workflow route handler
-                url: env.WORKFLOW_URL,
+                url: workflow_base_url + "/workflow",
                 headers: {
                     "Content-Type": "application/json",
                 },
