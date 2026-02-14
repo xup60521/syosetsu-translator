@@ -1,0 +1,10 @@
+services:
+  - type: web
+    plan: free
+    name: workflow-novel-handler
+    runtime: node
+    buildCommand: bun run build
+    startCommand: bun --bun ./dist/index.js
+    envVars:
+      - key: PORT
+        value: 3001

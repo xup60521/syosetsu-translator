@@ -1,0 +1,19 @@
+{
+  "name": "workflow-novel-handler",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --bun --watch ./index.ts",
+    "build": "bun build ./index.ts --outdir ./dist"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "hono": "^4.11.9"
+  }
+}
