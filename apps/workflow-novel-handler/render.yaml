@@ -3,8 +3,8 @@ services:
     plan: free
     name: workflow-novel-handler
     runtime: node
-    buildCommand: bun run build
-    startCommand: bun --bun ./dist/index.js
+    buildCommand: bun install
+    startCommand: bun --bun ./index.ts
     envVars:
       - key: PORT
         value: 3001
