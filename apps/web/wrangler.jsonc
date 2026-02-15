@@ -4,7 +4,7 @@
  */
 {
     "$schema": "node_modules/wrangler/config-schema.json",
-    "name": "cf-syosetsu-translator",
+    "name": "syosetsu-translator",
     "compatibility_date": "2026-02-05",
     "compatibility_flags": [
         "nodejs_compat"
@@ -30,10 +30,6 @@
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
-    "vars": {
-        "VITE_GOOGLE_CLIENT_ID": "135024280958-rlllfj1o8qq1mkr4fal1q7946l59745e.apps.googleusercontent.com",
-        "VITE_GOOGLE_APP_ID": "fullstack-syosetsu-translator"
-    }
     /**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
