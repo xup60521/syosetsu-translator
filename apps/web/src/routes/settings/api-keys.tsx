@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { v4 as uuid } from "uuid";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";
@@ -39,7 +40,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supportedProvider } from "@repo/shared";
 import { createFileRoute } from "@tanstack/react-router";
-import { useApikeyQuery } from "@/client-data/apikeyQuery";
+import {
+    APIKeyType,
+    useAddApiKeyMutation,
+    useApikeyQuery,
+    useDeleteApiKeyMutation,
+} from "@/client-data/apikeyQuery";
 import { useTRPC } from "@/server/trpc/react";
 
 export const Route = createFileRoute("/settings/api-keys")({
@@ -47,29 +53,14 @@ export const Route = createFileRoute("/settings/api-keys")({
 });
 
 function APIKeysPanel(): React.JSX.Element {
-    const queryClient = useQueryClient();
-    const { data: api_keys, isPending } = useApikeyQuery()
-    const deleteApiKeyMutation = useMutation({
-        mutationFn: async (index: number) => {
-            const storedKeys = localStorage.getItem("api_keys");
-            const keys = storedKeys ? JSON.parse(storedKeys) : [];
-            keys.splice(index, 1);
-            localStorage.setItem("api_keys", JSON.stringify(keys));
-        },
-        onSuccess: () => {
-            toast.success("API key deleted successfully!");
-            queryClient.invalidateQueries({ queryKey: ["api-keys"] });
-        },
-    });
-
-
+    const { data: api_keys, isPending } = useApikeyQuery();
 
     return (
-
-
         <section className="flex flex-col gap-6 pb-8">
             <div className="border-b-4 border-black dark:border-white pb-4">
-                <h3 className="text-3xl font-black uppercase tracking-tighter">API Keys</h3>
+                <h3 className="text-3xl font-black uppercase tracking-tighter">
+                    API Keys
+                </h3>
                 <p className="mt-2 text-base font-mono bg-yellow-100 dark:bg-yellow-900 p-2 border-2 border-black dark:border-white inline-block">
                     Manage your API keys. Keys are stored locally.
                 </p>
@@ -98,76 +89,8 @@ function APIKeysPanel(): React.JSX.Element {
                         ))}
                     </div>
                 ) : (
-                    api_keys?.map((key, index) => (
-                        <div
-                            key={index}
-                            className="flex flex-col gap-4 p-4 border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900 transition-transform hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]"
-                        >
-                            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-                                <div className="flex flex-col gap-2 flex-1 w-full">
-                                    <label className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white">
-                                        Provider
-                                    </label>
-                                    <div className="w-full font-mono text-lg font-bold border-b-2 border-black dark:border-white px-2 py-1 bg-gray-50 dark:bg-zinc-800">
-                                        {key.provider}
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-2 flex-[2] w-full">
-                                    <label
-                                        htmlFor={`key-name-${index}`}
-                                        className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
-                                    >
-                                        Key Name
-                                    </label>
-                                    <Input
-                                        type="text"
-                                        readOnly
-                                        id={`key-name-${index}`}
-                                        value={key.name}
-                                        className="w-full"
-                                        placeholder="e.g., Production, Development"
-                                    />
-                                </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button
-                                            variant="destructive"
-                                            className="shrink-0"
-                                        >
-                                            Delete
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent className="border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900">
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle className="font-black uppercase text-xl">
-                                                Are you sure?
-                                            </AlertDialogTitle>
-                                            <AlertDialogDescription className="font-mono text-black dark:text-white">
-                                                This action cannot be undone.
-                                                This will permanently delete the
-                                                API key <span className="font-bold bg-yellow-300 dark:bg-yellow-600 px-1 border border-black dark:border-white">"{key.name}"</span>
-                                                for {key.provider}.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel className="border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900 hover:bg-gray-100 dark:hover:bg-zinc-800">
-                                                Cancel
-                                            </AlertDialogCancel>
-                                            <AlertDialogAction
-                                                onClick={() =>
-                                                    deleteApiKeyMutation.mutate(
-                                                        index
-                                                    )
-                                                }
-                                                className="bg-red-600 text-white border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-red-700 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
-                                            >
-                                                Delete
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </div>
-                        </div>
+                    api_keys?.map((api_key_object) => (
+                        <APIKeyCard api_key_object={api_key_object} />
                     ))
                 )}
 
@@ -179,14 +102,93 @@ function APIKeysPanel(): React.JSX.Element {
 
                 <div className="flex gap-2 pt-4">
                     <AddAPIKeyDialog>
-                        <Button variant="default" className="w-full sm:w-auto text-lg px-8 py-6">
+                        <Button
+                            variant="default"
+                            className="w-full sm:w-auto text-lg px-8 py-6"
+                        >
                             + Add New Key
                         </Button>
                     </AddAPIKeyDialog>
                 </div>
             </div>
         </section>
+    );
+}
 
+function APIKeyCard({ api_key_object }: { api_key_object: APIKeyType }) {
+    const deleteApiKeyMutation = useDeleteApiKeyMutation();
+    return (
+        <div className="flex flex-col gap-4 p-4 border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900 transition-transform hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                <div className="flex flex-col gap-2 flex-1 w-full">
+                    <label className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white">
+                        Provider
+                    </label>
+                    <div className="w-full font-mono text-lg font-bold border-b-2 border-black dark:border-white px-2 py-1 bg-gray-50 dark:bg-zinc-800">
+                        {api_key_object.provider}
+                    </div>
+                </div>
+                <div className="flex flex-col gap-2 flex-[2] w-full">
+                    <label
+                        htmlFor={`key-name-${api_key_object.id}`}
+                        className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
+                    >
+                        Key Name
+                    </label>
+                    <Input
+                        type="text"
+                        readOnly
+                        id={`key-name-${api_key_object.id}`}
+                        value={api_key_object.name}
+                        className="w-full"
+                        placeholder="e.g., Production, Development"
+                    />
+                </div>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" className="shrink-0">
+                            Delete
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="font-black uppercase text-xl">
+                                Are you sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="font-mono text-black dark:text-white">
+                                This action cannot be undone. This will
+                                permanently delete the API key{" "}
+                                <span className="font-bold bg-yellow-300 dark:bg-yellow-600 px-1 border border-black dark:border-white">
+                                    "{api_key_object.name}"
+                                </span>
+                                for {api_key_object.provider}.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900 hover:bg-gray-100 dark:hover:bg-zinc-800">
+                                Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() =>
+                                    deleteApiKeyMutation
+                                        .mutateAsync({
+                                            id: api_key_object.id,
+                                        })
+                                        .then(() => {
+                                            toast.success(
+                                                "API key deleted successfully!",
+                                            );
+                                        })
+                                }
+                                className="bg-red-600 text-white border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-red-700 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
+                            >
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </div>
     );
 }
 
@@ -206,7 +208,6 @@ function AddAPIKeyDialog({
     const [open, setOpen] = React.useState(false);
     const [providerSelectMenuOpen, setProviderSelectMenuOpen] =
         React.useState(false);
-    const queryClient = useQueryClient();
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -215,37 +216,24 @@ function AddAPIKeyDialog({
             apiKey: "",
         },
     });
-    const trpc = useTRPC()
-    const mutateApiKey = useMutation(trpc.encrypt.mutationOptions());
+    const trpc = useTRPC();
+    const encryptApiKeyMutation = useMutation(trpc.encrypt.mutationOptions());
+    const addApiKeyMutation = useAddApiKeyMutation();
 
-    const onSubmit = (data: FormData) => {
+    const onSubmit = async (data: FormData) => {
         toast("Encrypting and saving API key...");
 
-        mutateApiKey.mutate(data, {
-            onSuccess: (encryptedKey) => {
-                const currentKeys = JSON.parse(
-                    localStorage.getItem("api_keys") || "[]"
-                ) as {
-                    provider: string;
-                    name: string;
-                    encrypted_key: string;
-                }[];
-                currentKeys.push({
-                    provider: data.provider,
-                    name: data.name,
-                    encrypted_key: encryptedKey,
-                });
-                localStorage.setItem("api_keys", JSON.stringify(currentKeys));
-                setOpen(false);
-                form.reset();
-                toast.success("API key added successfully!");
-                queryClient.invalidateQueries({ queryKey: ["api-keys"] });
-            },
-        });
-
-        // Handle form submission here
-        // setOpen(false);
-        // form.reset();
+        const encrypted_key = await encryptApiKeyMutation.mutateAsync(data);
+        const payload = {
+            id: uuid(),
+            name: data.name,
+            encrypted_key,
+            provider: data.provider,
+        } satisfies APIKeyType;
+        await addApiKeyMutation.mutateAsync(payload);
+        setOpen(false);
+        form.reset();
+        toast.success("API key added successfully!");
     };
 
     return (
@@ -256,11 +244,16 @@ function AddAPIKeyDialog({
                     Add New API Key
                 </DialogTitle>
                 <div className="p-6">
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+                    <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="flex flex-col gap-6"
+                    >
                         <div className="flex flex-col gap-4">
                             <Field className="flex flex-col gap-2">
                                 <Label
-                                    onClick={() => setProviderSelectMenuOpen(true)}
+                                    onClick={() =>
+                                        setProviderSelectMenuOpen(true)
+                                    }
                                     htmlFor="provider"
                                     className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
                                 >
@@ -292,13 +285,21 @@ function AddAPIKeyDialog({
                                 {form.formState.errors.provider &&
                                     !form.watch("provider") && (
                                         <p className="text-sm text-red-600 font-bold font-mono bg-red-100 dark:bg-red-900 p-1 border-2 border-red-600 dark:border-red-400">
-                                            {form.formState.errors.provider.message}
+                                            {
+                                                form.formState.errors.provider
+                                                    .message
+                                            }
                                         </p>
                                     )}
                             </Field>
 
                             <Field className="flex flex-col gap-2">
-                                <Label htmlFor="name" className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white">Name</Label>
+                                <Label
+                                    htmlFor="name"
+                                    className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
+                                >
+                                    Name
+                                </Label>
                                 <Input
                                     type="text"
                                     id="name"
@@ -314,7 +315,12 @@ function AddAPIKeyDialog({
                             </Field>
 
                             <Field className="flex flex-col gap-2">
-                                <Label htmlFor="apiKey" className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white">API Key</Label>
+                                <Label
+                                    htmlFor="apiKey"
+                                    className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
+                                >
+                                    API Key
+                                </Label>
                                 <Input
                                     type="password"
                                     id="apiKey"

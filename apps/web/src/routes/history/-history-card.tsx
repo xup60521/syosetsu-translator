@@ -89,10 +89,32 @@ export function HistoryCard({ item, openRetryDialog }: HistoryCardProps) {
         return <Loader2 className="h-3 w-3 animate-spin" />;
     };
 
-    const cancelMutation = useMutation(trpc.workflow.cancel.mutationOptions());
+    const cancelMutation = useMutation(
+        trpc.workflow.cancel.mutationOptions({
+            onSuccess: () => {
+                toast.success("Workflow cancelled");
+                queryClient.invalidateQueries(
+                    trpc.history.list_history.queryOptions(),
+                );
+            },
+            onError: (e: unknown) => {
+                toast.error(e instanceof Error ? e.message : "Cancel failed");
+            },
+        }),
+    );
 
     const deleteMutation = useMutation(
-        trpc.history.delete_history.mutationOptions(),
+        trpc.history.delete_history.mutationOptions({
+            onSuccess: () => {
+                toast.success("Deleted");
+                queryClient.invalidateQueries(
+                    trpc.history.list_history.queryOptions(),
+                );
+            },
+            onError: (e: unknown) => {
+                toast.error(e instanceof Error ? e.message : "Delete failed");
+            },
+        }),
     );
 
     const urls = parseUrls(item.urls);
@@ -241,46 +263,12 @@ export function HistoryCard({ item, openRetryDialog }: HistoryCardProps) {
                                 <AlertDialogAction
                                     onClick={() =>
                                         isInProgress
-                                            ? cancelMutation.mutate(
-                                                  { workflow_id: item.taskId },
-                                                  {
-                                                      onSuccess: () => {
-                                                          toast.success(
-                                                              "Workflow cancelled",
-                                                          );
-                                                          queryClient.invalidateQueries(
-                                                              trpc.history.list_history.queryOptions(),
-                                                          );
-                                                      },
-                                                      onError: (e: unknown) => {
-                                                          toast.error(
-                                                              e instanceof Error
-                                                                  ? e.message
-                                                                  : "Cancel failed",
-                                                          );
-                                                      },
-                                                  },
-                                              )
-                                            : deleteMutation.mutate(
-                                                  { taskId: item.taskId },
-                                                  {
-                                                      onSuccess: () => {
-                                                          toast.success(
-                                                              "Deleted",
-                                                          );
-                                                          queryClient.invalidateQueries(
-                                                              trpc.history.list_history.queryOptions(),
-                                                          );
-                                                      },
-                                                      onError: (e: unknown) => {
-                                                          toast.error(
-                                                              e instanceof Error
-                                                                  ? e.message
-                                                                  : "Delete failed",
-                                                          );
-                                                      },
-                                                  },
-                                              )
+                                            ? cancelMutation.mutate({
+                                                  workflow_id: item.taskId,
+                                              })
+                                            : deleteMutation.mutate({
+                                                  taskId: item.taskId,
+                                              })
                                     }
                                 >
                                     {isInProgress ? "Stop" : "Delete"}

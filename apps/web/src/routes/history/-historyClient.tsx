@@ -26,9 +26,8 @@ export default function HistoryClientPage() {
 }
 
 function ActualPage() {
-    const queryClient = useQueryClient();
     const trpc = useTRPC()
-    const { data: history, isLoading, isFetching } = useQuery(trpc.history.list_history.queryOptions());
+    const { data: history, isLoading, isFetching, refetch } = useQuery(trpc.history.list_history.queryOptions({},{refetchInterval: 10000}));
     const navigate = useNavigate();
 
     const { handleBack } = useGoBack()
@@ -72,9 +71,7 @@ function ActualPage() {
                             variant="outline"
                             size="sm"
                             disabled={isFetching}
-                            onClick={() =>
-                                queryClient.invalidateQueries(trpc.history.list_history.queryOptions())
-                            }
+                            onClick={()=>refetch()}
                             className=" hover:bg-yellow-300 dark:hover:bg-yellow-700 font-mono uppercase"
                         >
                             <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />

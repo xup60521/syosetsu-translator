@@ -97,7 +97,10 @@ function TranlationForm({
 
     const trpc = useTRPC();
     const modelListQuery = useQuery(
-        trpc.model_list.queryOptions({ provider: form.watch("provider") }),
+        trpc.model_list.queryOptions(
+            { provider: form.watch("provider") },
+            { enabled: !!form.watch("provider") },
+        ),
     );
     const queryClient = useQueryClient();
     const session = authClient.useSession();
@@ -133,11 +136,10 @@ function TranlationForm({
                 .mutateAsync(payload)
                 .then(() =>
                     queryClient.invalidateQueries(
-                        trpc.history.list_history.queryOptions(),
+                        trpc.history.list_history.queryOptions({}),
                     ),
                 );
             toast.info("Successfully create translation request!");
-            queryClient.invalidateQueries({ queryKey: ["history"] });
             SetDialogueOpen(false);
         } catch (e) {
             console.error(e);

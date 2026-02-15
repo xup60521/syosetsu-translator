@@ -4,7 +4,7 @@ import { redis, RedisTaskData } from "@/server/redis";
 import z from "zod";
 
 export const historyProcedure = createTRPCRouter({
-    list_history: protectedProcedure.query(async ({ ctx }) => {
+    list_history: protectedProcedure.input(z.object()).query(async ({ ctx }) => {
         const userId = ctx.user.id;
         if (!userId) {
             throw new TRPCError({

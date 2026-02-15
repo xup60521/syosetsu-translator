@@ -12,7 +12,7 @@ const urlSchema = z.string().transform((val, ctx) => {
     const parts = val.trim().split(/\s+/);
 
     for (const part of parts) {
-        const result = z.string().url().safeParse(part);
+        const result = z.url().safeParse(part);
         if (!result.success) {
             ctx.addIssue({
                 code: "custom",

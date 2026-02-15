@@ -305,12 +305,16 @@ function ContentView({
         data: fileContent,
         isLoading,
         error,
-    } = useQuery({
-        ...trpc.drive.fileContent.queryOptions({
-            fileId: selectedFileId ?? "",
-        }),
-        enabled: !!selectedFileId,
-    }); // Pass empty string if undefined to avoid query errors
+    } = useQuery(
+        trpc.drive.fileContent.queryOptions(
+            {
+                fileId: selectedFileId ?? "",
+            },
+            {
+                enabled: !!selectedFileId,
+            },
+        ),
+    ); // Pass empty string if undefined to avoid query errors
     // Find current file index to determine if we can go to previous/next
     const currentFileIndex =
         files && selectedFileId
