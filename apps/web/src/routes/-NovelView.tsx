@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import React from "react";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Separator } from "../components/ui/separator";
@@ -197,12 +197,13 @@ function SidePanel({
     // const decompose_url = useServerFn(decompose_url_serverfn);
 
     const trpc = useTRPC();
-    const { isLoading, error, data } = useQuery(
-        trpc.novel.decompose_url.queryOptions({ url_string }),
+    const { status, mutateAsync, error, data } = useMutation(
+        trpc.novel.decompose_url.mutationOptions(),
     );
     const [checkedItems, setCheckedItems] = React.useState<boolean[]>([]);
     const [dialogueOpen, SetDialogueOpen] = React.useState(false);
     const session = authClient.useSession();
+    const isLoading = status === "pending"
     React.useEffect(() => {
         if (
             isLoading === false &&
@@ -214,6 +215,13 @@ function SidePanel({
             setCheckedItems([...new Array(data.length).fill(true)]);
         }
     }, [data, error, isLoading, setSelectedNovelURL]);
+    
+    React.useEffect(()=>{
+        if (!!url_string) {
+            mutateAsync({url_string})
+        }
+    },[url_string])
+
     return (
         <div className="min-h-0 h-full flex flex-none flex-col w-full ">
             <h2 className="text-lg font-bold p-3 w-full bg-yellow-300 dark:bg-yellow-600 border-b-2 border-black dark:border-white font-mono uppercase tracking-tight">

@@ -47,7 +47,7 @@ export const novelProcedure = createTRPCRouter({
                 with_Cookies: z.boolean().optional().default(false),
             }),
         )
-        .query(async ({ input }) => {
+        .mutation(async ({ input }) => {
             const { url_string, with_Cookies } = input;
             const data = await fetch(
                 env.WORKFLOW_NOVEL_HANDLER_URL + "/decompose_url",
