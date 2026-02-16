@@ -6,8 +6,13 @@ import { historyProcedure } from "./routers/history";
 import { modelList } from "@repo/shared/server";
 import { TRPCError } from "@trpc/server";
 import { workflowProcedure } from "./routers/workflow";
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "@/server/trpc/init";
+import {
+    createTRPCRouter,
+    publicProcedure,
+    protectedProcedure,
+} from "@/server/trpc/init";
 import { env } from "@/env";
+import type { SupportedProviderType } from "@repo/shared";
 
 export const trpcRouter = createTRPCRouter({
     hello: publicProcedure.query(() => "hello world"),
@@ -21,7 +26,12 @@ export const trpcRouter = createTRPCRouter({
         .mutation(({ input }) => encrypt(input.apiKey, env.ENCRYPTION_KEY)),
     history: historyProcedure,
     model_list: publicProcedure
-        .input(z.object({ provider: z.string() }))
+        .input(
+            z.object({
+                provider:
+                    z.string<SupportedProviderType>(),
+            }),
+        )
         .query(async ({ input }) => {
             const { provider } = input;
             const getter = modelList[provider];

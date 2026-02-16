@@ -1,5 +1,6 @@
+import type { modelList } from "./server";
 
-export type * from "./lib/type"
+export type * from "./lib/type";
 
 // value should match modelList key
 export const supportedProvider = [
@@ -8,5 +9,8 @@ export const supportedProvider = [
     { value: "mistral", label: "MistralAI" },
     { value: "cerebras", label: "Cerebras" },
     { value: "groq", label: "Groq" },
-] as const;
+    { value: "anthropic", label: "Anthropic" },
+    { value: "openai", label: "OpenAI" },
+] as (Record<"value", keyof typeof modelList> & Record<"label", string>)[];
 
+export type SupportedProviderType = (typeof supportedProvider)[number]["value"];

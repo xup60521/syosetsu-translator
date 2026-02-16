@@ -29,23 +29,20 @@ import { authClient } from "@/server/better-auth/auth-client";
 import { Link } from "@tanstack/react-router";
 import { useApikeyQuery } from "@/client-data/apikeyQuery";
 import { useFolderIdQuery } from "@/client-data/folderIdQuery";
-import type { DecomposedURL } from "@repo/shared";
+import { supportedProvider, type DecomposedURL, type SupportedProviderType } from "@repo/shared";
 import { useTRPC } from "@/server/trpc/react";
-import { supportedProvider } from "@repo/shared";
+
 
 const translateFormSchema = z.object({
-    provider: z.string().min(1, "Please select a provider"),
+    provider: z.string<SupportedProviderType>(
+        "Please select a provider",
+    ),
     encrypted_api_key: z.string().min(1, "Encrypted API key is required"),
     model_id: z.string().min(1, "Please select a model"),
     concurrency: z.number().min(1, "Concurrency must be at least 1"),
     batch_size: z.number().min(1, "Batch size must be at least 1"),
 });
 type FormData = z.infer<typeof translateFormSchema>;
-const selectedFolderSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-});
-type SelectedFolderType = z.infer<typeof selectedFolderSchema>;
 
 export default function TranslateDialogue({
     checkedItems,
@@ -146,6 +143,7 @@ function TranlationForm({
             toast.error("Failed to create translation request");
         }
     };
+    
     return (
         <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-4">
@@ -153,7 +151,7 @@ function TranlationForm({
                     <Label>Select Provider</Label>
                     <Select
                         value={form.watch("provider")}
-                        onValueChange={(value) => {
+                        onValueChange={(value: SupportedProviderType) => {
                             form.setValue("provider", value);
                             form.setValue("encrypted_api_key", "");
                             form.setValue("model_id", "");
