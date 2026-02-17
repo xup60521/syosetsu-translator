@@ -2,6 +2,7 @@ import { syosetsu_handler } from "./syosetsu";
 import { pixiv_handler } from "./pixiv";
 import { kakuyomu_handler } from "./kakuyomu";
 import type { NovelHandlerResultType } from "@repo/shared";
+import { alphapolis_handler } from "./alphapolis";
 
 /**
  * This function takes an URL as input and extracts the novel detail of that url. This function can only accept single episode url at once and might throw error.
@@ -13,7 +14,7 @@ import type { NovelHandlerResultType } from "@repo/shared";
 
 export async function novel_handler(
     url: string,
-    { with_Cookies }: { with_Cookies?: boolean }
+    { with_Cookies }: { with_Cookies?: boolean },
 ): Promise<NovelHandlerResultType> {
     const urlobj = new URL(url);
     let result: NovelHandlerResultType | undefined = undefined;
@@ -26,6 +27,9 @@ export async function novel_handler(
             break;
         case "https://kakuyomu.jp":
             result = await kakuyomu_handler(urlobj, { with_Cookies });
+            break;
+        case "https://www.alphapolis.co.jp":
+            result = await alphapolis_handler(urlobj, { with_Cookies });
             break;
     }
     if (!result) throw new Error("handler is not defined");

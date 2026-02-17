@@ -1,4 +1,3 @@
-
 import { URLPattern } from "urlpattern-polyfill";
 import { load } from "cheerio";
 import type { DecomposedURL } from "./type";
@@ -32,11 +31,55 @@ export async function decomposeURL({
             );
 
             novel_urls.push(...processed_urls);
+        } else if (urlobj.host === "www.alphapolis.co.jp") {
+            const processed_urls = await decompose_alphapolis(
+                urlobj,
+                with_Cookies,
+            );
+            novel_urls.push(...processed_urls);
         } else {
             novel_urls.push({ url: url.toString(), title: undefined });
         }
     }
     return novel_urls;
+}
+
+async function decompose_alphapolis(
+    url: URL,
+    with_Cookies = false,
+): Promise<DecomposedURL[]> {
+    // https://www.alphapolis.co.jp/novel/475353206/100031617/episode/10813820
+    const single_match = new URLPattern({
+        baseURL: "https://www.alphapolis.co.jp/",
+        pathname: "/novel/:user_id/:series_id/episode/:work_id",
+    });
+    if (single_match.test(url)) {
+        return [{ url: url.toString(), title: undefined }];
+    }
+    // https://www.alphapolis.co.jp/novel/475353206/100031617
+    const series_match = new URLPattern({
+        baseURL: "https://www.alphapolis.co.jp/",
+        pathname: "/novel/:user_id/:series_id",
+    });
+    if (series_match.test(url)) {
+        const pageHTML = await fetch(url, {
+            headers: {
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+            },
+        }).then((res) => res.text());
+        const $ = load(pageHTML);
+        const decomposed_urls = $(".episode > a")
+            .toArray()
+            .map((h) => {
+                const $node = $(h);
+                const url = $node.attr("href")!;
+                const title = $node.find("span").first().text().trim(); // descendant span
+                return { url, title };
+            });
+        return decomposed_urls;
+    }
+    return [];
 }
 
 async function decompose_kakuyomu(
@@ -70,7 +113,12 @@ async function decompose_kakuyomu(
         pathname: "/works/:series_id/episodes/:work_id/episode_sidebar",
     });
     if (episode_sidebar_pattern.test(url)) {
-        const pageHtml = await fetch(url).then((res) => res.text());
+        const pageHtml = await fetch(url, {
+            headers: {
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+            },
+        }).then((res) => res.text());
         const $ = load(pageHtml);
         const urlArr = $("li a")
             .toArray()
@@ -108,6 +156,12 @@ async function decompose_syosetsu(
         // move from web crawling to using API
         const response = await fetch(
             `https://api.syosetu.com/novelapi/api/?ncode=${pathParts[0]}&out=json`,
+            {
+                headers: {
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+                },
+            },
         );
         const novel_count = (await response.json())[1].general_all_no as number;
         const urls = new Array(novel_count).fill(null).map((_, i) => ({
