@@ -7,7 +7,6 @@ import {
     type HandleFileInput,
     type NovelHandlerResultType,
 } from "@repo/shared";
-import { stringSimilarity } from "string-similarity-js";
 
 const ai_translated_result_schema = z.object({
     id: z.string(),
@@ -45,71 +44,57 @@ export async function batchTranslate(
         model,
         folder_id,
         encrypted_refresh_token,
-    } = props;
-    
+    } = props
+
 
     const novel_data = urls.map(async (url) =>
         novel_handler(url, { with_Cookies }),
     );
     const untranslated_data = await Promise.all(novel_data);
     // console.log("translating...")
-    let try_count = 0;
-    while (untranslated_data.length > 0) {
-        // console.log("Remaining sections:", untranslated_data.length);
-        try_count++;
-        if (try_count > 3) {
-            throw new Error("Translation failed");
+
+
+    const { elementStream } = streamText({
+        model,
+        output: Output.array({ element: ai_translated_result_schema }),
+        messages: [
+            {
+                role: "user",
+                content: en_prompt,
+            },
+            {
+                role: "user",
+                content: JSON.stringify(untranslated_data),
+            },
+        ],
+        maxRetries: 3,
+    })
+
+    for await (const item of elementStream) {
+
+        const metadata = untranslated_data.find(
+            (d) => d.id.trim() === item.id.trim(),
+        )!;
+        if (!metadata || !item) {
+            continue;
         }
-        const { elementStream } = streamText({
-            model,
-            output: Output.array({ element: ai_translated_result_schema }),
-            messages: [
-                {
-                    role: "user",
-                    content: en_prompt,
-                },
-                {
-                    role: "user",
-                    content: JSON.stringify(untranslated_data),
-                },
-            ],
-        });
 
-        for await (const item of elementStream) {
-            if (!item) {
-                continue;
-            }
-            const metadata = untranslated_data.find(
-                (d) => d.id.trim() === item.id.trim(),
-            )!;
-            if (!metadata) {
-                continue;
-            }
-
-            const similarity = stringSimilarity(
-                item.translated_content.replaceAll("\\n", "\n"),
-                metadata.content.replaceAll("\\n", "\n"),
-            );
-            if (similarity > 0.95) {
-                continue;
-            }
-
-            // remove that item from untranslated_data to save memory
-            untranslated_data.splice(untranslated_data.indexOf(metadata), 1);
-            const sectionedText = item.translated_content!.replace(
-                /(\r\n|\r|\n)/g,
-                "\n\n",
-            );
-            const {
-                series_title_and_author,
-                title,
-                indexPrefix,
-                url,
-                tags,
-                author,
-            } = metadata;
-            const content =
-                `# ${title}
+        // remove that item from untranslated_data to save memory
+        untranslated_data.splice(untranslated_data.indexOf(metadata), 1);
+        const sectionedText = item.translated_content!.replace(
+            /(\r\n|\r|\n)/g,
+            "\n\n",
+        );
+        const {
+            series_title_and_author,
+            title,
+            indexPrefix,
+            url,
+            tags,
+            author,
+        } = metadata;
+        const content =
+            `# ${title}
 
 ${indexPrefix}
 
@@ -120,24 +105,24 @@ Model: ${model_id}
 Tags: ${tags?.join(", ") ?? ""}
 
 ` +
-                (
-                    await replace_words(sectionedText, {
-                        series_title_and_author,
-                        title,
-                        tags,
-                    })
-                ).replaceAll("\\n", "\n");
+            (
+                await replace_words(sectionedText, {
+                    series_title_and_author,
+                    title,
+                    tags,
+                })
+            ).replaceAll("\\n", "\n");
 
-            // console.log(content);
-            await handle_file({
-                series_title_and_author,
-                title,
-                indexPrefix,
-                content,
-                folder_id,
-                encrypted_refresh_token,
-            });
-        }
+        // console.log(content);
+        await handle_file({
+            series_title_and_author,
+            title,
+            indexPrefix,
+            content,
+            folder_id,
+            encrypted_refresh_token,
+        });
     }
-    // console.log("finishing translation")
 }
+// console.log("finishing translation")
+
