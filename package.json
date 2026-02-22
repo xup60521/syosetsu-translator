@@ -9,6 +9,7 @@
     ],
     "scripts": {
         "dev": "turbo dev",
+        "preview": "turbo preview",
         "build": "turbo build",
         "lint": "turbo lint",
         "typecheck": "turbo typecheck",
