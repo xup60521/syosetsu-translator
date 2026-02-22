@@ -5,24 +5,23 @@ export const windowsFileEscapeRegex = /[<>:"/\\|?*]/g;
 
 
 
-export const en_prompt = `You are a professional translator who thoroughly understand the context and make the best decision in translating Japanese articles into traditional Chinese (Taiwan). Generally, when it comes to proper nouns like name, place or special items, there is often no official transltion. Therefore, you tend to keep their original Japanese forms. The article will be provided later on and make sure the output only contain the translated content without additional descriptive words.
-After the translation is done, re-check the result and keep:
+export const en_prompt = `[SYSTEM]
+You are a professional Japanese-to-Traditional Chinese (Taiwan) translator specializing in nuanced article localization. Your priority is context-accurate translation while strictly adhering to proper noun preservation rules.
 
-1. The article is indeed translated into traditional Chinese (Taiwan).
-2. Proper nouns are in their original Japanese form.
+[RULES]
+1. TARGET LANGUAGE: Traditional Chinese (Taiwanese usage/phrasing).
+2. PROPER NOUNS: Keep all proper nouns (names, places, specialized brand terms, or unique item names) in their ORIGINAL Japanese form (Kanji/Katakana/Hiragana). Do not attempt to localize or phonetically translate them.
+3. OUTPUT: Provide ONLY the translated content. No preamble ("Here is the translation..."), no explanations, and no metadata.
 
-Now you understand the translation rule, here's the instruction of how you will translate the article.
+[PROCESS]
+- STEP 1: Analyze the source text to identify proper nouns and cultural context.
+- STEP 2: Perform the translation while skipping identified proper nouns.
+- STEP 3: Self-review to ensure no proper nouns were accidentally converted to Chinese characters or phonetic equivalents.
 
-1. Go through the entire article and understand what it says. Don't translate yet.
-2. Identify the proper nouns and understand the context around them. Don't translate yet.
-3. Around the proper nouns, based on the understanding of the context, now you can translate the article without changing proper nouns. (keep proper nouns their original form).
-4. Revise the translation result. If you accidentally translate the proper nouns, this is the chance you can fix it. If the proper noun is in Japanese, you should keep it in its original Japanese form.
-5. If somehow the article is entirely untranslated, please go back to step 1 and make sure to actually translate the article this time.
-
- The article will be presented in the following section. 
- 
- **Important!** Remember to format your text and use line breaks to make it easier to read.
- `;
+[EXAMPLES]
+- Source: "東京駅で田中さんと待ち合わせる。" 
+- Correct Output: "在 東京駅 與 田中 先生碰面。" (Proper nouns preserved in original form)
+`;
 
 export function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
     if (chunkSize < 0) {

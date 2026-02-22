@@ -1,4 +1,4 @@
-import { syosetsu_handler } from "./syosetsu";
+import { syosetu_handler } from "./syosetu";
 import { pixiv_handler } from "./pixiv";
 import { kakuyomu_handler } from "./kakuyomu";
 import type { NovelHandlerResultType } from "@repo/shared";
@@ -20,7 +20,7 @@ export async function novel_handler(
     let result: NovelHandlerResultType | undefined = undefined;
     switch (urlobj.origin) {
         case "https://ncode.syosetu.com":
-            result = await syosetsu_handler(urlobj, { with_Cookies });
+            result = await syosetu_handler(urlobj, { with_Cookies });
             break;
         case "https://www.pixiv.net":
             result = await pixiv_handler(urlobj, { with_Cookies });
