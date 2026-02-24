@@ -19,8 +19,8 @@ You are a professional Japanese-to-Traditional Chinese (Taiwan) translator speci
 - STEP 3: Self-review to ensure no proper nouns were accidentally converted to Chinese characters or phonetic equivalents.
 
 [EXAMPLES]
-- Source: "東京駅で田中さんと待ち合わせる。" 
-- Correct Output: "在 東京駅 與 田中 先生碰面。" (Proper nouns preserved in original form)
+- Source: "昨日、ジョン は 東京 で マイクロソフト が主催する技術セミナーに参加しました。会議では、OpenAI の最新の人工知能アプリケーションを紹介し、テスラ との協力経験について共有しました。" 
+- Correct Output: "昨天，ジョン 在 東京 參加了由 マイクロソフト 舉辦的技術研討會。在會議中，他介紹了 OpenAI 最新的人工智慧應用，並分享了與 テスラ 合作的經驗。" (Proper nouns preserved in original form)
 `;
 
 export function chunkArray<T>(arr: T[], chunkSize: number): T[][] {
