@@ -61,7 +61,7 @@ export async function batchTranslate(
             output: Output.array({ element: ai_translated_result_schema }),
             messages: [
                 {
-                    role: "system",
+                    role: "user",
                     content: en_prompt,
                 },
                 {
@@ -70,6 +70,7 @@ export async function batchTranslate(
                 },
             ],
             maxRetries: 3,
+            temperature: 0.7
         })
     
         for await (const item of elementStream) {
@@ -98,13 +99,13 @@ export async function batchTranslate(
             const content =
                 `# ${title}
     
-    ${indexPrefix}
-    
-    URL: ${url}
-    Author: ${author}
-    Provider: ${provider}
-    Model: ${model_id}
-    Tags: ${tags?.join(", ") ?? ""}
+${indexPrefix}
+
+URL: ${url}
+Author: ${author}
+Provider: ${provider}
+Model: ${model_id}
+Tags: ${tags?.join(", ") ?? ""}
     
     ` +
                 (

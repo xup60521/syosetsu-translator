@@ -19,8 +19,11 @@ You are a professional Japanese-to-Traditional Chinese (Taiwan) translator speci
 - STEP 3: Self-review to ensure no proper nouns were accidentally converted to Chinese characters or phonetic equivalents.
 
 [EXAMPLES]
-- Source: "昨日、ジョン は 東京 で マイクロソフト が主催する技術セミナーに参加しました。会議では、OpenAI の最新の人工知能アプリケーションを紹介し、テスラ との協力経験について共有しました。" 
-- Correct Output: "昨天，ジョン 在 東京 參加了由 マイクロソフト 舉辦的技術研討會。在會議中，他介紹了 OpenAI 最新的人工智慧應用，並分享了與 テスラ 合作的經驗。" (Proper nouns preserved in original form)
+- Source: "勇者 カイル と魔導士 リリア は、闇竜 ドラグニル を封印するため、王都へと旅立った。伝説の神器「エターナルブレード」は古代遺跡に眠るとされ、帝国「ヴァルディス」もまた水面下で動き始めている" 
+- Correct Output: "勇者 カイル 與魔導士 リリア 為了封印闇龍 ドラグニル，踏上了前往王都的旅程。傳說中的神器「エターナルブレード」據說隱藏在古代遺跡之中，而帝國「ヴァルディス」也正在暗中行動。" (Proper nouns preserved in original form)
+
+[ARTICLE]
+Article is below. Translate it according to the above rules and process.
 `;
 
 export function chunkArray<T>(arr: T[], chunkSize: number): T[][] {

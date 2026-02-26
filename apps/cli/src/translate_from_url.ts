@@ -45,7 +45,12 @@ export async function translate_from_URL({url_string}:{url_string: string}) {
         min: 1,
         required: true,
     });
-    
+    const start_from = await number({
+        message: "Start from batch number",
+        default: 1,
+        min: 1,
+        required: true,
+    })
     const urls = (await decomposeURL({ url_string })).map((d) => d.url);
     const unfinish_urls = structuredClone(urls)
     const batches = [] as string[][];
@@ -53,7 +58,7 @@ export async function translate_from_URL({url_string}:{url_string: string}) {
     for (let i = 0; i < urls.length; i += batch_size) {
         batches.push(urls.slice(i, i + batch_size));
     }
-    let totalProcessed = 0;
+    let totalProcessed = start_from - 1;
     const progress_bar = new cliProgress.SingleBar(
         {},
         cliProgress.Presets.legacy,
@@ -62,7 +67,7 @@ export async function translate_from_URL({url_string}:{url_string: string}) {
 
     const concurrent_batches = chunkArray(batches, concurrency);
     try {
-		for (let batches_index = 0; batches_index < concurrent_batches.length; batches_index++) {
+		for (let batches_index = start_from  - 1; batches_index < concurrent_batches.length; batches_index++) {
 			const batches = concurrent_batches[batches_index]!;
             await Promise.all(
                 batches.map(async (batch, batch_index) => {

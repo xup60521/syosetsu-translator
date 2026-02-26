@@ -2,10 +2,11 @@ import { load, type CheerioAPI } from "cheerio";
 import type { NovelHandlerResultType } from "@repo/shared";
 import { randomUUID } from "crypto";
 import { URLPattern } from "urlpattern-polyfill";
+import { windowsFileEscapeRegex } from "../utils";
 
 export async function syosetu_handler(
     urlobj: URL,
-    { with_Cookies }: { with_Cookies?: boolean }
+    { with_Cookies }: { with_Cookies?: boolean },
 ): Promise<NovelHandlerResultType> {
     const res = await fetch(urlobj, {
         headers: {
@@ -19,15 +20,15 @@ export async function syosetu_handler(
 
     const $ = load(res);
     if (pathParts.length === 2) {
-        return handle_long_work({ urlobj, $ })
+        return handle_long_work({ urlobj, $ });
     } else if (pathParts.length === 1) {
-        return handle_short_work({ urlobj, $ })
+        return handle_short_work({ urlobj, $ });
     } else {
         throw new Error("Invalid URL");
     }
 }
 
-function handle_short_work({ urlobj, $ }: { urlobj: URL, $: CheerioAPI }) {
+function handle_short_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
     const paragraphArr: string[] = [];
     const title = $(".p-novel__title").text();
     $(".p-novel__body > div > p").each((index, element) => {
@@ -35,8 +36,8 @@ function handle_short_work({ urlobj, $ }: { urlobj: URL, $: CheerioAPI }) {
         paragraphArr.push($element.text());
     });
 
-    const series_title = title
-    const author = $("div.p-novel__author").text().split("：")[1]!;
+    const series_title = title;
+    const author = $("div.p-novel__author > a").text();
     const tags = getNovelTags(urlobj) ?? [series_title];
 
     return {
@@ -44,7 +45,9 @@ function handle_short_work({ urlobj, $ }: { urlobj: URL, $: CheerioAPI }) {
         title: title,
         indexPrefix: urlobj.pathname.replaceAll("/", " ").trim(),
         content: paragraphArr.join("\n"),
-        series_title_and_author: series_title + " " + author,
+        series_title_and_author: (series_title + " " + author)
+            .replaceAll(windowsFileEscapeRegex, "")
+            .trim(),
         url: urlobj.href,
         tags: tags,
         series_title,
@@ -52,7 +55,7 @@ function handle_short_work({ urlobj, $ }: { urlobj: URL, $: CheerioAPI }) {
     };
 }
 
-function handle_long_work({ urlobj, $ }: { urlobj: URL, $: CheerioAPI }) {
+function handle_long_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
     const paragraphArr: string[] = [];
     const title = $(".p-novel__title").text();
     $(".p-novel__body > div > p").each((index, element) => {
@@ -61,7 +64,7 @@ function handle_long_work({ urlobj, $ }: { urlobj: URL, $: CheerioAPI }) {
     });
 
     const series_title = $(
-        "div.c-announce:nth-child(2) > a:nth-child(1)"
+        "div.c-announce:nth-child(2) > a:nth-child(1)",
     ).text();
     const author = $("div.c-announce:nth-child(2) > a:nth-child(2)").text();
     const tags = getNovelTags(urlobj) ?? [series_title];
@@ -71,7 +74,9 @@ function handle_long_work({ urlobj, $ }: { urlobj: URL, $: CheerioAPI }) {
         title: title,
         indexPrefix: urlobj.pathname.replaceAll("/", " ").trim(),
         content: paragraphArr.join("\n"),
-        series_title_and_author: series_title + " " + author,
+        series_title_and_author: (series_title + " " + author)
+            .replaceAll(windowsFileEscapeRegex, "")
+            .trim(),
         url: urlobj.href,
         tags: tags,
         series_title,
