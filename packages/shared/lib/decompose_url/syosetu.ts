@@ -1,4 +1,7 @@
 import type { DecomposedURL } from "../type";
+import { URLPattern } from "urlpattern-polyfill";
+import { load } from "cheerio";
+import { decomposeURL } from ".";
 
 /**
  * Decomposes a syosetsu novel URL into individual episode URLs.
@@ -14,15 +17,101 @@ export async function decompose_syosetu(
     url: URL,
     with_Cookies = false,
 ): Promise<DecomposedURL[]> {
-
     const pathParts = url.pathname.split("/").filter(Boolean);
+    const ncode = pathParts[0];
     // pathParts: ["{novel_id}"] or ["{novel_id}", "{order}"]
+    // const episodePattern = new URLPattern({
+    //     baseURL: "https://ncode.syosetu.com",
+    //     pathname: "/:ncode/:order/",
+    // });
+    // if (episodePattern.test(url)) {
+    //     return [{ url: url.toString(), title: undefined }];
+    // }
+
+    // const ncodePattern = new URLPattern({
+    //     baseURL: "https://ncode.syosetu.com",
+    //     pathname: "/:ncode/",
+    // });
+    // if (ncodePattern.test(url)) {
+    //     const ncode = ncodePattern.exec(url)?.pathname.groups.ncode;
+    //     if (!ncode) {
+    //         throw new Error("Failed to extract ncode from URL");
+    //     }
+    //     if (ncode.startsWith("s")) {
+    //         const r = await fetch(url, {
+    //             headers: {
+    //                 "User-Agent":
+    //                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    //             },
+    //         });
+    //         const html = await r.text();
+    //         const $ = load(html);
+    //         const h2s = $("h2").toArray();
+    //         const urls = h2s.map(h2 => {
+    //             const a = $(h2).find("a").first();
+    //             const href = a.attr("href");
+    //             if (href) {
+    //                 return  href;
+    //             }
+    //         })
+    //         .filter((x): x is string => !!x) as string[];
+    //         if (urls.length > 0) {
+    //             return await decomposeURL({url_string: urls.join(" "), with_Cookies});
+    //         }
+    //     }
+    //     const response = await fetch(
+    //         `https://api.syosetu.com/novelapi/api/?ncode=${ncode}&out=json`,
+    //         {
+    //             headers: {
+    //                 "User-Agent":
+    //                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+    //             },
+    //         },
+    //     );
+    //     const j = (await response.json()) as unknown[];
+    //     const data = j[1] as Data;
+    //     if (data.novel_type === 2) {
+    //         return [{ url: url.toString(), title: data.title }];
+    //     }
+    //     const novel_count = data.general_all_no as number;
+    //     const urls = new Array(novel_count).fill(null).map((_, i) => ({
+    //         title: undefined,
+    //         url: `https://ncode.syosetu.com/${ncode}/${i + 1}/`,
+    //     }));
+    //     return urls;
+    // }
     if (pathParts.length === 1) {
         // List page, need to decompose
+        if (ncode!.startsWith("s")) {
+            const r = await fetch(url, {
+                headers: {
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+                },
+            });
+            const html = await r.text();
+            const $ = load(html);
+            const h2s = $("h2").toArray();
+            const urls = h2s
+                .map((h2) => {
+                    const a = $(h2).find("a").first();
+                    const href = a.attr("href");
+                    if (href) {
+                        return href;
+                    }
+                })
+                .filter((x): x is string => !!x) as string[];
+            if (urls.length > 0) {
+                return await decomposeURL({
+                    url_string: urls.join(" "),
+                    with_Cookies,
+                });
+            }
+        }
 
         // move from web crawling to using API
         const response = await fetch(
-            `https://api.syosetu.com/novelapi/api/?ncode=${pathParts[0]}&out=json`,
+            `https://api.syosetu.com/novelapi/api/?ncode=${ncode}&out=json`,
             {
                 headers: {
                     "User-Agent":
@@ -30,29 +119,27 @@ export async function decompose_syosetu(
                 },
             },
         );
-        const j = (await response.json()) as unknown[]
-        const data = j[1] as Data
+        const j = (await response.json()) as unknown[];
+        const data = j[1] as Data;
         if (data.novel_type === 2) {
-            return [{ url: url.toString(), title: data.title }]
+            return [{ url: url.toString(), title: data.title }];
         }
         const novel_count = data.general_all_no as number;
         const urls = new Array(novel_count).fill(null).map((_, i) => ({
             title: undefined,
-            url: `https://ncode.syosetu.com/${pathParts[0]}/${i + 1}/`,
+            url: `https://ncode.syosetu.com/${ncode}/${i + 1}/`,
         }));
-        return urls
+        return urls;
     } else if (pathParts.length === 2) {
         // Direct episode page, return the url itself
         return [{ url: url.toString(), title: undefined }];
     } else {
-        throw new Error(
-            "The URL does not point to a valid syosetsu novel series or episode: " +
-            url.toString(),
-        );
     }
+    throw new Error(
+        "The URL does not point to a valid syosetsu novel series or episode: " +
+            url.toString(),
+    );
 }
-
-
 
 type Data = {
     title: string;
@@ -93,4 +180,4 @@ type Data = {
     kaiwaritu: number;
     novelupdated_at: string;
     updated_at: string;
-}
+};
