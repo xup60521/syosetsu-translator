@@ -30,14 +30,20 @@ export async function syosetu_handler(
 
 function handle_short_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
     const paragraphArr: string[] = [];
-    const title = $(".p-novel__title").text();
+    const title = $(".p-novel__title")
+        .text()
+        .replaceAll(windowsFileEscapeRegex, "")
+        .trim();
     $(".p-novel__body > div > p").each((index, element) => {
         const $element = $(element);
         paragraphArr.push($element.text());
     });
 
     const series_title = title;
-    const author = $("div.p-novel__author > a").text();
+    const author = $("div.p-novel__author > a")
+        .text()
+        .replaceAll(windowsFileEscapeRegex, "")
+        .trim();
     const tags = getNovelTags(urlobj) ?? [series_title];
 
     return {
@@ -57,7 +63,10 @@ function handle_short_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
 
 function handle_long_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
     const paragraphArr: string[] = [];
-    const title = $(".p-novel__title").text();
+    const title = $(".p-novel__title")
+        .text()
+        .replaceAll(windowsFileEscapeRegex, "")
+        .trim();
     $(".p-novel__body > div > p").each((index, element) => {
         const $element = $(element);
         paragraphArr.push($element.text());
@@ -65,8 +74,12 @@ function handle_long_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
 
     const series_title = $(
         "div.c-announce:nth-child(2) > a:nth-child(1)",
-    ).text();
-    const author = $("div.c-announce:nth-child(2) > a:nth-child(2)").text();
+    ).text().replaceAll(windowsFileEscapeRegex, "")
+            .trim();
+    const author = $("div.c-announce:nth-child(2) > a:nth-child(2)")
+        .text()
+        .replaceAll(windowsFileEscapeRegex, "")
+        .trim();
     const tags = getNovelTags(urlobj) ?? [series_title];
 
     return {
