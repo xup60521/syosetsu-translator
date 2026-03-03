@@ -61,7 +61,7 @@ export async function batchTranslate(
             output: Output.array({ element: ai_translated_result_schema }),
             messages: [
                 {
-                    role: "user",
+                    role: "system",
                     content: en_prompt,
                 },
                 {
