@@ -201,6 +201,9 @@ export const modelList = {
         {
             name: "gemini-3-flash-preview",
             value: "gemini-3-flash-preview",
+        },{
+            name: "gemini-3.1-flash-lite-preview",
+            value: "gemini-3.1-flash-lite-preview",
         },
         {
             name: "gemini-3-pro-preview",
