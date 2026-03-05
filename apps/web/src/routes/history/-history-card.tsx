@@ -94,7 +94,7 @@ export function HistoryCard({ item, openRetryDialog }: HistoryCardProps) {
             onSuccess: () => {
                 toast.success("Workflow cancelled");
                 queryClient.invalidateQueries(
-                    trpc.history.list_history.queryOptions(),
+                    trpc.history.list_history.queryOptions({}),
                 );
             },
             onError: (e: unknown) => {
@@ -108,7 +108,7 @@ export function HistoryCard({ item, openRetryDialog }: HistoryCardProps) {
             onSuccess: () => {
                 toast.success("Deleted");
                 queryClient.invalidateQueries(
-                    trpc.history.list_history.queryOptions(),
+                    trpc.history.list_history.queryOptions({}),
                 );
             },
             onError: (e: unknown) => {

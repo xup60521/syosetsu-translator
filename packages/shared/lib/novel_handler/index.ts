@@ -22,6 +22,9 @@ export async function novel_handler(
         case "https://ncode.syosetu.com":
             result = await syosetu_handler(urlobj, { with_Cookies });
             break;
+        case "https://novel18.syosetu.com":
+            result = await syosetu_handler(urlobj, { with_Cookies });
+            break;
         case "https://www.pixiv.net":
             result = await pixiv_handler(urlobj, { with_Cookies });
             break;

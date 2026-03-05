@@ -13,6 +13,7 @@ export async function syosetu_handler(
             ...(with_Cookies ? { Cookie: process.env.SYOSSETSU_COOKIES } : {}),
             "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+            Cookie: "over18=yes;",
         },
     }).then((res) => res.text());
 
@@ -71,15 +72,7 @@ function handle_long_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
         const $element = $(element);
         paragraphArr.push($element.text());
     });
-
-    const series_title = $(
-        "div.c-announce:nth-child(2) > a:nth-child(1)",
-    ).text().replaceAll(windowsFileEscapeRegex, "")
-            .trim();
-    const author = $("div.c-announce:nth-child(2) > a:nth-child(2)")
-        .text()
-        .replaceAll(windowsFileEscapeRegex, "")
-        .trim();
+    const {series_title, author} = series_title_and_author({ urlobj, $ });
     const tags = getNovelTags(urlobj) ?? [series_title];
 
     return {
@@ -94,6 +87,40 @@ function handle_long_work({ urlobj, $ }: { urlobj: URL; $: CheerioAPI }) {
         tags: tags,
         series_title,
         author,
+    };
+}
+
+function series_title_and_author({
+    urlobj,
+    $,
+}: {
+    urlobj: URL;
+    $: CheerioAPI;
+}) {
+    if (urlobj.origin === "https://novel18.syosetu.com") {
+        const series_title = $("div.c-announce:nth-child(2) > a")
+            .text()
+            .replaceAll(windowsFileEscapeRegex, "")
+            .trim();
+        const author = $("div.c-announce:nth-child(2)")
+            .text()
+            .split("作者：")[1]!
+            .replaceAll(windowsFileEscapeRegex, "")
+            .trim();
+        return {
+            series_title,
+            author,
+        };
+    }
+    return {
+        series_title: $("div.c-announce:nth-child(2) > a:nth-child(1)")
+            .text()
+            .replaceAll(windowsFileEscapeRegex, "")
+            .trim(),
+        author: $("div.c-announce:nth-child(2) > a:nth-child(2)")
+            .text()
+            .replaceAll(windowsFileEscapeRegex, "")
+            .trim(),
     };
 }
 
