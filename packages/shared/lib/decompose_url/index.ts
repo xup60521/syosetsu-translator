@@ -2,7 +2,7 @@ import { URLPattern } from "urlpattern-polyfill";
 import { load } from "cheerio";
 import type { DecomposedURL } from "../type";
 import { decompose_pixiv } from "./pixiv";
-import { decompose_syosetu } from "./syosetu";
+import { decompose_syosetu, decompose_novel18_syosetu } from "./syosetu";
 import { decompose_kakuyomu } from "./kakuyomu";
 import { decompose_alphapolis } from "./alphapolis";
 
@@ -28,6 +28,13 @@ export async function decomposeURL({
             );
 
             novel_urls.push(...processed_urls);
+        }else if (urlobj.host === "novel18.syosetu.com") {
+            const processed_urls = await decompose_novel18_syosetu(
+                urlobj,
+                with_Cookies,
+            );
+
+            novel_urls.push(...processed_urls);
         } else if (urlobj.host === "kakuyomu.jp") {
             const processed_urls = await decompose_kakuyomu(
                 urlobj,
@@ -45,6 +52,7 @@ export async function decomposeURL({
             novel_urls.push({ url: url.toString(), title: undefined });
         }
     }
+    // console.log(novel_urls)
     return novel_urls;
 }
 

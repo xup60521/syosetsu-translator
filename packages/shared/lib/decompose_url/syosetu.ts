@@ -141,6 +141,42 @@ export async function decompose_syosetu(
     );
 }
 
+export async function decompose_novel18_syosetu(
+    url: URL,
+    with_Cookies = false,
+): Promise<DecomposedURL[]> {
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    const ncode = pathParts[0];
+    if (pathParts.length === 1) {
+        const html = await fetch(url, {
+            headers: {
+                "User-Agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+                Cookie: "over18=yes;",
+            },
+        }).then((r) => r.text());
+        const $ = load(html, {baseURI: url.origin });
+        const as = $("a.p-eplist__subtitle").toArray();
+        const urls = as
+            .map((a) => {
+                const href = $(a).attr("href");
+                const title = $(a).text().trim();
+                if (href) {
+                    return { url: `${url.origin}${href}`, title };
+                }
+            })
+            .filter((x): x is { url: string; title: string } => !!x);
+        return urls;
+    } else if (pathParts.length === 2) {
+        // Direct episode page, return the url itself
+        return [{ url: url.toString(), title: undefined }];
+    }
+    throw new Error(
+        "The URL does not point to a valid syosetsu novel series or episode: " +
+            url.toString(),
+    );
+}
+
 type Data = {
     title: string;
     ncode: string;
