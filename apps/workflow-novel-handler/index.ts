@@ -82,7 +82,7 @@ app.post("/workflow", serve(
                         );
                     });
                     totalProcessed += currentBatch.length;
-                    await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 secs to prevent reaching rate limit
+                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 secs to prevent reaching rate limit
                     // console.log(totalProcessed, total)
                 }),
             );
