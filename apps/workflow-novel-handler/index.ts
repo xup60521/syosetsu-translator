@@ -57,6 +57,7 @@ app.post("/workflow", serve(
         const concurrent_batches = chunkArray(batches, concurrency);
         for (let batches_index = 0; batches_index < concurrent_batches.length; batches_index++) {
             const batches = concurrent_batches[batches_index]!;
+            // Concurrently process batches in the current chunk
             await Promise.all(
                 batches.map(async (batch, batch_index) => {
                     const currentBatch = batch;
@@ -81,6 +82,7 @@ app.post("/workflow", serve(
                         );
                     });
                     totalProcessed += currentBatch.length;
+                    await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 secs to prevent reaching rate limit
                     // console.log(totalProcessed, total)
                 }),
             );
