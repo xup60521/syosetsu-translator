@@ -93,6 +93,7 @@ export const workflowProcedure = createTRPCRouter({
                     status: "starting",
                     progress: 0,
                     current: 0,
+                    api_call_count: 0,
                     total: payload.urls.length,
                     urls: JSON.stringify(payload.urls),
                     created_at: Date.now(),

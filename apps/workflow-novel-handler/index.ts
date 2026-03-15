@@ -53,6 +53,7 @@ app.all("/workflow", serve(
         }
 
         let totalProcessed = 0;
+        let api_call_count = 0;
 
         const concurrent_batches = chunkArray(batches, concurrency);
         for (let batches_index = 0; batches_index < concurrent_batches.length; batches_index++) {
@@ -61,12 +62,11 @@ app.all("/workflow", serve(
             await Promise.all(
                 batches.map(async (batch, batch_index) => {
                     const currentBatch = batch;
-                    // console.log(`Processing batch ${i}`);
-                    await context.run(`process-batch-${batches_index}-${batch_index}`, async () => {
+                    api_call_count += await context.run(`process-batch-${batches_index}-${batch_index}`, async () => {
                         const decrypted_api_key = decrypt(encrypted_api_key, process.env.ENCRYPTION_KEY!);
                         const providerInstance = getProvider(provider, decrypted_api_key);
                         const model = providerInstance(model_id);
-                        await batchTranslate(
+                        return await batchTranslate(
                             {
                                 encrypted_refresh_token,
                                 urls: currentBatch,
@@ -92,6 +92,7 @@ app.all("/workflow", serve(
                     status: totalProcessed >= total ? 'completed' : 'processing',
                     progress: progress,
                     current: totalProcessed,
+                    api_call_count
                 });
             });
         }

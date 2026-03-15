@@ -24,6 +24,7 @@ type BatchTranslationParameter = {
     encrypted_refresh_token?: string;
 };
 
+class EmptyResponseError extends Error {}
 
 // don't use the shared novel_handler directly
 // since the workflow calls the novel_handler endpoint elsewhere,
@@ -35,7 +36,7 @@ export async function batchTranslate(
         options: { with_Cookies?: boolean },
     ) => Promise<NovelHandlerResultType>,
     handle_file: (params: HandleFileInput) => Promise<void>,
-) {
+): Promise<number> {
     const {
         urls,
         model_id,
@@ -44,18 +45,20 @@ export async function batchTranslate(
         model,
         folder_id,
         encrypted_refresh_token,
-    } = props
-
+    } = props;
 
     const novel_data = urls.map(async (url) =>
         novel_handler(url, { with_Cookies }),
     );
     const untranslated_data = await Promise.all(novel_data);
     // console.log("translating...")
-    const error_pool = []as any[];
+    let api_call_count = 0;
+    const empty_error_pool = [] as any[];
 
     while (untranslated_data.length > 0) {
-
+        if (empty_error_pool.length > 3) {
+            throw new Error("Empty response from the model for multiple times. Stopping the workflow.");
+        }
         const { elementStream } = streamText({
             model,
             output: Output.array({ element: ai_translated_result_schema }),
@@ -70,18 +73,19 @@ export async function batchTranslate(
                 },
             ],
             maxRetries: 3,
-            temperature: 0.7
-        })
-    
+            temperature: 0.7,
+        });
+        api_call_count++;
+
         for await (const item of elementStream) {
-    
             const metadata = untranslated_data.find(
                 (d) => d.id.trim() === item.id.trim(),
             )!;
             if (!metadata || !item) {
+                empty_error_pool.push(new EmptyResponseError());
                 continue;
             }
-    
+
             // remove that item from untranslated_data to save memory
             untranslated_data.splice(untranslated_data.indexOf(metadata), 1);
             const sectionedText = item.translated_content!.replace(
@@ -115,7 +119,7 @@ Tags: ${tags?.join(", ") ?? ""}
                         tags,
                     })
                 ).replaceAll("\\n", "\n");
-    
+
             // console.log(content);
             await handle_file({
                 series_title_and_author,
@@ -125,9 +129,8 @@ Tags: ${tags?.join(", ") ?? ""}
                 folder_id,
                 encrypted_refresh_token,
             });
+        }
     }
-
-    }
+    return api_call_count;
 }
 // console.log("finishing translation")
-
