@@ -20,7 +20,7 @@ import { Route as SettingsStorageRouteImport } from './routes/settings/storage'
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language'
 import { Route as SettingsConnectedAccountsRouteImport } from './routes/settings/connected-accounts'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
-import { Route as SettingsApiKeysRouteImport } from './routes/settings/api-keys'
+import { Route as SettingsApiKeysIndexRouteImport } from './routes/settings/api-keys/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 
@@ -80,9 +80,9 @@ const SettingsAppearanceRoute = SettingsAppearanceRouteImport.update({
   path: '/appearance',
   getParentRoute: () => SettingsRouteRoute,
 } as any)
-const SettingsApiKeysRoute = SettingsApiKeysRouteImport.update({
-  id: '/api-keys',
-  path: '/api-keys',
+const SettingsApiKeysIndexRoute = SettingsApiKeysIndexRouteImport.update({
+  id: '/api-keys/',
+  path: '/api-keys/',
   getParentRoute: () => SettingsRouteRoute,
 } as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
@@ -99,7 +99,6 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
-  '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
   '/settings/language': typeof SettingsLanguageRoute
@@ -111,10 +110,10 @@ export interface FileRoutesByFullPath {
   '/view/': typeof ViewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/settings/api-keys/': typeof SettingsApiKeysIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
   '/settings/language': typeof SettingsLanguageRoute
@@ -126,12 +125,12 @@ export interface FileRoutesByTo {
   '/view': typeof ViewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/settings/api-keys': typeof SettingsApiKeysIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteRouteWithChildren
-  '/settings/api-keys': typeof SettingsApiKeysRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/connected-accounts': typeof SettingsConnectedAccountsRoute
   '/settings/language': typeof SettingsLanguageRoute
@@ -143,13 +142,13 @@ export interface FileRoutesById {
   '/view/': typeof ViewIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/settings/api-keys/': typeof SettingsApiKeysIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/settings'
-    | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
     | '/settings/language'
@@ -161,10 +160,10 @@ export interface FileRouteTypes {
     | '/view/'
     | '/api/auth/$'
     | '/api/trpc/$'
+    | '/settings/api-keys/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
     | '/settings/language'
@@ -176,11 +175,11 @@ export interface FileRouteTypes {
     | '/view'
     | '/api/auth/$'
     | '/api/trpc/$'
+    | '/settings/api-keys'
   id:
     | '__root__'
     | '/'
     | '/settings'
-    | '/settings/api-keys'
     | '/settings/appearance'
     | '/settings/connected-accounts'
     | '/settings/language'
@@ -192,6 +191,7 @@ export interface FileRouteTypes {
     | '/view/'
     | '/api/auth/$'
     | '/api/trpc/$'
+    | '/settings/api-keys/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -284,11 +284,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsAppearanceRouteImport
       parentRoute: typeof SettingsRouteRoute
     }
-    '/settings/api-keys': {
-      id: '/settings/api-keys'
+    '/settings/api-keys/': {
+      id: '/settings/api-keys/'
       path: '/api-keys'
-      fullPath: '/settings/api-keys'
-      preLoaderRoute: typeof SettingsApiKeysRouteImport
+      fullPath: '/settings/api-keys/'
+      preLoaderRoute: typeof SettingsApiKeysIndexRouteImport
       parentRoute: typeof SettingsRouteRoute
     }
     '/api/trpc/$': {
@@ -309,21 +309,21 @@ declare module '@tanstack/react-router' {
 }
 
 interface SettingsRouteRouteChildren {
-  SettingsApiKeysRoute: typeof SettingsApiKeysRoute
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsConnectedAccountsRoute: typeof SettingsConnectedAccountsRoute
   SettingsLanguageRoute: typeof SettingsLanguageRoute
   SettingsStorageRoute: typeof SettingsStorageRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
+  SettingsApiKeysIndexRoute: typeof SettingsApiKeysIndexRoute
 }
 
 const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
-  SettingsApiKeysRoute: SettingsApiKeysRoute,
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsConnectedAccountsRoute: SettingsConnectedAccountsRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
   SettingsStorageRoute: SettingsStorageRoute,
   SettingsIndexRoute: SettingsIndexRoute,
+  SettingsApiKeysIndexRoute: SettingsApiKeysIndexRoute,
 }
 
 const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
