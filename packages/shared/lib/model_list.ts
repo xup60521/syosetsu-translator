@@ -519,6 +519,9 @@ export const modelList = {
         {
             name: "gpt-oss-120b",
             value: "gpt-oss-120b",
+        },{
+            name: "qwen-3-235b-a22b-instruct-2507",
+            value: "qwen-3-235b-a22b-instruct-2507"
         },
         {
             name: "llama-3.3-70b",
