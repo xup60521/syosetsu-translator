@@ -1,31 +1,9 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { v4 as uuid } from "uuid";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { Field } from "@/components/ui/field";
-import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
     AlertDialog,
@@ -38,16 +16,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { supportedProvider } from "@repo/shared";
 import { createFileRoute } from "@tanstack/react-router";
 import {
     APIKeyType,
-    useAddApiKeyMutation,
     useApikeyQuery,
     useDeleteApiKeyMutation,
 } from "@/client-data/apikeyQuery";
-import { useTRPC } from "@/server/trpc/react";
-import { AddAPIKeyDialog } from "./-Add_API_key";
+import { AddAPIKeySheet } from "./-Add_API_key";
 
 export const Route = createFileRoute("/settings/api-keys/")({
     component: APIKeysPanel,
@@ -91,7 +66,7 @@ function APIKeysPanel(): React.JSX.Element {
                     </div>
                 ) : (
                     api_keys?.map((api_key_object) => (
-                        <APIKeyCard api_key_object={api_key_object} />
+                        <APIKeyCard key={api_key_object.id} api_key_object={api_key_object} />
                     ))
                 )}
 
@@ -102,14 +77,14 @@ function APIKeysPanel(): React.JSX.Element {
                 )}
 
                 <div className="flex gap-2 pt-4">
-                    <AddAPIKeyDialog>
+                    <AddAPIKeySheet>
                         <Button
                             variant="default"
                             className="w-full sm:w-auto text-lg px-8 py-6"
                         >
                             + Add New Key
                         </Button>
-                    </AddAPIKeyDialog>
+                    </AddAPIKeySheet>
                 </div>
             </div>
         </section>

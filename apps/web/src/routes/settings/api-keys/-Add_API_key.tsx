@@ -1,18 +1,16 @@
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { v4 as uuid } from "uuid";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { Field } from "@/components/ui/field";
-import { Label } from "@/components/ui/label";
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 import {
     Select,
     SelectContent,
@@ -21,176 +19,291 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supportedProvider } from "@repo/shared";
 import { APIKeyType, useAddApiKeyMutation } from "@/client-data/apikeyQuery";
 import { useTRPC } from "@/server/trpc/react";
+import { Plus, Trash2, Zap } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+const singleKeySchema = z.object({
+    provider: z.string().min(1, "Required"),
+    name: z.string().min(1, "Required"),
+    apiKey: z.string().min(1, "Required"),
+});
 
 const formSchema = z.object({
-    provider: z.string().min(1, "Please select a provider"),
-    name: z.string().min(1, "Name is required"),
-    apiKey: z.string().min(1, "API Key is required"),
+    keys: z.array(singleKeySchema).min(1, "Add at least one key"),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-export function AddAPIKeyDialog({
+export function AddAPIKeySheet({
     children,
 }: {
     children: React.ReactNode;
 }): React.JSX.Element {
     const [open, setOpen] = React.useState(false);
-    const [providerSelectMenuOpen, setProviderSelectMenuOpen] =
-        React.useState(false);
+
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            provider: "",
-            name: "",
-            apiKey: "",
+            keys: [{ provider: "", name: "", apiKey: "" }],
         },
     });
+
+    const { fields, append, remove, replace } = useFieldArray({
+        control: form.control,
+        name: "keys",
+    });
+
     const trpc = useTRPC();
     const encryptApiKeyMutation = useMutation(trpc.encrypt.mutationOptions());
     const addApiKeyMutation = useAddApiKeyMutation();
 
-    const onSubmit = async (data: FormData) => {
-        toast("Encrypting and saving API key...");
+    const guessProvider = (name: string, key: string): string => {
+        const lowerName = name.toLowerCase();
+        const lowerKey = key.toLowerCase();
+        if (lowerName.includes("openai") || lowerKey.startsWith("sk-"))
+            return "openai";
+        if (lowerName.includes("anthropic") || lowerKey.startsWith("sk-ant"))
+            return "anthropic";
+        if (lowerName.includes("google") || lowerName.includes("gemini"))
+            return "google-ai-studio";
+        if (lowerName.includes("openrouter")) return "openrouter";
+        if (lowerName.includes("mistral")) return "mistral";
+        if (lowerName.includes("groq")) return "groq";
+        if (lowerName.includes("cerebras")) return "cerebras";
+        return "";
+    };
 
-        const encrypted_key = await encryptApiKeyMutation.mutateAsync(data);
-        const payload = {
-            id: uuid(),
-            name: data.name,
-            encrypted_key,
-            provider: data.provider,
-        } satisfies APIKeyType;
-        await addApiKeyMutation.mutateAsync([payload]);
-        setOpen(false);
-        form.reset();
-        toast.success("API key added successfully!");
+    const handlePaste = (e: React.ClipboardEvent, index: number) => {
+        const paste = e.clipboardData.getData("text");
+        if (!paste.includes("\n") && !paste.includes("=")) return;
+
+        e.preventDefault();
+        const lines = paste
+            .split(/\r?\n/)
+            .filter((line) => line.trim() && !line.startsWith("#"));
+        const newKeys = lines.map((line) => {
+            let name = "";
+            let apiKey = "";
+            if (line.includes("=")) {
+                const [n, ...k] = line.split("=");
+                name = n.trim();
+                apiKey = k.join("=").trim();
+            } else if (line.includes(":")) {
+                const [n, ...k] = line.split(":");
+                name = n.trim();
+                apiKey = k.join(":").trim();
+            } else {
+                apiKey = line.trim();
+            }
+            name = name.replace(/^export\s+/, "").replace(/^["']|["']$/g, "");
+            apiKey = apiKey.replace(/^["']|["']$/g, "");
+            return {
+                name: name || "New Key",
+                apiKey: apiKey,
+                provider: guessProvider(name, apiKey),
+            };
+        });
+
+        if (newKeys.length > 0) {
+            const currentKeys = form.getValues("keys");
+            if (
+                currentKeys.length === 1 &&
+                !currentKeys[0].apiKey &&
+                !currentKeys[0].name
+            ) {
+                replace(newKeys);
+            } else {
+                const updatedKeys = [...currentKeys];
+                updatedKeys.splice(index, 1, ...newKeys);
+                replace(updatedKeys);
+            }
+            toast.success(`Smart Import: ${newKeys.length} keys added.`);
+        }
+    };
+
+    const onSubmit = async (data: FormData) => {
+        toast(`Processing ${data.keys.length} key(s)...`);
+        try {
+            const payloads: APIKeyType[] = [];
+            for (const item of data.keys) {
+                const encrypted_key = await encryptApiKeyMutation.mutateAsync({
+                    apiKey: item.apiKey,
+                });
+                payloads.push({
+                    id: uuid(),
+                    name: item.name,
+                    encrypted_key,
+                    provider: item.provider,
+                });
+            }
+            await addApiKeyMutation.mutateAsync(payloads);
+            setOpen(false);
+            form.reset({ keys: [{ provider: "", name: "", apiKey: "" }] });
+            toast.success("API keys saved successfully!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to save keys.");
+        }
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="max-w-lg border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] p-0 gap-0 overflow-hidden bg-white dark:bg-zinc-900">
-                <DialogTitle className="p-6 pb-4 text-2xl font-black uppercase tracking-tighter bg-yellow-300 dark:bg-yellow-600 border-b-2 border-black dark:border-white">
-                    Add New API Key
-                </DialogTitle>
-                <div className="p-6">
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>{children}</SheetTrigger>
+            <SheetContent className="sm:max-w-xl border-l-4 border-black dark:border-white p-0 flex flex-col bg-white dark:bg-zinc-950 h-full">
+                <SheetHeader className="p-6 py-4 bg-yellow-300 dark:bg-yellow-600 border-b-4 border-black dark:border-white shrink-0">
+                    <SheetTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                        Add API Keys
+                    </SheetTitle>
+                </SheetHeader>
+
+                <div className="flex-1 flex flex-col min-h-0">
+                    {/* Fixed Info Box */}
+                    <div className="p-6 py-2 shrink-0 w-full">
+                        <div className="flex items-center w-full gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-none font-mono text-[11px] leading-tight">
+                            <Zap className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                            <span>
+                                Smart Paste: Paste .env content directly into
+                                any API Key field.
+                            </span>
+                        </div>
+                    </div>
+
                     <form
                         onSubmit={form.handleSubmit(onSubmit)}
-                        className="flex flex-col gap-6"
+                        className="flex-1 flex flex-col min-h-0 pb-6"
                     >
-                        <div className="flex flex-col gap-4">
-                            <Field className="flex flex-col gap-2">
-                                <Label
-                                    onClick={() =>
-                                        setProviderSelectMenuOpen(true)
-                                    }
-                                    htmlFor="provider"
-                                    className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
-                                >
-                                    Provider
-                                </Label>
-                                <Select
-                                    open={providerSelectMenuOpen}
-                                    onOpenChange={setProviderSelectMenuOpen}
-                                    value={form.watch("provider")}
-                                    onValueChange={(value) =>
-                                        form.setValue("provider", value)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] h-12 font-mono focus:ring-0 focus:ring-offset-0 bg-white dark:bg-zinc-900">
-                                        <SelectValue placeholder="Select a provider" />
-                                    </SelectTrigger>
-                                    <SelectContent className="border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900">
-                                        {supportedProvider.map((provider) => (
-                                            <SelectItem
-                                                key={provider.value}
-                                                value={provider.value}
-                                                className="focus:bg-yellow-100 dark:focus:bg-yellow-900 focus:font-bold font-mono cursor-pointer border-b-2 border-transparent focus:border-black dark:focus:border-white"
+                        {/* Scrollable list area */}
+                        <ScrollArea className="flex-1 overflow-y-auto min-h-0 px-6 py-2 scrollbar-thin scrollbar-thumb-black dark:scrollbar-thumb-white">
+                            <FieldGroup className="gap-4">
+                                {fields.map((field, index) => (
+                                    <div
+                                        key={field.id}
+                                        className="p-4 border-2 border-black dark:border-white bg-zinc-50 dark:bg-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] flex flex-col gap-4 relative"
+                                    >
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Field>
+                                                <FieldLabel className="text-[10px] font-black uppercase font-mono tracking-wider opacity-60">
+                                                    Provider
+                                                </FieldLabel>
+                                                <Select
+                                                    value={form.watch(
+                                                        `keys.${index}.provider`,
+                                                    )}
+                                                    onValueChange={(val) =>
+                                                        form.setValue(
+                                                            `keys.${index}.provider`,
+                                                            val,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="h-9 border-2 border-black dark:border-white text-xs font-mono shadow-none rounded-none focus:ring-0 bg-white dark:bg-zinc-950">
+                                                        <SelectValue placeholder="Select..." />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="border-2 border-black dark:border-white font-mono rounded-none">
+                                                        {supportedProvider.map(
+                                                            (p) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        p.value
+                                                                    }
+                                                                    value={
+                                                                        p.value
+                                                                    }
+                                                                    className="text-xs"
+                                                                >
+                                                                    {p.label}
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </Field>
+
+                                            <Field>
+                                                <FieldLabel htmlFor={`keys.${index}.name`} className="text-[10px] font-black uppercase font-mono tracking-wider opacity-60">
+                                                    Name
+                                                </FieldLabel>
+                                                <Input
+                                                id={`keys.${index}.name`}
+                                                    {...form.register(
+                                                        `keys.${index}.name`,
+                                                    )}
+                                                    className="h-9 text-xs font-mono border-2 border-black dark:border-white shadow-none rounded-none focus-visible:translate-x-0 focus-visible:translate-y-0"
+                                                    placeholder="Key name"
+                                                />
+                                            </Field>
+                                        </div>
+
+                                        <Field>
+                                            <FieldLabel htmlFor={`keys.${index}.apiKey`} className="text-[10px] font-black uppercase font-mono tracking-wider opacity-60">
+                                                API Key
+                                            </FieldLabel>
+                                            <Input
+                                                id={`keys.${index}.apiKey`}
+                                                type="password"
+                                                {...form.register(
+                                                    `keys.${index}.apiKey`,
+                                                )}
+                                                onPaste={(e) =>
+                                                    handlePaste(e, index)
+                                                }
+                                                className="h-9 text-xs font-mono border-2 border-black dark:border-white shadow-none rounded-none focus-visible:translate-x-0 focus-visible:translate-y-0"
+                                                placeholder="Paste key here..."
+                                            />
+                                        </Field>
+
+                                        {fields.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                size="xs"
+                                                onClick={() => remove(index)}
+                                                className="absolute top-1.5 right-1.5 bg-white dark:bg-zinc-900 dark:text-red-400 dark:hover:bg-red-950 text-red-600 hover:bg-red-100"
                                             >
-                                                {provider.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {form.formState.errors.provider &&
-                                    !form.watch("provider") && (
-                                        <p className="text-sm text-red-600 font-bold font-mono bg-red-100 dark:bg-red-900 p-1 border-2 border-red-600 dark:border-red-400">
-                                            {
-                                                form.formState.errors.provider
-                                                    .message
-                                            }
-                                        </p>
-                                    )}
-                            </Field>
+                                                <Trash2 className="w-3 h-3" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                            </FieldGroup>
+                        </ScrollArea>
 
-                            <Field className="flex flex-col gap-2">
-                                <Label
-                                    htmlFor="name"
-                                    className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
-                                >
-                                    Name
-                                </Label>
-                                <Input
-                                    type="text"
-                                    id="name"
-                                    placeholder="e.g., Production, Development"
-                                    {...form.register("name")}
-                                    className="bg-white dark:bg-zinc-900"
-                                />
-                                {form.formState.errors.name && (
-                                    <p className="text-sm text-red-600 font-bold font-mono bg-red-100 dark:bg-red-900 p-1 border-2 border-red-600 dark:border-red-400">
-                                        {form.formState.errors.name.message}
-                                    </p>
-                                )}
-                            </Field>
-
-                            <Field className="flex flex-col gap-2">
-                                <Label
-                                    htmlFor="apiKey"
-                                    className="text-sm font-bold uppercase font-mono bg-yellow-300 dark:bg-yellow-600 w-fit px-1 border-2 border-black dark:border-white"
-                                >
-                                    API Key
-                                </Label>
-                                <Input
-                                    type="password"
-                                    id="apiKey"
-                                    placeholder="Enter your API key"
-                                    {...form.register("apiKey")}
-                                    className="bg-white dark:bg-zinc-900"
-                                />
-                                {form.formState.errors.apiKey && (
-                                    <p className="text-sm text-red-600 font-bold font-mono bg-red-100 dark:bg-red-900 p-1 border-2 border-red-600 dark:border-red-400">
-                                        {form.formState.errors.apiKey.message}
-                                    </p>
-                                )}
-                            </Field>
-                        </div>
-
-                        <DialogFooter className="mt-2 gap-2 sm:gap-0">
+                        {/* Fixed Actions */}
+                        <div className="px-6 pt-4 flex flex-col gap-3 shrink-0 bg-white dark:bg-zinc-950 border-t-2 border-black/10 dark:border-white/10 mt-auto">
                             <Button
                                 type="button"
+                                onClick={() =>
+                                    append({
+                                        provider: "",
+                                        name: "",
+                                        apiKey: "",
+                                    })
+                                }
                                 variant="outline"
-                                onClick={() => setOpen(false)}
-                                className="border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-zinc-900 hover:bg-gray-100 dark:hover:bg-zinc-800 mr-2"
+                                className="w-full h-10 border-2 border-black dark:border-white border-dashed bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 font-mono text-[10px] uppercase font-black"
                             >
-                                Cancel
+                                <Plus className="w-3 h-3 mr-2" />
+                                Add Row
                             </Button>
+
                             <Button
                                 disabled={form.formState.isSubmitting}
                                 type="submit"
-                                className="border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-stone-500 dark:bg-stone-700 text-white hover:bg-stone-600 dark:hover:bg-stone-800"
+                                className="w-full h-12 text-sm font-black uppercase tracking-widest border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-zinc-800 dark:bg-zinc-100 text-white dark:text-black "
                             >
-                                Add API Key
+                                {form.formState.isSubmitting
+                                    ? "Saving..."
+                                    : "Save All Keys"}
                             </Button>
-                        </DialogFooter>
+                        </div>
                     </form>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     );
 }
