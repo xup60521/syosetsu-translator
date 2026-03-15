@@ -130,18 +130,18 @@ export function AddAPIKeySheet({
     const onSubmit = async (data: FormData) => {
         toast(`Processing ${data.keys.length} key(s)...`);
         try {
-            const payloads: APIKeyType[] = [];
-            for (const item of data.keys) {
-                const encrypted_key = await encryptApiKeyMutation.mutateAsync({
-                    apiKey: item.apiKey,
-                });
-                payloads.push({
-                    id: uuid(),
-                    name: item.name,
-                    encrypted_key,
-                    provider: item.provider,
-                });
-            }
+            const apiKeys = data.keys.map((item) => item.apiKey);
+            const encryptedKeys = await encryptApiKeyMutation.mutateAsync({
+                apiKey: apiKeys,
+            });
+
+            const payloads: APIKeyType[] = data.keys.map((item, index) => ({
+                id: uuid(),
+                name: item.name,
+                encrypted_key: encryptedKeys[index],
+                provider: item.provider,
+            }));
+
             await addApiKeyMutation.mutateAsync(payloads);
             setOpen(false);
             form.reset({ keys: [{ provider: "", name: "", apiKey: "" }] });

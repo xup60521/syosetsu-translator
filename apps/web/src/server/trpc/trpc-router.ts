@@ -22,14 +22,15 @@ export const trpcRouter = createTRPCRouter({
     drive: driveProcedure,
     novel: novelProcedure,
     encrypt: publicProcedure
-        .input(z.object({ apiKey: z.string() }))
-        .mutation(({ input }) => encrypt(input.apiKey, env.ENCRYPTION_KEY)),
+        .input(z.object({ apiKey: z.array(z.string()) }))
+        .mutation(({ input }) =>
+            input.apiKey.map((apikey) => encrypt(apikey, env.ENCRYPTION_KEY)),
+        ),
     history: historyProcedure,
     model_list: publicProcedure
         .input(
             z.object({
-                provider:
-                    z.string<SupportedProviderType>(),
+                provider: z.string<SupportedProviderType>(),
             }),
         )
         .query(async ({ input }) => {
