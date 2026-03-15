@@ -40,7 +40,7 @@ app.post("/decompose_url", async (c) => {
     return c.json(await decomposeURL({ url_string, with_Cookies }))
 });
 
-app.post("/workflow", serve(
+app.all("/workflow", serve(
     async (context) => {
         const payload = context.requestPayload as WorkflowPayloadType;
         const { urls, batch_size, model_id, provider, encrypted_api_key, user_id, concurrency, folder_id, encrypted_refresh_token } = payload;
