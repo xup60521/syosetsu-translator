@@ -65,7 +65,7 @@ export function AddAPIKeyDialog({
             encrypted_key,
             provider: data.provider,
         } satisfies APIKeyType;
-        await addApiKeyMutation.mutateAsync(payload);
+        await addApiKeyMutation.mutateAsync([payload]);
         setOpen(false);
         form.reset();
         toast.success("API key added successfully!");

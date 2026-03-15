@@ -56,9 +56,9 @@ export const useApikeyQuery = () =>
 export const useAddApiKeyMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (payload: APIKeyType) => {
+        mutationFn: async (payload: APIKeyType[]) => {
             const current_api_keys = await getAPIKeysFromLocalStorage();
-            const added_api_keys = [...current_api_keys, payload];
+            const added_api_keys = [...current_api_keys, ...payload];
             localStorage.setItem(
                 API_KEY_STORAGE_KEY,
                 JSON.stringify(added_api_keys),
