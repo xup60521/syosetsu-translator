@@ -10,7 +10,7 @@ import {
 
 const ai_translated_result_schema = z.object({
     id: z.string(),
-    translated_content: z.string(),
+    translated_paragraphs: z.array(z.string()),
 });
 
 type BatchTranslationParameter = {
@@ -88,7 +88,7 @@ export async function batchTranslate(
 
             // remove that item from untranslated_data to save memory
             untranslated_data.splice(untranslated_data.indexOf(metadata), 1);
-            const sectionedText = item.translated_content!.replace(
+            const sectionedText = item.translated_paragraphs!.join("\n\n").replace(
                 /(\r\n|\r|\n)/g,
                 "\n\n",
             );
