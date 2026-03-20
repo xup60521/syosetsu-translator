@@ -103,7 +103,6 @@ export async function batchTranslate(
                 );
                 const sectionedText = item
                     .translated_paragraphs!.join("\n\n")
-                    .replace(/(\r\n|\r|\n)/g, "\n\n");
                 const {
                     series_title_and_author,
                     title,
