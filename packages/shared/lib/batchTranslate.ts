@@ -54,82 +54,100 @@ export async function batchTranslate(
     // console.log("translating...")
     let api_call_count = 0;
     const empty_error_pool = [] as any[];
+    let isError = false;
 
-    while (untranslated_data.length > 0) {
+    while (untranslated_data.length > 0 && !isError) {
         if (empty_error_pool.length > 3) {
-            throw new Error("Empty response from the model for multiple times. Stopping the workflow.");
-        }
-        const { elementStream } = streamText({
-            model,
-            output: Output.array({ element: ai_translated_result_schema }),
-            messages: [
-                {
-                    role: "system",
-                    content: en_prompt,
-                },
-                {
-                    role: "user",
-                    content: JSON.stringify(untranslated_data),
-                },
-            ],
-            maxRetries: 3,
-            temperature: 0.7,
-        });
-        api_call_count++;
-
-        for await (const item of elementStream) {
-            const metadata = untranslated_data.find(
-                (d) => d.id.trim() === item.id.trim(),
-            )!;
-            if (!metadata || !item) {
-                empty_error_pool.push(new EmptyResponseError());
-                continue;
-            }
-
-            // remove that item from untranslated_data to save memory
-            untranslated_data.splice(untranslated_data.indexOf(metadata), 1);
-            const sectionedText = item.translated_paragraphs!.join("\n\n").replace(
-                /(\r\n|\r|\n)/g,
-                "\n\n",
+            isError = true;
+            console.error(
+                "Too many empty responses from the model. Stopping the translation process.",
             );
-            const {
-                series_title_and_author,
-                title,
-                indexPrefix,
-                url,
-                tags,
-                author,
-            } = metadata;
-            const content =
-                `# ${title}
-    
-${indexPrefix}
-
-URL: ${url}
-Author: ${author}
-Provider: ${provider}
-Model: ${model_id}
-Tags: ${tags?.join(", ") ?? ""}
-    
-    ` +
-                (
-                    await replace_words(sectionedText, {
-                        series_title_and_author,
-                        title,
-                        tags,
-                    })
-                ).replaceAll("\\n", "\n");
-
-            // console.log(content);
-            await handle_file({
-                series_title_and_author,
-                title,
-                indexPrefix,
-                content,
-                folder_id,
-                encrypted_refresh_token,
-            });
+            break;
         }
+       
+            const { elementStream } = streamText({
+                model,
+                output: Output.array({ element: ai_translated_result_schema }),
+                messages: [
+                    {
+                        role: "system",
+                        content: en_prompt,
+                    },
+                    {
+                        role: "user",
+                        content: JSON.stringify(untranslated_data),
+                    },
+                ],
+                maxRetries: 0,
+                onError: (err) => {
+                    console.error("Error during translation:", err);
+                    empty_error_pool.push(err);
+                },
+                temperature: 0.7,
+            });
+            api_call_count++;
+
+            for await (const item of elementStream) {
+                const metadata = untranslated_data.find(
+                    (d) => d.id.trim() === item.id.trim(),
+                )!;
+                if (!metadata || !item) {
+                    empty_error_pool.push(new EmptyResponseError());
+                    continue;
+                }
+
+                // remove that item from untranslated_data to save memory
+                untranslated_data.splice(
+                    untranslated_data.indexOf(metadata),
+                    1,
+                );
+                const sectionedText = item
+                    .translated_paragraphs!.join("\n\n")
+                    .replace(/(\r\n|\r|\n)/g, "\n\n");
+                const {
+                    series_title_and_author,
+                    title,
+                    indexPrefix,
+                    url,
+                    tags,
+                    author,
+                } = metadata;
+                const content =
+                    `# ${title}
+        
+    ${indexPrefix}
+    
+    URL: ${url}
+    Author: ${author}
+    Provider: ${provider}
+    Model: ${model_id}
+    Tags: ${tags?.join(", ") ?? ""}
+        
+        ` +
+                    (
+                        await replace_words(sectionedText, {
+                            series_title_and_author,
+                            title,
+                            tags,
+                        })
+                    ).replaceAll("\\n", "\n");
+
+                // console.log(content);
+                await handle_file({
+                    series_title_and_author,
+                    title,
+                    indexPrefix,
+                    content,
+                    folder_id,
+                    encrypted_refresh_token,
+                });
+            }
+       
+    }
+    if (isError) {
+        throw new Error(
+            "Translation process stopped due to too many empty responses from the model.",
+        );
     }
     return api_call_count;
 }
