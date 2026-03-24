@@ -1,43 +1,42 @@
-
 export const modelList = {
     anthropic: async () => [
-    {
-        "value": "claude-opus-4-6",
-        "name": "Claude Opus 4.6"
-    },
-    {
-        "value": "claude-opus-4-5-20251101",
-        "name": "Claude Opus 4.5"
-    },
-    {
-        "value": "claude-haiku-4-5-20251001",
-        "name": "Claude Haiku 4.5"
-    },
-    {
-        "value": "claude-sonnet-4-5-20250929",
-        "name": "Claude Sonnet 4.5"
-    },
-    {
-        "value": "claude-opus-4-1-20250805",
-        "name": "Claude Opus 4.1"
-    },
-    {
-        "value": "claude-opus-4-20250514",
-        "name": "Claude Opus 4"
-    },
-    {
-        "value": "claude-sonnet-4-20250514",
-        "name": "Claude Sonnet 4"
-    },
-    {
-        "value": "claude-3-5-haiku-20241022",
-        "name": "Claude Haiku 3.5"
-    },
-    {
-        "value": "claude-3-haiku-20240307",
-        "name": "Claude Haiku 3"
-    }
-],
+        {
+            value: "claude-opus-4-6",
+            name: "Claude Opus 4.6",
+        },
+        {
+            value: "claude-opus-4-5-20251101",
+            name: "Claude Opus 4.5",
+        },
+        {
+            value: "claude-haiku-4-5-20251001",
+            name: "Claude Haiku 4.5",
+        },
+        {
+            value: "claude-sonnet-4-5-20250929",
+            name: "Claude Sonnet 4.5",
+        },
+        {
+            value: "claude-opus-4-1-20250805",
+            name: "Claude Opus 4.1",
+        },
+        {
+            value: "claude-opus-4-20250514",
+            name: "Claude Opus 4",
+        },
+        {
+            value: "claude-sonnet-4-20250514",
+            name: "Claude Sonnet 4",
+        },
+        {
+            value: "claude-3-5-haiku-20241022",
+            name: "Claude Haiku 3.5",
+        },
+        {
+            value: "claude-3-haiku-20240307",
+            name: "Claude Haiku 3",
+        },
+    ],
     openai: async () => [
         {
             value: "gpt-3.5-turbo-0125",
@@ -201,7 +200,8 @@ export const modelList = {
         {
             name: "gemini-3-flash-preview",
             value: "gemini-3-flash-preview",
-        },{
+        },
+        {
             name: "gemini-3.1-flash-lite-preview",
             value: "gemini-3.1-flash-lite-preview",
         },
@@ -451,6 +451,10 @@ export const modelList = {
             value: "mistral-small-2501",
         },
         {
+            name: "mistral-small-2603",
+            value: "mistral-small-2603",
+        },
+        {
             name: "mistral-embed-2312",
             value: "mistral-embed-2312",
         },
@@ -519,9 +523,10 @@ export const modelList = {
         {
             name: "gpt-oss-120b",
             value: "gpt-oss-120b",
-        },{
+        },
+        {
             name: "qwen-3-235b-a22b-instruct-2507",
-            value: "qwen-3-235b-a22b-instruct-2507"
+            value: "qwen-3-235b-a22b-instruct-2507",
         },
         {
             name: "llama-3.3-70b",
