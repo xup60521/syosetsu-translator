@@ -114,13 +114,14 @@ export async function batchTranslate(
                 const content =
                     `# ${title}
         
-    ${indexPrefix}
-    
-    URL: ${url}
-    Author: ${author}
-    Provider: ${provider}
-    Model: ${model_id}
-    Tags: ${tags?.join(", ") ?? ""}
+${indexPrefix}
+
+URL: ${url}
+Author: ${author}
+Provider: ${provider}
+Model: ${model_id}
+Batch Size: ${urls.length}
+Tags: ${tags?.join(", ") ?? ""}
         
         ` +
                     (
