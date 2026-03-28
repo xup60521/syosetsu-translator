@@ -257,38 +257,50 @@ function TranlationForm({
                     />
                     <FieldError errors={[form.formState.errors.model_id]} />
                 </Field>
-                <Field data-invalid={!!form.formState.errors.concurrency}>
-                    <Label htmlFor="concurrency">Concurrency</Label>
-                    <Input
-                        id="concurrency"
-                        type="number"
-                        min={1}
-                        value={form.watch("concurrency")}
-                        onChange={(e) =>
-                            form.setValue(
-                                "concurrency",
-                                parseInt(e.target.value, 10),
-                            )
-                        }
-                    />
-                    <FieldError errors={[form.formState.errors.concurrency]} />
-                </Field>
-                <Field data-invalid={!!form.formState.errors.batch_size}>
-                    <Label htmlFor="batch_size">Batch Size</Label>
-                    <Input
-                        id="batch_size"
-                        type="number"
-                        min={1}
-                        value={form.watch("batch_size")}
-                        onChange={(e) =>
-                            form.setValue(
-                                "batch_size",
-                                parseInt(e.target.value, 10),
-                            )
-                        }
-                    />
-                    <FieldError errors={[form.formState.errors.batch_size]} />
-                </Field>
+                <div className="flex gap-4">
+                    <Field
+                        className="flex-1"
+                        data-invalid={!!form.formState.errors.concurrency}
+                    >
+                        <Label htmlFor="concurrency">Concurrency</Label>
+                        <Input
+                            id="concurrency"
+                            type="number"
+                            min={1}
+                            value={form.watch("concurrency")}
+                            onChange={(e) =>
+                                form.setValue(
+                                    "concurrency",
+                                    parseInt(e.target.value, 10),
+                                )
+                            }
+                        />
+                        <FieldError
+                            errors={[form.formState.errors.concurrency]}
+                        />
+                    </Field>
+                    <Field
+                        className="flex-1"
+                        data-invalid={!!form.formState.errors.batch_size}
+                    >
+                        <Label htmlFor="batch_size">Batch Size</Label>
+                        <Input
+                            id="batch_size"
+                            type="number"
+                            min={1}
+                            value={form.watch("batch_size")}
+                            onChange={(e) =>
+                                form.setValue(
+                                    "batch_size",
+                                    parseInt(e.target.value, 10),
+                                )
+                            }
+                        />
+                        <FieldError
+                            errors={[form.formState.errors.batch_size]}
+                        />
+                    </Field>
+                </div>
 
                 <Field>
                     <Label>Output Folder</Label>
