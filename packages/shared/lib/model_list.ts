@@ -161,23 +161,6 @@ export const modelList = {
     ],
     "google-ai-studio": async () => [
         {
-            name: "gemini-2.0-flash-thinking-exp-01-21",
-            value: "gemini-2.0-flash-thinking-exp-01-21",
-        },
-        {
-            name: "gemini-2.0-flash",
-            value: "gemini-2.0-flash",
-        },
-        {
-            name: "gemini-2.0-flash-lite",
-            value: "gemini-2.0-flash-lite",
-        },
-        {
-            name: "gemini-2.0-pro-exp-02-05",
-            value: "gemini-2.0-pro-exp-02-05",
-        },
-        // 2.5
-        {
             name: "gemini-2.5-flash",
             value: "gemini-2.5-flash",
         },
@@ -222,6 +205,14 @@ export const modelList = {
             name: "gemma-3-27b-it",
             value: "gemma-3-27b-it",
         },
+        {
+            name: "gemma-4-26b-a4b-it",
+            value: "gemma-4-26b-a4b-it",
+        },
+        {
+            name: "gemma-4-31b-it",
+            value: "gemma-4-31b-it",
+        }
     ],
     openrouter: async () => {
         let data: any;
