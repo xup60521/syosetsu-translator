@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import React from "react";
+import React, { useRef } from "react";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Separator } from "../components/ui/separator";
 import { Button } from "../components/ui/button";
@@ -22,6 +22,8 @@ import {
 } from "../components/ui/resizable";
 import { ClientOnly } from "@tanstack/react-router";
 import { useTRPC } from "@/server/trpc/react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { atom, useAtom } from "jotai";
 
 export default function NovelView({
     url_string,
@@ -181,6 +183,8 @@ function NovelContentView({
     );
 }
 
+const checkedItemsAtom = atom<boolean[]>([])
+
 function SidePanel({
     selectedNovelURL,
     setSelectedNovelURL,
@@ -200,10 +204,20 @@ function SidePanel({
     const { status, mutateAsync, error, data } = useMutation(
         trpc.novel.decompose_url.mutationOptions(),
     );
-    const [checkedItems, setCheckedItems] = React.useState<boolean[]>([]);
+    const [checkedItems, setCheckedItems] = useAtom(checkedItemsAtom)
     const [dialogueOpen, SetDialogueOpen] = React.useState(false);
     const session = authClient.useSession();
-    const isLoading = status === "pending"
+    const isLoading = status === "pending";
+
+    const parentRef = useRef<HTMLDivElement>(null!);
+
+    const rowVirtualizer = useVirtualizer({
+        count: data ? data.length : 0,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 45, // Estimate height of one row in pixels
+        overscan: 5,
+    });
+
     React.useEffect(() => {
         if (
             isLoading === false &&
@@ -215,19 +229,22 @@ function SidePanel({
             setCheckedItems([...new Array(data.length).fill(true)]);
         }
     }, [data, error, isLoading, setSelectedNovelURL]);
-    
-    React.useEffect(()=>{
+
+    React.useEffect(() => {
         if (!!url_string) {
-            mutateAsync({url_string})
+            mutateAsync({ url_string });
         }
-    },[url_string])
+    }, [url_string]);
 
     return (
         <div className="min-h-0 h-full flex flex-none flex-col w-full ">
             <h2 className="text-lg font-bold p-3 w-full bg-yellow-300 dark:bg-yellow-600 border-b-2 border-black dark:border-white font-mono uppercase tracking-tight">
                 Novel Queue List
             </h2>
-            <ScrollArea className="grow min-h-0 h-full w-full overflow-auto py-0">
+            <ScrollArea
+                ref={parentRef}
+                className="grow min-h-0 h-full w-full py-0"
+            >
                 {error && (
                     <div className="p-4 text-red-600">
                         Error:{" "}
@@ -236,47 +253,83 @@ function SidePanel({
                             : "Unknown error"}
                     </div>
                 )}
+
                 {isLoading && <SidePanelLoading />}
 
-                {data &&
-                    data.map((item, index) => (
-                        <React.Fragment key={index}>
-                            {index === 0 ? null : <Separator className="" />}
-                            <div
-                                rel="noopener noreferrer"
-                                onClick={() =>
-                                    setSelectedNovelURL(
-                                        item.url === selectedNovelURL
-                                            ? undefined
-                                            : item.url,
-                                    )
-                                }
-                                className={cn(
-                                    "text-black dark:text-white text-sm py-3 px-3 cursor-pointer flex gap-2.5 hover:bg-yellow-100 dark:hover:bg-yellow-900 transition border-y-2 border-transparent",
-                                    selectedNovelURL === item.url &&
-                                        "bg-yellow-300 dark:bg-yellow-700 font-bold border-black dark:border-white border-y-2 last:border-b-2 first:border-t-2",
-                                )}
-                            >
-                                <Checkbox
-                                    checked={checkedItems[index] ?? false}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        const newCheckedItems = [
-                                            ...checkedItems,
-                                        ];
-                                        newCheckedItems[index] =
-                                            !newCheckedItems[index];
-                                        setCheckedItems(newCheckedItems);
+                {data && (
+                    <div
+                        style={{
+                            height: `${rowVirtualizer.getTotalSize()}px`,
+                            width: "100%",
+                            position: "relative",
+                        }}
+                    >
+                        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                            const item = data[virtualRow.index];
+                            const isSelected = selectedNovelURL === item.url;
+
+                            return (
+                                <div
+                                    key={virtualRow.key}
+                                    style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                        width: "100%",
+                                        height: `${virtualRow.size}px`,
+                                        transform: `translateY(${virtualRow.start}px)`,
                                     }}
-                                />
-                                <span>
-                                    {fetchedTitles[item.url] ??
-                                        item.title ??
-                                        item.url}
-                                </span>
-                            </div>
-                        </React.Fragment>
-                    ))}
+                                >
+                                    {/* Separator logic: only show if not the very first item in the data array */}
+                                    {virtualRow.index !== 0 && <Separator />}
+
+                                    <div
+                                        onClick={() =>
+                                            setSelectedNovelURL(
+                                                isSelected
+                                                    ? undefined
+                                                    : item.url,
+                                            )
+                                        }
+                                        className={cn(
+                                            "text-black dark:text-white text-sm py-3 px-3 cursor-pointer flex gap-2.5 hover:bg-yellow-100 dark:hover:bg-yellow-900 transition border-y-2 border-transparent",
+                                            isSelected &&
+                                                "bg-yellow-300 dark:bg-yellow-700 font-bold border-black dark:border-white border-y-2",
+                                        )}
+                                    >
+                                        <Checkbox
+                                            checked={
+                                                checkedItems[
+                                                    virtualRow.index
+                                                ] ?? false
+                                            }
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const newCheckedItems = [
+                                                    ...checkedItems,
+                                                ];
+                                                newCheckedItems[
+                                                    virtualRow.index
+                                                ] =
+                                                    !newCheckedItems[
+                                                        virtualRow.index
+                                                    ];
+                                                setCheckedItems(
+                                                    newCheckedItems,
+                                                );
+                                            }}
+                                        />
+                                        <span className="truncate">
+                                            {fetchedTitles[item.url] ??
+                                                item.title ??
+                                                item.url}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </ScrollArea>
             <div className="w-full p-3 py-1.5 flex items-center bg-white dark:bg-zinc-900 border-t-2 border-black dark:border-white gap-2">
                 <div className=" flex items-center gap-2.5 mb-1.5">
@@ -332,6 +385,7 @@ function SidePanel({
         </div>
     );
 }
+
 
 function isButtonAllChecked(checkedItems: boolean[]): boolean {
     return checkedItems.every((item) => item === true);
