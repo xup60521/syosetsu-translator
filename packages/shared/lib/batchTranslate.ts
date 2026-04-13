@@ -60,7 +60,7 @@ export async function batchTranslate(
         if (empty_error_pool.length > 3) {
             isError = true;
             console.error(
-                "Too many empty responses from the model. Stopping the translation process.",
+                "Too many empty responses from the model. Stopping the translation process.", JSON.stringify(empty_error_pool)
             );
             break;
         }
