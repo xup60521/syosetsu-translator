@@ -531,32 +531,8 @@ export const modelList = {
         { value: "llama-3.1-8b-instant", name: "llama-3.1-8b-instant" },
         { value: "llama-3.3-70b-versatile", name: "llama-3.3-70b-versatile" },
         {
-            value: "meta-llama/llama-4-maverick-17b-128e-instruct",
-            name: "meta-llama/llama-4-maverick-17b-128e-instruct",
-        },
-        {
             value: "meta-llama/llama-4-scout-17b-16e-instruct",
             name: "meta-llama/llama-4-scout-17b-16e-instruct",
-        },
-        {
-            value: "meta-llama/llama-guard-4-12b",
-            name: "meta-llama/llama-guard-4-12b",
-        },
-        {
-            value: "meta-llama/llama-prompt-guard-2-22m",
-            name: "meta-llama/llama-prompt-guard-2-22m",
-        },
-        {
-            value: "meta-llama/llama-prompt-guard-2-86m",
-            name: "meta-llama/llama-prompt-guard-2-86m",
-        },
-        {
-            value: "moonshotai/kimi-k2-instruct",
-            name: "moonshotai/kimi-k2-instruct",
-        },
-        {
-            value: "moonshotai/kimi-k2-instruct-0905",
-            name: "moonshotai/kimi-k2-instruct-0905",
         },
         { value: "openai/gpt-oss-120b", name: "openai/gpt-oss-120b" },
         { value: "openai/gpt-oss-20b", name: "openai/gpt-oss-20b" },
