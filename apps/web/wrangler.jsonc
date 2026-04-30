@@ -4,7 +4,7 @@
  */
 {
     "$schema": "node_modules/wrangler/config-schema.json",
-    "name": "syosetsu-translator-cf-workflows",
+    "name": "syosetsu-translator",
     "compatibility_date": "2026-02-05",
     "compatibility_flags": [
         "nodejs_compat"
@@ -15,9 +15,9 @@
     },
     "workflows": [
         {
-            "name": "syosetsu-translator-test-workflow",
-            "binding": "ST_TEST_WORKFLOW",
-            "class_name": "SyosetsuTranslatorTESTWorkflow"
+            "name": "syosetsu-translator-workflow",
+            "binding": "ST_WORKFLOW",
+            "class_name": "SyosetsuTranslatorWorkflow"
         }
     ]
     /**

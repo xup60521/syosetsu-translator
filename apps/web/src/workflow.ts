@@ -14,7 +14,7 @@ import {
     env,
 } from "cloudflare:workers";
 
-export class SyosetsuTranslatorTESTWorkflow extends WorkflowEntrypoint<
+export class SyosetsuTranslatorWorkflow extends WorkflowEntrypoint<
     Env,
     WorkflowPayloadType
 > {

@@ -83,7 +83,7 @@ export const workflowProcedure = createTRPCRouter({
             // });
             // console.log("workflow is triggered")
 
-            const {id: workflowRunId} = (await env.ST_TEST_WORKFLOW.create({params: payload}));
+            const {id: workflowRunId} = (await env.ST_WORKFLOW.create({params: payload}));
             console.log("workflow is triggered with ID:", workflowRunId)
 
             await redis
@@ -117,7 +117,7 @@ export const workflowProcedure = createTRPCRouter({
             const { workflow_id } = input;
             // qstashClient.cancel({ ids: [workflow_id] });
             console.log("terminating workflow instance", workflow_id)
-            const instance = await env.ST_TEST_WORKFLOW.get(workflow_id)
+            const instance = await env.ST_WORKFLOW.get(workflow_id)
             await instance.terminate()
             await redis.hset(`task:${workflow_id}`, {
                 status: "canceled",
