@@ -12,6 +12,14 @@ export const auth = betterAuth({
         provider: "pg",
         schema,
     }),
+    session: {
+        additionalFields: {
+            providerId: {
+                type: "string",
+                input: false,
+            }
+        }
+    },
     socialProviders: {
         google: {
             clientId: env.VITE_GOOGLE_CLIENT_ID!,
@@ -27,21 +35,14 @@ export const auth = betterAuth({
             prompt: "consent",
         },
     },
-    // Debug: 記錄 account 創建時的資料
-    // databaseHooks: {
-    //     account: {
-    //         create: {
-    //             before: async (account) => {
-    //                 console.log("=== DEBUG: Account Create ===");
-    //                 console.log("Provider:", account.providerId);
-    //                 console.log("Access Token:", account.accessToken ? "存在" : "NULL");
-    //                 console.log("Refresh Token:", account.refreshToken ? "存在" : "NULL");
-    //                 console.log("Full Account Data:", JSON.stringify(account, null, 2));
-    //                 console.log("=============================");
-    //                 // 回傳 undefined 或 void 讓 better-auth 繼續處理
-    //                 return;
-    //             },
-    //         },
-    //     },
-    // },
+    databaseHooks: {
+        session: {
+            create: {
+                before: async (session, ctx) => {
+                    
+                }
+                
+            },
+        },
+    },
 });
