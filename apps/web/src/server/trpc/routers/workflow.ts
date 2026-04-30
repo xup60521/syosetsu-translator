@@ -33,10 +33,11 @@ export const workflowProcedure = createTRPCRouter({
                 });
             }
             const userAccount = await db.query.account.findFirst({
-                where: (fields, { and, eq }) =>  and(
-                    eq(account.userId, userId),
-                    eq(account.providerId, "google"),
-                ),
+                where: (fields, { and, eq }) =>
+                    and(
+                        eq(account.userId, userId),
+                        eq(account.providerId, "google"),
+                    ),
             });
 
             if (!userAccount || !userAccount.refreshToken) {
@@ -83,8 +84,10 @@ export const workflowProcedure = createTRPCRouter({
             // });
             // console.log("workflow is triggered")
 
-            const {id: workflowRunId} = (await env.ST_WORKFLOW.create({params: payload}));
-            console.log("workflow is triggered with ID:", workflowRunId)
+            const { id: workflowRunId } = await env.ST_WORKFLOW.create({
+                params: payload,
+            });
+            console.log("workflow is triggered with ID:", workflowRunId);
 
             await redis
                 .pipeline()
@@ -116,9 +119,19 @@ export const workflowProcedure = createTRPCRouter({
         .mutation(async ({ input }) => {
             const { workflow_id } = input;
             // qstashClient.cancel({ ids: [workflow_id] });
-            console.log("terminating workflow instance", workflow_id)
-            const instance = await env.ST_WORKFLOW.get(workflow_id)
-            await instance.terminate()
+            console.log("terminating workflow instance", workflow_id);
+            const instance = await env.ST_WORKFLOW.get(workflow_id);
+            const status = await instance.status();
+            if (
+                status.status === "terminated" ||
+                status.status === "complete"
+            ) {
+                console.log(
+                    `Workflow ${workflow_id} is already completed or terminated.`,
+                );
+            } else {
+                await instance.terminate();
+            }
             await redis.hset(`task:${workflow_id}`, {
                 status: "canceled",
             });
