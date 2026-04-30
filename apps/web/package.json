@@ -54,7 +54,7 @@
         "@trpc/tanstack-react-query": "^11.4.3",
         "@upstash/redis": "^1.36.1",
         "@upstash/workflow": "^1.1.0",
-        "better-auth": "^1.4.12",
+        "better-auth": "^1.6.6",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
