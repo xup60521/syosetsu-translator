@@ -4,15 +4,22 @@
  */
 {
     "$schema": "node_modules/wrangler/config-schema.json",
-    "name": "syosetsu-translator",
+    "name": "syosetsu-translator-cf-workflows",
     "compatibility_date": "2026-02-05",
     "compatibility_flags": [
         "nodejs_compat"
     ],
-    "main": "@tanstack/react-start/server-entry",
+    "main": "./src/server.ts",
     "observability": {
         "enabled": true
     },
+    "workflows": [
+        {
+            "name": "syosetsu-translator-test-workflow",
+            "binding": "ST_TEST_WORKFLOW",
+            "class_name": "SyosetsuTranslatorTESTWorkflow"
+        }
+    ]
     /**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
